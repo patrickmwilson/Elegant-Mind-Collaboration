@@ -41,7 +41,7 @@ t1 = t1./count;
 
 
 folder = '/Users/patrickwilson/Desktop/R/Elegant-Mind-Collaboration/Crowded Center/Data';
-tfiles = dir('/Users/patrickwilson/Desktop/R/Elegant-Mind-Collaboration/Crowded Center/Data');
+tfiles = dir('/Users/patrickwilson/Desktop/R/Elegant-Mind-Collaboration/T1/Data');
 tfilenames={tfiles(:).name}';
 tcsvfiles=tfilenames(endsWith(tfilenames,'.csv'));
 
@@ -80,8 +80,8 @@ cc = cc./count;
 
 
 
-folder = '/Users/patrickwilson/Desktop/R/Elegant-Mind-Collaboration/Crowded Periphery/Data';
-tfiles = dir('/Users/patrickwilson/Desktop/R/Elegant-Mind-Collaboration/Crowded Periphery/Data');
+folder = '/Users/patrickwilson/Desktop/CrowdedPeripheryData';
+tfiles = dir('/Users/patrickwilson/Desktop/CrowdedPeripheryData');
 tfilenames={tfiles(:).name}';
 tcsvfiles=tfilenames(endsWith(tfilenames,'.csv'));
 

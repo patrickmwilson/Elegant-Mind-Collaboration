@@ -1,7 +1,8 @@
 clear variables;
 clear all;
-folder = '/Users/patrickwilson/Desktop/T1Data';
-tfiles = dir('/Users/patrickwilson/Desktop/T1Data');
+
+folder = '/Users/patrickwilson/Desktop/R/Elegant-Mind-Collaboration/T1/Data';
+tfiles = dir('/Users/patrickwilson/Desktop/R/Elegant-Mind-Collaboration/T1/Data');
 tfilenames={tfiles(:).name}';
 tcsvfiles=tfilenames(endsWith(tfilenames,'.csv'));
 
@@ -29,12 +30,13 @@ end
 
 t1 = t1./count;
 
-files = dir('/Users/patrickwilson/Desktop/CrowdedCenterData');
+folder = '/Users/patrickwilson/Desktop/R/Elegant-Mind-Collaboration/Crowded Center/Data';
+files = dir('/Users/patrickwilson/Desktop/R/Elegant-Mind-Collaboration/Crowded Center/Data');
 filenames={files(:).name}';
 csvfiles=filenames(endsWith(filenames,'.csv'));
 
 for i = 1:size(csvfiles,1)
-    filename = fullfile(string(csvfiles(i,1)));
+    filename = fullfile(folder, string(csvfiles(i,1)));
     thisTable = readtable(filename);
     if i == 1
         table = thisTable;

@@ -1,8 +1,8 @@
 clear variables;
 clear all;
 
-folder = '/Users/patrickwilson/Desktop/T1Data';
-tfiles = dir('/Users/patrickwilson/Desktop/T1Data');
+folder = '/Users/patrickwilson/Desktop/R/Elegant-Mind-Collaboration/T1/Data';
+tfiles = dir('/Users/patrickwilson/Desktop/R/Elegant-Mind-Collaboration/T1/Data');
 tfilenames={tfiles(:).name}';
 tcsvfiles=tfilenames(endsWith(tfilenames,'.csv'));
 
@@ -30,12 +30,13 @@ end
 
 t1 = t1./count;
 
-files = dir('/Users/patrickwilson/Desktop/IsolatedCharacterData');
+folder = '/Users/patrickwilson/Desktop/R/Elegant-Mind-Collaboration/Isolated Character/Data';
+files = dir('/Users/patrickwilson/Desktop/R/Elegant-Mind-Collaboration/Isolated Character/Data');
 filenames={files(:).name}';
 csvfiles=filenames(endsWith(filenames,'.csv'));
 
 for i = 1:size(csvfiles,1)
-    filename = fullfile(string(csvfiles(i,1)));
+    filename = fullfile(folder, string(csvfiles(i,1)));
     thisTable = readtable(filename);
     if i == 1
         table = thisTable;
@@ -51,6 +52,7 @@ anstisX = [4.02148, 8.94224, 16.2079, 17.3219, 23.249, 28.0508, 31.1738, 31.6387
 anstisY = [0.243199, 0.377233, 0.681458, 0.839386, 1.00387, 1.34426, 1.67235, 1.17467 , 2.34074, 4.00559, 3.33797];
 
 letterHeights = [ 0.25, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4 ];
+t1LetterHeights = [ 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4 ];
 angles = zeros(4,9);
 counters = zeros(4,9);
 
@@ -99,8 +101,8 @@ lines(5) = plot(xFit, yFit, "k-", 'LineWidth', 1);
 grid on;
 
 hold on
-scatter(t1(1,:), letterHeights(1,:), 15, "m", "filled");
-coefficients = polyfit(t1(1,:), letterHeights(1,:), 1);
+scatter(t1(1,:), t1LetterHeights(1,:), 15, "m", "filled");
+coefficients = polyfit(t1(1,:), t1LetterHeights(1,:), 1);
 legends(6) = sprintf(txt, "T1", coefficients(1,1), coefficients(1,2));
 xFit = linspace(min(t1(1,:)), max(t1(1,:)), 1000);
 yFit = polyval(coefficients, xFit);
