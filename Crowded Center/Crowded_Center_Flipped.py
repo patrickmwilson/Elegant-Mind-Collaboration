@@ -79,15 +79,17 @@ keyPress = keyboard.Keyboard()
 
 #EXPERIMENTAL VARIABLES
 letters = list("EPB")
-sizes = [0.25, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4]
+anglesH = [10, 20, 30, 40, 50, 60]
+anglesV = [0, 10, 20, 30, 40]
 directions = [0, 1, 2, 3]
+foveaRadius = 7 #cm
+distToScreen = 35 #cm
 
 #SPACING ADJUSTMENTS FOR TEXT DISPLAY
 dirXMult = [1.62, 0, -1.68, 0]
 dirYMult = [0, -1.562, 0, 1.748]
 yOffset = [0.2, 0, 0.2, 0]
 iAngle = [9, 9, 9, 9, 9, 9, 9, 10]
-maxAngles = [61, 42, 61, 42]
 dirSpacer = [0.1, 0.5, 0, 0]
 
 #GENERATE TEXT STIM 
@@ -101,8 +103,8 @@ def genDisplay(text, xPos, yPos, height, colour):
     depth=0.0)
     return displayText
 
-#STAIRCASE ALGORITHM TO DETERMINE MAXIMUM LEGIBLE ANGLE
-def stairCase(thisResponse, numReversals, angle, stairCaseCompleted, lastResponse, responses, baseAngle, maxAngle):
+#STAIRCASE ALGORITHM TO DETERMINE MINUMUM LEGIBLE SIZE
+def stairCase(thisResponse, numReversals, size, stairCaseCompleted, lastResponse, responses):
     responses += 1
     #IF TWO SEQUENTIAL IN/CORRECT ANSWERS, RESET NUMREVERSALS
     if numReversals > 0 and lastResponse == thisResponse:
@@ -110,19 +112,19 @@ def stairCase(thisResponse, numReversals, angle, stairCaseCompleted, lastRespons
     #IF CORRECT, MOVE CHARACTER OUTWARD
     if thisResponse:
         if numReversals == 0:
-            angle += 3
+            size += 0.2
         else:
-            angle += 1
+            size += 0.1
     #IF INCORRECT, MOVE CHARACTER INWARD, INCREMENT NUMREVERSALS
     else:
-        if angle -1 > baseAngle:
-            angle -= 1
-        numReversals += 1
+        numReversals-=-1
+        if size > 0.1: 
+            size -= 0.1
     #COMPLETE STAIRCASE IF THE MAX ANGLE IS REACHED, OR 3 REVERSALS OR 25 RESPONSES OCCUR
-    if numReversals >= 3 or responses >= 25 or angle >= maxAngle:
+    if numReversals >= 3 or responses >= 25:
         stairCaseCompleted = True
         
-    return stairCaseCompleted, angle, numReversals, thisResponse, responses
+    return stairCaseCompleted, size, numReversals, thisResponse, responses
 
 #CONVERT DEGREE INPUT TO DISTANCE IN CENTIMETERS
 def angleCalc(angle):
@@ -130,20 +132,82 @@ def angleCalc(angle):
     spacer = (math.tan(radians)*35)
     return spacer
 
+#ROUND NUMBER OF ROWS OR COLUMNS TO AN ODD NUMBER THAT MOST CLOSELY FITS THE RADIUS OF THE FOVEA
+def rounder(num):
+    if ((num % int(num)) > 0.5):
+        if((int(num) % 2) == 0):
+            num = int(num) + 3
+        else:
+            num = int(num) + 1
+    else:
+        if((int(num) % 2) == 0):
+            num = int(num) + 1
+        else:
+            num = int(num)
+    return num
+
+def spacer(height):
+    #add in some y=mx+b bullshit right here
+    spacerH = 0
+    spacerV = 0
+    return spacerH, spacerV
+
+#CALCULATE THE NUMBER OF ROWS TO FILL THE FOVEA (radius of 7°) AT THIS LETTER SIZE
+def grid(height):
+    spacerH, spacerV = spacer(height)
+    diameter = angleCalc(foveaRadius)*2
+    rows = rounder(diameter/spacerV)
+    return rows, spacerV, spacerH
+
+#CALCULATE THE NUMBER OF CHARACTERS ON A SPECIFIC ROW OF THE CENTER GRID
+def charsThisRow(height, row, yCoord, spacerH):
+    radius = angleCalc(foveaRadius)
+    #INVERSE COSINE OF DISTANCE ALONG Y AXIS FROM ORIGIN OVER CIRCLE RADIUS TO FIND THETA
+    theta = math.acos(abs(yCoord)/radius)
+    #TANGENT OF THETA MULTIPLIED BY DISTANCE ALONG Y AXIS TO GIVE LENGTH OF EACH ROW IN CM
+    length = (math.tan(theta) * abs(yCoord)) * 2
+    chars = rounder(length/spacerH)
+    return chars
+
+
+
 #GENERATE AND DRAW CENTER DISPLAY
-chars = [3, 6, 8, 10, 8, 6, 3]
-yCoords = [9, 6, 3, 0, -3, -6, -9]
-def genCenter():
-    for i in range(7):
+def genCenter(heightCm):
+
+    rows, spacerV, spacerH = grid(heightCm)
+    centerRow = (rows-1)/2
+
+    for row in range(rows-1):
+        #FLIP IS 1 IF ROW < CENTER ROW, 0 IF ROW = CENTER ROW, AND 1 IF ROW > CENTER ROW
+        flip = -1 + (2 * (row > centerRow)) + (1 * (row == centerRow))
+        #DISPLAY COORDINATE FOR THAT ROW IS CALCULATED BY MULTIPLYING THE ROW NUMBER BY THE VERTICAL SPACER, AND THE SIGN IS DETERMINED BY FLIP
+        yCoord = flip * ( spacerV * (centerRow - row) )
+        chars = charsThisRow(heightCm, row, yCoord, spacerH)
+
+        #POPULATES A LIST OF LENGTH (CHARS) WITH RANDOM LETTERS (E/P/B)
         thisLine = ''
-        thisList = ['']*chars[i]
-        for j in range(chars[i]):
-            thisList[j] = random.choice(letters)
+        thisList = ['']*chars
+        for char in range(chars-1):
+            letter = random.choice(letters)
+            thisList[char] = letter
+            if(row == centerRow and char == (((chars-1)/2))):
+                centerChar = letter
+
         #CONVERT LIST TO ARRAY
         thisLine = ''.join(thisList)
         #GENERATE AND DRAW TEXT STIM
-        lineDisplay = genDisplay(thisLine, 0, yCoords[i], 3, 'black')
+        lineDisplay = genDisplay(thisLine, 0, yCoord, 3, 'black')
         lineDisplay.draw()
+
+        #CONVERT LIST TO ARRAY
+        thisLine = ''.join(thisList)
+        #GENERATE AND DRAW TEXT STIM
+        lineDisplay = genDisplay(thisLine, 0, yCoord, 3, 'black')
+        lineDisplay.draw()
+
+    #OVERLAY THE CENTER CHARACTER OF THE ARRAY WITH A GREEN COPY
+    genDisplay(centerChar, 0, 0, heightCm, 'green')
+    return centerChar
 
 #CALCULATE DISPLAY COORDINATES AND HEIGHT OF STIMULI
 def displayVariables(angle, dir):
@@ -170,20 +234,24 @@ if theseKeys[0] == 'escape':
 dot = genDisplay('.', 0, 1.1, 3, 'red')
 
 #RANDOMIZE SIZES, LOOP THROUGH 
-shuffle(sizes)
-for size in sizes:
+#shuffle(sizes)
+#for size in sizes:
+shuffle(directions)
+for dir in directions:
     
     #RANDOMIZE DIRECTIONS, LOOP THROUGH
-    shuffle(directions)
-    for dir in directions:
-        
-        #SET MAX AND MIN ANGLES
-        maxAngle = maxAngles[dir]
-        #baseAngle = iAngle[int((size-0.5)*2)]
-        baseAngle = 11
-        angle = baseAngle
+    #shuffle(directions)
+    #for dir in directions:
+    if(dir == 0 or dir == 2):
+        angles = anglesH
+    else:
+        angles = anglesV
+
+    shuffle(angles)
+    for angle in angles:
         
         #INITIALIZE TRIAL VARIABLES
+        size = 0.1
         numReversals = 0
         responses = 0
         lastResponse = False
@@ -205,26 +273,30 @@ for size in sizes:
             
             #DRAW STIMULI, DOT, AND CENTER ARRAY, CLEAR KEYPRESS LOG
             dot.draw()
-            genCenter()
+            centerChar = genCenter(heightCm)
             displayText.draw()
             win.callOnFlip(keyPress.clearEvents, eventType='keyboard')
             win.flip()
             
             #SUSPEND EXECUTION UNTIL KEYPRESS
-            theseKeys = event.waitKeys(keyList = ['e', 'p', 'b', 'escape'], clearEvents = False)
+            theseKeys = event.waitKeys(keyList = ['space', 'enter', 'escape'], clearEvents = False)
             
             #STOP SCRIPT IF ESCAPE IS PRESSED
             if theseKeys[0] == 'escape':
                 endExp()
             
-            #CHECK KEYPRESS AGAINST TARGET LETTER
-            thisResponse = (theseKeys[0] == letter.lower())
+            #IF TARGET LETTER == CENTER LETTER, ENTER = CORRECT; IF TARGET LETTER != CENTER LETTER, SPACE = CORRECT
+            match = (letter == centerChar)
+            if match:
+                thisResponse = (theseKeys[0] == 'enter')
+            else:
+                thisResponse = (theseKeys[0] == 'space')
             
             #CALL STAIRCASE ALGORITHM
-            stairCaseCompleted, angle, numReversals, lastResponse, responses = stairCase(thisResponse, numReversals, angle, stairCaseCompleted, lastResponse, responses, baseAngle, maxAngle)
+            stairCaseCompleted, angle, numReversals, lastResponse, responses = stairCase(thisResponse, numReversals, angle, stairCaseCompleted, lastResponse, responses)
             
             if stairCaseCompleted:
-                #ADVANCE DIRECTION
+                #INCREMENT DIR FOR DATA OUTPUT
                 direction = dir+1
                 #CSV OUTPUT
                 if recordData:

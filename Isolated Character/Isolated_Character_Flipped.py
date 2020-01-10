@@ -79,9 +79,8 @@ keyPress = keyboard.Keyboard()
 
 #EXPERIMENTAL VARIABLES
 letters = list("EPB")
-sizes = [0.25, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4]
-anglesH = [0, 10, 20, 30, 40, 50, 60]
-anglesV = [10, 20, 30, 40, 50, 60]
+anglesH = [10, 20, 30, 40, 50, 60]
+anglesV = [0, 10, 20, 30, 40]
 directions = [0, 1, 2, 3]
 
 #SPACING ADJUSTMENTS FOR TEXT DISPLAY
@@ -97,11 +96,11 @@ def genDisplay(text, xPos, yPos, height, colour):
     pos=(xPos, yPos), height=height, wrapWidth=500, ori=0, 
     color=colour, colorSpace='rgb', opacity=1, 
     languageStyle='LTR',
-    depth=0.0);
+    depth=0.0)
     return displayText
 
-#STAIRCASE ALGORITHM TO DETERMINE MAXIMUM LEGIBLE ANGLE
-def stairCase(thisResponse, numReversals, size, stairCaseCompleted, lastResponse, responses, maxAngle):
+#STAIRCASE ALGORITHM TO DETERMINE MINIMUM LEGIBLE SIZE
+def stairCase(thisResponse, numReversals, size, stairCaseCompleted, lastResponse, responses):
     responses += 1
     #IF TWO SEQUENTIAL IN/CORRECT ANSWERS, RESET NUMREVERSALS
     if numReversals > 0 and lastResponse == thisResponse:
@@ -116,7 +115,7 @@ def stairCase(thisResponse, numReversals, size, stairCaseCompleted, lastResponse
     else:
         numReversals += 1
         if size > 0.1:
-            angle -= 0.1
+            size -= 0.1
     #COMPLETE STAIRCASE IF THE MAX ANGLE IS REACHED, OR 3 REVERSALS OR 25 RESPONSES OCCUR
     if numReversals >= 3 or responses >= 25:
         stairCaseCompleted = True
@@ -178,8 +177,6 @@ for dir in directions:
         lastResponse = False
         stairCaseCompleted = False
         
-        #SET ANGLE LIMIT(EDGE OF SCREEN)
-        maxAngle = maxAngles[dir]
         
         while not stairCaseCompleted:
             
@@ -188,6 +185,7 @@ for dir in directions:
             heightCm, angleCm, xPos, yPos = displayVariables(angle, dir)
             displayText = genDisplay(letter, xPos, yPos, heightCm, 'black')
             
+            #ON FIRST TRIAL, DISPLAY BLANK SCREEN WITH CENTER DOT
             if responses == 0:
                 dot.draw()
                 win.flip()
@@ -211,11 +209,11 @@ for dir in directions:
             thisResponse = (letter.lower() == theseKeys[0])
             
             #CALL STAIRCASE ALGORITHM
-            stairCaseCompleted, size, numReversals, lastResponse, responses = stairCase(thisResponse, numReversals, size, stairCaseCompleted, lastResponse, responses, maxAngle)
+            stairCaseCompleted, size, numReversals, lastResponse, responses = stairCase(thisResponse, numReversals, size, stairCaseCompleted, lastResponse, responses)
             
             if stairCaseCompleted:
                 #ADVANCE DIRECTION
-                #direction = dir+1
+                direction = dir+1
                 #CSV OUTPUT
                 if recordData:
                     csvOutput([direction, size, angle])
