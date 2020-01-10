@@ -42,14 +42,14 @@ recordData = datadlg.OK
 
 if recordData:
     #OUTPUT FILE PATH
-    PATH = 'C:\\Users\\chand\\OneDrive\\Desktop\\VA Scripts\\Crowded Center'
+    PATH = 'C:\\Users\\chand\\OneDrive\\Documents\\GitHub\\Elegant-Mind-Collaboration\\Crowded Center'
     OUTPATH = '{0:s}\\Data\\'.format(PATH)
     
     #CD TO SCRIPT DIRECTORY
     _thisDir = os.path.dirname(os.path.abspath(__file__))
     os.chdir(_thisDir)
     #STORE INFO ABOUT EXPERIMENT SESSION
-    expName = 'Crowded Center'
+    expName = 'Crowded Center Flipped'
     date = data.getDateStr(format='%m-%d') 
     expInfo = {'Participant': ''}
     
@@ -103,28 +103,33 @@ def genDisplay(text, xPos, yPos, height, colour):
     depth=0.0)
     return displayText
 
-#STAIRCASE ALGORITHM TO DETERMINE MINUMUM LEGIBLE SIZE
-def stairCase(thisResponse, numReversals, size, stairCaseCompleted, lastResponse, responses):
+#STAIRCASE ALGORITHM TO DETERMINE MINIMUM LEGIBLE SIZE
+def stairCase(thisResponse, numReversals, totalReversals, size, stairCaseCompleted, lastResponse, responses):
     responses += 1
     #IF TWO SEQUENTIAL IN/CORRECT ANSWERS, RESET NUMREVERSALS
     if numReversals > 0 and lastResponse == thisResponse:
+        totalReversals += numReversals
         numReversals = 0
     #IF CORRECT, MOVE CHARACTER OUTWARD
     if thisResponse:
-        if numReversals == 0:
+        if numReversals == 0 and size > 1:
+            size -= 0.5
+        elif(size > 0.5):
+            size -= 0.2
+        else:
+            size -= 0.1
+    #IF INCORRECT, MOVE CHARACTER INWARD, INCREMENT NUMREVERSALS
+    else:
+        numReversals += 1
+        if size > 0.5:
             size += 0.2
         else:
             size += 0.1
-    #IF INCORRECT, MOVE CHARACTER INWARD, INCREMENT NUMREVERSALS
-    else:
-        numReversals-=-1
-        if size > 0.1: 
-            size -= 0.1
     #COMPLETE STAIRCASE IF THE MAX ANGLE IS REACHED, OR 3 REVERSALS OR 25 RESPONSES OCCUR
-    if numReversals >= 3 or responses >= 25:
+    if numReversals >= 3 or responses >= 25 or totalReversals > 15:
         stairCaseCompleted = True
         
-    return stairCaseCompleted, size, numReversals, thisResponse, responses
+    return stairCaseCompleted, size, numReversals, totalReversals, thisResponse, responses
 
 #CONVERT DEGREE INPUT TO DISTANCE IN CENTIMETERS
 def angleCalc(angle):
@@ -169,8 +174,6 @@ def charsThisRow(height, row, yCoord, spacerH):
     chars = rounder(length/spacerH)
     return chars
 
-
-
 #GENERATE AND DRAW CENTER DISPLAY
 def genCenter(heightCm):
 
@@ -204,7 +207,6 @@ def genCenter(heightCm):
         #GENERATE AND DRAW TEXT STIM
         lineDisplay = genDisplay(thisLine, 0, yCoord, 3, 'black')
         lineDisplay.draw()
-
     #OVERLAY THE CENTER CHARACTER OF THE ARRAY WITH A GREEN COPY
     genDisplay(centerChar, 0, 0, heightCm, 'green')
     return centerChar
@@ -221,7 +223,7 @@ def displayVariables(angle, dir):
     if angle == 0 and dir%2 != 0:
         yPos += 0.2
     return heightCm, angleCm, xPos, yPos
-    
+
 #DISPLAY INSTRUCTIONS FOR CHINREST ALIGNMENT
 instructions = genDisplay('  Align the edge of the headrest stand \nwith the edge of the tape marked 35cm \n\n       Press Spacebar to continue', 0, 0, 5, 'black')
 instructions.draw()
@@ -246,12 +248,14 @@ for dir in directions:
         angles = anglesH
     else:
         angles = anglesV
-
+    
     shuffle(angles)
     for angle in angles:
         
         #INITIALIZE TRIAL VARIABLES
-        size = 0.1
+        size = angle/10
+        if(size == 0):
+            size = 1
         numReversals = 0
         responses = 0
         lastResponse = False
@@ -293,7 +297,7 @@ for dir in directions:
                 thisResponse = (theseKeys[0] == 'space')
             
             #CALL STAIRCASE ALGORITHM
-            stairCaseCompleted, angle, numReversals, lastResponse, responses = stairCase(thisResponse, numReversals, angle, stairCaseCompleted, lastResponse, responses)
+            stairCaseCompleted, size, numReversals, totalReversals, lastResponse, responses = stairCase(thisResponse, numReversals, totalReversals, size, stairCaseCompleted, lastResponse, responses)
             
             if stairCaseCompleted:
                 #INCREMENT DIR FOR DATA OUTPUT
