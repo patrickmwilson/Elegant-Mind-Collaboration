@@ -40,6 +40,16 @@ datadlg = gui.Dlg(title='Record Data?', pos=None, size=None, style=None, labelBu
 ok_data = datadlg.show()
 recordData = datadlg.OK
 
+#Y/N INPUT DIALOGUE FOR GLASSES
+datadlg = gui.Dlg(title='Does the subject wear glasses?', pos=None, size=None, style=None, labelButtonOK=' Yes ', labelButtonCancel=' No ', screen=-1)
+ok_data = datadlg.show()
+glasses = datadlg.OK
+
+#Y/N INPUT DIALOGUE FOR KEY REMAPPING
+datadlg = gui.Dlg(title='Remap keys?', pos=None, size=None, style=None, labelButtonOK=' Yes ', labelButtonCancel=' No ', screen=-1)
+ok_data = datadlg.show()
+remap = datadlg.OK
+
 if recordData:
     #OUTPUT FILE PATH
     PATH = 'C:\\Users\\chand\\OneDrive\\Documents\\GitHub\\Elegant-Mind-Collaboration\\Crowded Periphery'
@@ -69,7 +79,7 @@ mon.setWidth(200)
 win = visual.Window(
     size=(3840, 2160), fullscr=False, screen=-1, 
     winType='pyglet', allowGUI=True, allowStencil=False,
-    monitor= mon, color='white', colorSpace='rgb',
+    monitor= mon, color='grey', colorSpace='rgb',
     blendMode='avg', useFBO=True, 
     units='cm')
 
@@ -79,9 +89,21 @@ keyPress = keyboard.Keyboard()
 
 #EXPERIMENTAL VARIABLES
 letters = list("EPB")
-anglesH = [10, 20, 30, 40, 50, 60]
-anglesV = [0, 10, 20, 30, 40]
-directions = [0, 1, 2, 3] #0 = R, 1 = D, 2 = L, 3 = U
+anglesH = [10, 20, 30, 40]
+anglesV = [0, 10, 20, 30]
+directionsG = [0, 2]
+directionsNG = [0, 1, 2, 3]
+distToScreen = 50 #cm
+
+if glasses:
+    directions = directionsG
+else:
+    directions = directionsNG
+
+if remap:
+    keys = ['z', 'x', 'n', 'm', 'escape', 'space']
+else:
+    keys = ['e', 'p', 'b', 'escape', 'space']
 
 #SPACING ADJUSTMENTS FOR TEXT DISPLAY
 dirXMult = [1.62, 0, -1.68, 0]
@@ -125,12 +147,15 @@ def stairCase(thisResponse, numReversals, totalReversals, size, stairCaseComplet
     if numReversals >= 3 or responses >= 25 or totalReversals > 15:
         stairCaseCompleted = True
         
+    if size < 0.1:
+        size = 0.1
+        
     return stairCaseCompleted, size, numReversals, totalReversals, thisResponse, responses
 
 #CONVERT DEGREE INPUT TO DISTANCE IN CENTIMETERS
 def angleCalc(angle):
     radians = math.radians(angle)
-    spacer = (math.tan(radians)*35)
+    spacer = (math.tan(radians)*distToScreen)
     return spacer
     
 #GENERATE A RANDOMIZED 3X3 ARRAY OF LETTERS, RETURN CENTER LETTER
@@ -157,6 +182,22 @@ def displayVariables(angle, dir):
     if angle == 0 and dir%2 != 0:
         yPos += 0.2
     return heightCm, angleCm, xPos, yPos
+    
+def checkResponse(response, letter):
+    key = '0'
+    if(remap):
+        if response[0] == 'z':
+            key = 'b'
+        elif response[0] == 'x':
+            key = 'e'
+        elif response[0] == 'n':
+            key = 'p'
+        elif response[0] == 'm':
+            key = 'space'
+    else:
+        key = response[0]
+    
+    return (key == letter.lower())
 
 #DISPLAY INSTRUCTIONS FOR CHINREST ALIGNMENT
 instructions = genDisplay('  Align the edge of the headrest stand \nwith the edge of the tape marked 35cm \n\n       Press Spacebar to continue', 0, 5, 5, 'black')
@@ -167,7 +208,7 @@ if theseKeys[0] == 'escape':
     endExp()
 
 #GENERATE CENTER DOT
-dot = genDisplay('.', 0, 1.1, 3, 'red')
+dot = genDisplay('.', 0, 1.1, 3, [.207,1,.259])
 
 #RANDOMIZE SIZES, LOOP THROUGH 
 #shuffle(sizes)
@@ -200,7 +241,7 @@ for dir in directions:
             #GENERATE NEW STIMULI
             array, letter = genArray()
             heightCm, angleCm, xPos, yPos = displayVariables(angle, dir)
-            displayText = genDisplay(array, xPos, yPos, heightCm, 'black')
+            displayText = genDisplay(array, xPos, yPos, heightCm, 'white')
             
             if responses == 0:
                 dot.draw()
@@ -208,21 +249,24 @@ for dir in directions:
             
             time.sleep(0.5)
             
-            #DRAW STIMULI, CLEAR KEYPRESS LOG
-            dot.draw()
-            displayText.draw()
-            win.callOnFlip(keyPress.clearEvents, eventType='keyboard')
-            win.flip()
-            
-            #SUSPEND EXECUTION UNTIL KEYPRESS
-            theseKeys = event.waitKeys(keyList = ['e', 'p', 'b', 'escape', 'space'], clearEvents = False)
+            flash = 0
+            while 1:
+                flash = (flash == 0)
+                if flash:
+                    dot.draw()
+                displayText.draw()
+                win.callOnFlip(keyPress.clearEvents, eventType='keyboard')
+                win.flip()
+                theseKeys = event.waitKeys(maxWait = 0.1, keyList = keys, clearEvents = False)
+                if theseKeys:
+                    break
             
             #STOP SCRIPT IF ESCAPE IS PRESSED
             if theseKeys[0] == 'escape':
                 endExp()
             
             #CHECK KEYPRESS AGAINST TARGET LETTER
-            thisResponse = (letter.lower() == theseKeys[0])
+            thisResponse = checkResponse(theseKeys, letter)
             
             #CALL STAIRCASE ALGORITHM
             stairCaseCompleted, size, numReversals, totalReversals, lastResponse, responses = stairCase(thisResponse, numReversals, totalReversals, size, stairCaseCompleted, lastResponse, responses)
