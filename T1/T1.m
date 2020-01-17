@@ -8,8 +8,9 @@
 close all hidden;
 clear variables;
 clear mex;
+clear all;
 sca;
-Screen('Preference', 'SkipSyncTests', 0);
+Screen('Preference', 'SkipSyncTests', 1);
 
 trials=3;
 
@@ -57,12 +58,6 @@ end
 
 %OPEN NEW FOLDER, SET CSV NAME
 if(recordData)
-    %y/N INPUT PROMPT FOR EYETRACKING
-    eyetracking = true;
-    eyetrackingAnswer = questdlg('Eye Tracking?', '', 'Yes', 'No', 'Cancel', 'No');
-    if(char(dataAnswer(1)) == 'N')
-        eyetracking = false;
-    end
     
     %INPUT PROMPT FOR PARTICIPANT NAME
     prompt = {'Enter participant name:' };
@@ -110,7 +105,8 @@ black = BlackIndex(screenNumber);
 white = WhiteIndex(screenNumber);
 
 %OPEN WHITE ON-SCREEN WINDOW
-[window, windowRect] = PsychImaging('OpenWindow', screenNumber, white);
+grey = [.39 .39 .39];
+[window, windowRect] = PsychImaging('OpenWindow', screenNumber, grey);
 Screen('BlendFunction', window, 'GL_SRC_ALPHA', 'GL_ONE_MINUS_SRC_ALPHA');
 %ANTI-ALIASING
 Screen('BlendFunction', window, 'GL_SRC_ALPHA', 'GL_ONE_MINUS_SRC_ALPHA');
@@ -123,84 +119,10 @@ Screen('TextFont', window, 'Helvetica');
 halfX = 0.5 * screenXpixels;
 halfY = 0.5 * screenYpixels;
 
-%CAMERA SETUP AND TRIGGER
-if eyetracking
-    %CREATE EYETRACKING OUTPUT CSV
-    eyetrackingCsvName = fullfile(innerFolderName, 'EyetrackingFrames.csv');
-    fileID = fopen(eyetrackingCsvName, 'a');
-    fprintf(fileID, '%s, %s, %s\n', 'Start Frame', 'End Frame', 'Usable');
-    
-    %CREATE EYETRACKING CALIBRATION OUTPUT CSV
-    calibrationCsvName = fullfile(innerFolderName, 'Calibration.csv');
-    fileID = fopen(calibrationCsvName, 'a');
-    fprintf(fileID, '%s, %s\n', 'Angle', 'Frame');
-    
-    %INITIALIZE CAMERA SETTINGS
-    imaqreset;
-    imaqmex('feature','-limitPhysicalMemoryUsage',false);
-    vid = videoinput('gentl', 1, 'Mono8');
-    src = getselectedsource(vid);
-    vid.FramesPerTrigger = inf;
-    vid.LoggingMode = 'disk';
-    videoFileName = fullfile(innerFolderName, 'Eyetracking.avi');
-    diskLogger = VideoWriter(videoFileName, 'Grayscale AVI');
-    vid.DiskLogger = diskLogger;
-    triggerconfig(vid, 'manual');
-    vid.ROIPosition = [0 0 640 480];
-    src.ExposureTime = 1700.003;
-    src.Gain = 10;
-    
-    %TRIGGER CAMERA
-    start(vid);
-    trigger(vid);
-    pause(1);
-end
-
 %HARDCODED COORDINATES FOR EYETRACKING CALIBRATION
 calibrationAngles = [ -20, -15, -10, -5, 0, 5, 10, 15, 20 ];
 calibrationXCoords = [ 896, 997, 1095, 1189, 1280, 1371, 1466, 1564, 1665 ];
 instructionText = 'Focus your eyes on the green dot and press any key once you have done so. Press any key to begin.';
-
-%EYETRACKING CALIBRATION
-if eyetracking
-    
-    %DISPLAY CALIBRATION INSTRUCTIONS
-    Screen('TextSize', window, 25);
-    DrawFormattedText(window, instructionText, 800, halfY, black);
-    Screen('Flip', window);
-    KbWait();
-    WaitSecs(1);
-    %LOOP THROUGH EACH ANGLE FOR CALIBRATION
-    for i = 1:9
-        Screen('DrawDots', window, [calibrationXCoords(i) 720], 20, [0 255 0], [], 2);
-        Screen('Flip',window);
-        %WAIT FOR KEYPRESS
-        [secs, keyCode, deltaSecs] = KbWait();
-        %STORE FRAME CORRESPONDING TO KEYPRESS
-        frame = vid.FramesAcquired;
-        if keyCode(27) == 1 % ESC 
-            sca; %CLEAR SCREEN IF ESC IS PRESSED
-            if eyetracking
-                stop(vid);
-                %PAUSE EXECUTION UNTIL VIDEO IS FULLY WRITTEN TO DISK
-                while(vid.FramesAcquired ~= vid.DiskLoggerFrameCount)
-                    pause(.1);
-                end
-                delete(vid);
-            end
-            return;
-        end
-        %CALIBRATION DATA OUTPUT
-        angle = calibrationAngles(i);
-        fileID = fopen(calibrationCsvName, 'a');
-        fprintf(fileID, '%i, %i\n', angle, frame);
-        WaitSecs(1);
-    end
-    
-    DrawFormattedText(window, 'Eyetracking Calibration complete', 800, halfY, black);
-    Screen('Flip', window);
-    WaitSecs(5);
-end
 
 for trialNum = 1:trials
     
@@ -272,32 +194,22 @@ for trialNum = 1:trials
                 %DRAW CENTER MASKING RECTANGLE
                 Screen('FillRect', window, [], centerRect);
                 %DRAW CENTER DOT
-                Screen('DrawDots', window, [dotXPos(size) dotYPos(size)], dotSizePix(size), [0 255 0], [], 2);
+                Screen('DrawDots', window, [dotXPos(size) dotYPos(size)], dotSizePix(size), [0 1 0], [], 2);
                 %DRAW DIRECTION INDICATOR
                 Screen('TextSize', window, dirTS(size));
                 DrawFormattedText(window, dirText(direction), dirTextXPos(size), dirTextYPos(size), black);
                 Screen('Flip', window);
-                
-                %OUTPUT FRAME NUMBER CORRESPONDING TO START OF TRIAL
-                if eyetracking
-                    if numCorrect == 0
-                        startFrame = vid.FramesAcquired;
-                    end
-                end
-                
+              
                 %WAIT FOR KEYPRESS
                 [secs, keyCode, deltaSecs] = KbWait();
-                if eyetracking
-                    %STORE FRAME OF LAST KEYPRESS
-                    endFrame = vid.FramesAcquired;
-                end
+
                 %DISPLAY GREEN DOT TO INDICATE 0.5 SECOND WAIT PERIOD BEFORE
                 %NEXT KEYPRESS
                 wrappedString=WrapString(textArray,500);
                 Screen('TextSize', window, tS(size));
                 DrawFormattedText(window, wrappedString, arrayHorizontalStart(size), arrayVerticalStart(size), black);
                 Screen('FillRect', window, [], centerRect);
-                Screen('DrawDots', window, [dotXPos(size) dotYPos(size)], dotSizePix(size), [255 0 0], [], 2);
+                Screen('DrawDots', window, [dotXPos(size) dotYPos(size)], dotSizePix(size), [1 0 0], [], 2);
                 Screen('TextSize', window, dirTS(size));
                 DrawFormattedText(window, dirText(direction), dirTextXPos(size), dirTextYPos(size), black);
                 Screen('Flip', window);
@@ -312,14 +224,6 @@ for trialNum = 1:trials
                     key = 'P';
                 elseif keyCode(27) == 1 % ESC 
                     sca; %CLEAR SCREEN IF ESC IS PRESSED
-                    if eyetracking
-                        stop(vid);
-                        %PAUSE EXECUTION UNTIL VIDEO IS FULLY WRITTEN TO DISK
-                        while(vid.FramesAcquired ~= vid.DiskLoggerFrameCount)
-                            pause(.1);
-                        end
-                        delete(vid);
-                    end
                     return; 
                 else
                     key = 'Q';
@@ -356,11 +260,7 @@ for trialNum = 1:trials
                         fileID = fopen(csvName, 'a');
                         fprintf(fileID, '%s, %d, %4.2f, %4.2f\n', dir, numCorrect, eccentricity, letterHeightDeg);
                     end
-                    %EYETRACKING FRAME OUTPUT
-                    if eyetracking
-                        fileID = fopen(eyetrackingCsvName, 'a');
-                        fprintf(fileID, '%i, %i, %i\n', startFrame, endFrame, 1);
-                    end
+
                     directionIndex = directionIndex + 1;
                     break;
                 end
@@ -389,16 +289,6 @@ Screen('TextSize', window, 25);
 DrawFormattedText(window, 'DONE!', halfX, halfY, black);
 Screen('Flip', window);
 WaitSecs(5);
-
-%TURN OFF CAMERA
-if eyetracking
-    stop(vid);
-    %PAUSE EXECUTION UNTIL VIDEO IS FULLY WRITTEN TO DISK
-    while(vid.FramesAcquired ~= vid.DiskLoggerFrameCount)
-        pause(.1);
-    end
-    delete(vid);
-end
 
 sca;
 return;

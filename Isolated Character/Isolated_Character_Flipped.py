@@ -3,7 +3,6 @@
 #Github.com/patrickmwilson
 #Created for the Elegant Mind Collaboration at UCLA under Professor Katsushi Arisaka
 #Copyright © 2019 Elegant Mind Collaboration. All rights reserved.
-
 from __future__ import absolute_import, division
 
 import psychopy
@@ -89,8 +88,8 @@ keyPress = keyboard.Keyboard()
 
 #EXPERIMENTAL VARIABLES
 letters = list("EPB")
-anglesH = [10, 20, 30, 40]
-anglesV = [0, 10, 20, 30]
+anglesH = [0, 5, 10, 15, 20, 25, 30, 35, 40]
+anglesV = [5, 10, 15, 20, 25, 30]
 directionsG = [0, 2]
 directionsNG = [0, 1, 2, 3]
 distToScreen = 50 #cm
@@ -188,7 +187,7 @@ def checkResponse(response, letter):
 
     
 #DISPLAY INSTRUCTIONS FOR CHINREST ALIGNMENT
-instructions = genDisplay('  Align the edge of the headrest stand \nwith the edge of the tape marked 35cm \n\n       Press Spacebar to continue', 0, 0, 5, 'black')
+instructions = genDisplay('  Align the edge of the headrest stand \nwith the edge of the tape marked 50cm \n\n       Press Spacebar to continue', 0, 0, 5, 'black')
 instructions.draw()
 win.flip()
 theseKeys = event.waitKeys(keyList = ['space', 'escape'], clearEvents = False)
@@ -196,7 +195,7 @@ if theseKeys[0] == 'escape':
     endExp()
 
 #GENERATE CENTER DOT
-dot = genDisplay('.', 0, 1.1, 3, [.207,1,.259])
+dot = genDisplay('.', 0, 1.1, 4, [.207,1,.259])
 
 #RANDOMIZE SIZES, LOOP THROUGH
 #shuffle(sizes)
@@ -249,7 +248,7 @@ for dir in directions:
                 displayText.draw()
                 win.callOnFlip(keyPress.clearEvents, eventType='keyboard')
                 win.flip()
-                theseKeys = event.waitKeys(maxWait = 0.1, keyList = keys, clearEvents = False)
+                theseKeys = event.waitKeys(maxWait = 0.025, keyList = keys, clearEvents = False)
                 if theseKeys:
                     break
             

@@ -41,6 +41,11 @@ datadlg = gui.Dlg(title='Record Data?', pos=None, size=None, style=None, labelBu
 ok_data = datadlg.show()
 recordData = datadlg.OK
 
+#Y/N INPUT DIALOGUE FOR GLASSES
+datadlg = gui.Dlg(title='Does the subject wear glasses?', pos=None, size=None, style=None, labelButtonOK=' Yes ', labelButtonCancel=' No ', screen=-1)
+ok_data = datadlg.show()
+glasses = datadlg.OK
+
 if recordData:
     #OUTPUT FILE PATH
     PATH = 'C:\\Users\\chand\\OneDrive\\Documents\\GitHub\\Elegant-Mind-Collaboration\\Crowded Center'
@@ -70,7 +75,7 @@ mon.setWidth(200)
 win = visual.Window(
     size=(3840, 2160), fullscr=False, screen=-1, 
     winType='pyglet', allowGUI=True, allowStencil=False,
-    monitor= mon, color='white', colorSpace='rgb',
+    monitor= mon, color='grey', colorSpace='rgb',
     blendMode='avg', useFBO=True, 
     units='cm')
 
@@ -80,17 +85,22 @@ keyPress = keyboard.Keyboard()
 
 #EXPERIMENTAL VARIABLES
 letters = list("EPB")
-anglesH = [10, 20, 30, 40, 50]
-anglesV = [0, 10, 20, 30, 40]
-directions = [0, 1, 2, 3]
+anglesH = [10, 15, 20, 25, 30, 35, 40]
+anglesV = [10, 15, 20, 25, 30]
+directionsG = [0, 2]
+directionsNG = [0, 1, 2, 3]
 foveaRadius = 7 #cm
-distToScreen = 35 #cm
+distToScreen = 50 #cm
+
+if glasses:
+    directions = directionsG
+else:
+    directions = directionsNG
 
 #SPACING ADJUSTMENTS FOR TEXT DISPLAY
 dirXMult = [1.62, 0, -1.68, 0]
 dirYMult = [0, -1.562, 0, 1.748]
 yOffset = [0.2, 0, 0.2, 0]
-iAngle = [9, 9, 9, 9, 9, 9, 9, 10]
 dirSpacer = [0.1, 0.5, 0, 0]
 
 #GENERATE TEXT STIM 
@@ -103,6 +113,102 @@ def genDisplay(text, xPos, yPos, height, colour):
     languageStyle='LTR',
     depth=0.0)
     return displayText
+
+#CONVERT DEGREE INPUT TO DISTANCE IN CENTIMETERS
+def angleCalc(angle):
+    radians = math.radians(angle)
+    spacer = (math.tan(radians)*50)
+    return spacer
+    
+#CALCULATE DISPLAY COORDINATES AND HEIGHT OF STIMULI
+def displayVariables(angle, dir, size):
+    #DISPLAY HEIGHT AND DISTANCE FROM CENTER IN CENTIMETERS
+    heightCm = (angleCalc(size)*2.3378)
+    angleCm = angleCalc(angle)
+    #X AND Y DISPLAY COORDINATES
+    xPos = (dirXMult[dir]*angleCm) 
+    yPos = (dirYMult[dir]*angleCm) + yOffset[dir]
+    #ADJUSTMENT TO CENTER CHARACTER
+    if angle == 0 and dir%2 != 0:
+        yPos += 0.2
+    return heightCm, angleCm, xPos, yPos
+    
+def genArray(size, heightCm, centerChar):
+    spacer = (size*1.4)*1.8
+    diameter = angleCalc(foveaRadius) * 2
+    
+    rows = int(diameter/heightCm) * 2
+    if rows%2 == 0:
+        rows = rows+1
+    cols = (rows*2)+1
+    
+    centerRow = int((rows-1)/2)
+    centerCol = int((cols-1)/2)
+    
+    for i in range(rows):
+        yCoord = spacer*(centerRow - i)
+        
+        line = list(range(0))
+        for j in range(cols):
+            if((i == centerRow) and j == centerCol):
+                char = centerChar
+            else:
+                char = random.choice(letters)
+            line.append(char)
+        line = ''.join(line)
+        lineDisplay = genDisplay(line, 0, yCoord, heightCm, 'white')
+        lineDisplay.draw()
+
+def findQuadrant(i, points, interval, slice):
+    slice = slice + 1
+    xSign = ySign = 1
+    if slice == 3 or slice == 4:
+        xSign = -1
+    if slice == 2 or slice == 3:
+        ySign = -1
+    if i in range(int(interval*(slice-1)), int(interval*slice)):
+        return slice, interval, xSign, ySign
+    else:
+        return findQuadrant(i, points, interval, slice)
+
+def genMask(points):
+    radius = angleCalc(foveaRadius)
+    
+    maskVerts = list(range(0))
+    interval = points/4
+    
+    for i in range(2):
+        
+        vertices = list(range(0))
+        count = 0
+        
+        for i in range(points):
+            
+            quadrant, interval, xSign, ySign = findQuadrant(i, points, interval, 0)
+            
+            x = ((radius/interval)*count)
+            y = (math.sqrt((radius**2)-(x**2)))
+            if int(x) == 0:
+                x = 0.01
+            if int(y) == 0:
+                y = 0.01
+            x = round(x,2)*xSign
+            y = round(y,2)*ySign
+            
+            vertex = tuple([x,y])
+            vertices.append(vertex)
+            
+            if quadrant == 1 or quadrant == 3:
+                count = count + 1
+            else:
+                count = count - 1
+                
+        maskVerts.append(vertices)
+        radius = radius*15
+        
+    mask = ShapeStim(win, vertices = maskVerts, fillColor = 'grey', lineWidth = 0, size = 1, units = 'cm', pos = (0,0))
+    
+    return mask
 
 #STAIRCASE ALGORITHM TO DETERMINE MINIMUM LEGIBLE SIZE
 def stairCase(thisResponse, numReversals, totalReversals, size, angle, stairCaseCompleted, lastResponse, responses):
@@ -132,161 +238,27 @@ def stairCase(thisResponse, numReversals, totalReversals, size, angle, stairCase
         
     return stairCaseCompleted, size, numReversals, totalReversals, thisResponse, responses
 
-#CONVERT DEGREE INPUT TO DISTANCE IN CENTIMETERS
-def angleCalc(angle):
-    radians = math.radians(angle)
-    spacer = (math.tan(radians)*35)
-    return spacer
-
-#ROUND NUMBER OF ROWS OR COLUMNS TO AN ODD NUMBER THAT MOST CLOSELY FITS THE RADIUS OF THE FOVEA
-def rounder(num):
-    if ( (num >= 1) and ( (num % int(num)) > 0.5) ):
-        if((int(num) % 2) == 0):
-            num = int(num) + 3
-        else:
-            num = int(num) + 1
-    else:
-        if((int(num) % 2) == 0):
-            num = int(num) + 1
-        else:
-            num = int(num)
-    return num
-
-def spacer(size, heightCm):
-    #TODO: add in some y=mx+b bullshit right here
-    
-    spacerH = size + (size*0.6)
-    spacerV = heightCm*1.18
-    
-    return spacerH, spacerV
-
-#CALCULATE THE NUMBER OF ROWS TO FILL THE FOVEA (radius of 7°) AT THIS LETTER SIZE
-def grid(size, heightCm):
-    spacerH, spacerV = spacer(size, heightCm)
-    diameter = angleCalc(foveaRadius)*2
-    rows = rounder(diameter/spacerV)
-    print("Rows (from grid function): ", rows)
-    return rows, spacerV, spacerH
-
-#CALCULATE THE NUMBER OF CHARACTERS ON A SPECIFIC ROW OF THE CENTER GRID
-def charsThisRow(height, row, yCoord, spacerH):
-    radius = angleCalc(foveaRadius)
-    adjacent = abs(yCoord)
-    print("Radius: ", radius, "adjacent: ", adjacent, "spacerH: ", spacerH)
-    
-    length = (math.sqrt(abs((radius**2) - (adjacent**2)))*2)
-    
-    print("Length (from charsThisRow function: ",length)
-    chars = rounder(length/spacerH)
-    print("Chars (from charsThisRow function): ",chars)
-    return chars
-
-#GENERATE AND DRAW CENTER DISPLAY
-def genCenter(size, heightCm, centerChar):
-
-    rows, spacerV, spacerH = grid(size, heightCm)
-    rows = (rows*2)-1
-    centerRow = (rows-1)/2
-    
-    for row in range(rows):
-        #FLIP IS 1 IF ROW < CENTER ROW, 0 IF ROW = CENTER ROW, AND 1 IF ROW > CENTER ROW
-        flip = -1 + (2 * (row > centerRow)) + (1 * (row == centerRow))
-        #DISPLAY COORDINATE FOR THAT ROW IS CALCULATED BY MULTIPLYING THE ROW NUMBER BY THE VERTICAL SPACER, AND THE SIGN IS DETERMINED BY FLIP
-        yCoord = (flip * ( spacerV * abs(centerRow - row) ) )
-        print("yCoord: ", yCoord)
-        chars = charsThisRow(heightCm, row, yCoord, spacerH)
-        chars = chars*2
-        print("row: ", row, "chars: ", chars, "flip: ", flip)
-        #POPULATES A LIST OF LENGTH (CHARS) WITH RANDOM LETTERS (E/P/B)
-        thisLine = ''
-        thisList = ['']*chars
-        for char in range(chars):
-            letter = random.choice(letters)
-            thisList[char] = letter
-            if(row == centerRow and char == (((chars-1)/2))):
-                centerChar = letter
-        #CONVERT LIST TO ARRAY
-        thisLine = ''.join(thisList)
-        thisLine.strip()
-        #GENERATE AND DRAW TEXT STIM
-        lineDisplay = genDisplay(thisLine, 0, yCoord, heightCm, 'black')
-        lineDisplay.draw()
-        #time.sleep(1)
-    #OVERLAY THE CENTER CHARACTER OF THE ARRAY WITH A GREEN COPY
-    centerDisplay = genDisplay(centerChar, 0, 0, heightCm, 'green')
-    centerDisplay.draw()
-    return centerChar
-    
-
-#CALCULATE DISPLAY COORDINATES AND HEIGHT OF STIMULI
-def displayVariables(angle, dir, size):
-    #DISPLAY HEIGHT AND DISTANCE FROM CENTER IN CENTIMETERS
-    #*2.3378
-    heightCm = (angleCalc(size)*2.3378)
-    angleCm = angleCalc(angle)
-    #X AND Y DISPLAY COORDINATES
-    xPos = (dirXMult[dir]*angleCm) 
-    yPos = (dirYMult[dir]*angleCm) + yOffset[dir]
-    #ADJUSTMENT TO CENTER CHARACTER
-    if angle == 0 and dir%2 != 0:
-        yPos += 0.2
-    return heightCm, angleCm, xPos, yPos
-    
-def genMask():
-    radius = angleCalc(foveaRadius)
-    
-    vertices = list(range(0))
-    count = 0
-    for i in range(60):
-        
-        x = radius/(15-count)
-        y = math.sqrt((radius**2) - (x**2))
-        xS = 1 - (2*(i > 29))
-        yS = 1 - (2*((i >= 15) and (i < 45)))
-        count = count+1
-        if count == 15:
-            count = 0
-        vertex = tuple([(xS*x),(yS*y)])
-        vertices.append(vertex)
-        
-    edges = [(-100, 100),(100,100),(100,-100),(-100,-100)]
-    maskVerts = list(range(0))
-    maskVerts.append(vertices)
-    maskVerts.append(edges)
-    #maskVerts = [vertices, edges]
-    print(maskVerts[1])
-    #mask = ShapeStim(win, vertices = maskVerts, fillColor = 'grey', lineWidth = 0, size = 1, units = 'cm', pos = (0,0))
-    mask = ShapeStim(win, vertices=maskVerts, fillColor='grey', lineWidth=0, size=1, pos=(0, 0))
-    #donut = ShapeStim(win, vertices=donutVert, fillColor='orange', lineWidth=0, size=.75, pos=(-.2, -.25))
-    mask.draw()
-
 #DISPLAY INSTRUCTIONS FOR CHINREST ALIGNMENT
-instructions = genDisplay('  Align the edge of the headrest stand \nwith the edge of the tape marked 35cm \n\n       Press Spacebar to continue', 0, 0, 5, 'black')
+instructions = genDisplay('  Align the edge of the headrest stand \nwith the edge of the tape marked 50cm \n\n       Press Spacebar to continue', 0, 0, 5, 'white')
 instructions.draw()
 win.flip()
 theseKeys = event.waitKeys(keyList = ['space', 'escape'], clearEvents = False)
 if theseKeys[0] == 'escape':
     endExp()
+    
 #DISPLAY INSTRUCTIONS FOR CHINREST ALIGNMENT
-instructions = genDisplay('  Press Enter if the character matches \nthe green center character, and spacebar\nif they do not match \n\n       Press Spacebar to continue', 0, 0, 5, 'black')
+instructions = genDisplay('  Press M if the character matches \n  the green center character, and Z\n         if they do not match \n\n      Press Spacebar to continue', 0, 0, 5, 'white')
 instructions.draw()
 win.flip()
 theseKeys = event.waitKeys(keyList = ['space', 'escape'], clearEvents = False)
 if theseKeys[0] == 'escape':
     endExp()
 
-#GENERATE CENTER DOT
-dot = genDisplay('.', 0, 1.1, 3, 'red')
+dot = genDisplay('.', 0, 1.1, 4, [.207,1,.259])
 
-#RANDOMIZE SIZES, LOOP THROUGH 
-#shuffle(sizes)
-#for size in sizes:
 shuffle(directions)
 for dir in directions:
     
-    #RANDOMIZE DIRECTIONS, LOOP THROUGH
-    #shuffle(directions)
-    #for dir in directions:
     if(dir == 0 or dir == 2):
         angles = anglesH
     else:
@@ -296,41 +268,71 @@ for dir in directions:
     for angle in angles:
         
         #INITIALIZE TRIAL VARIABLES
-        #size = angle/10
-        size = 4
+        size = angle/10
+        size = 3
         if(size == 0):
             size = 1
+            
         numReversals = 0
+        totalReversals = 0
         responses = 0
         lastResponse = False
         stairCaseCompleted = False
         
         while not stairCaseCompleted:
             
+            win.clearBuffer()
             #CHOOSE RANDOM STIM LETTER, CALCULATE COORDINATES AND HEIGHT, GENERATE STIM
             letter = random.choice(letters)
+            
+            matching = random.randint(0,1)
+            
+            if matching == 1:
+                centerChar = letter
+            else:
+                centerChar = random.choice(letters)
+                
+            if centerChar == letter:
+                match = True
+            else:
+                match = False
+            
             heightCm, angleCm, xPos, yPos = displayVariables(angle, dir, size)
-            displayText = genDisplay(letter, xPos, yPos, heightCm, 'black')
-            print("size: ", size, "heightcm: ", heightCm)
-            #DISPLAY BLANK SCREEN WITH DOT ON FIRST FLIP
+            displayText = genDisplay(letter, xPos, yPos, heightCm, 'white')
+            
             if responses == 0:
                 dot.draw()
                 win.flip()
+                win.clearBuffer()
             
             time.sleep(0.5)
-            #mask = genMask()
-            #mask.draw()
-            genMask()
-            #DRAW STIMULI, DOT, AND CENTER ARRAY, CLEAR KEYPRESS LOG
-            dot.draw()
-            centerChar = 'B'
-            centerChar = genCenter(size, heightCm, centerChar)
-            displayText.draw()
-            win.callOnFlip(keyPress.clearEvents, eventType='keyboard')
-            win.flip()
             
-            #SUSPEND EXECUTION UNTIL KEYPRESS
-            theseKeys = event.waitKeys(keyList = ['space', 'enter', 'escape'], clearEvents = False)
+            genArray(size, heightCm, centerChar)
+            
+            mask = genMask(60)
+            mask.draw()
+            displayText.draw()
+            
+            flash = 0
+            while 1:
+                flash = (flash == 0)
+                
+                if flash:
+                    centerCharDisplay = genDisplay(centerChar, 0, 0, heightCm, [.207,1,.259])
+                    centerCharDisplay.draw()
+                else:
+                    centerCharDisplay = genDisplay(centerChar, 0, 0, heightCm, 'white')
+                    centerCharDisplay.draw()
+                    
+                win.callOnFlip(keyPress.clearEvents, eventType='keyboard')
+                
+                win.flip(clearBuffer = False)
+                
+                theseKeys = event.waitKeys(maxWait = 0.05, keyList = ['z', 'm', 'escape'], clearEvents = False)
+                
+                if theseKeys:
+                    break
+            
             
             #STOP SCRIPT IF ESCAPE IS PRESSED
             if theseKeys[0] == 'escape':
@@ -339,9 +341,9 @@ for dir in directions:
             #IF TARGET LETTER == CENTER LETTER, ENTER = CORRECT; IF TARGET LETTER != CENTER LETTER, SPACE = CORRECT
             match = (letter == centerChar)
             if match:
-                thisResponse = (theseKeys[0] == 'enter')
+                thisResponse = (theseKeys[0] == 'm')
             else:
-                thisResponse = (theseKeys[0] == 'space')
+                thisResponse = (theseKeys[0] == 'z')
             
             #CALL STAIRCASE ALGORITHM
             stairCaseCompleted, size, numReversals, totalReversals, lastResponse, responses = stairCase(thisResponse, numReversals, totalReversals, size, angle, stairCaseCompleted, lastResponse, responses)
