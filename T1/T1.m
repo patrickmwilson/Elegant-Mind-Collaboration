@@ -20,7 +20,8 @@ cols = [200, 150, 151, 99, 76, 60, 51, 43, 38, 30, 25, 22, 19, 17, 15];
 center = [7582, 5092, 4513, 1969, 1209, 775, 556, 427, 340, 208, 148, 108, 73, 66, 76];
 charactersPerSize = [15074, 9966, 8850, 3850, 2400, 1500, 1050, 800, 625, 375, 259, 206, 151, 125, 127];
 letters = 'EPB';
-
+green = [0 1 0];
+red = [1 0 0];
 
 %HARDCODED TEXT ARRAY DISPLAY COORDINATES
 arrayHorizontalStart = [850, 601, -4, -8, -30, -31, -46, -32, -66, -70, -7, -115, -43, -60, -20];
@@ -50,11 +51,16 @@ dirTextXPos = [1278, 1277, 1275, 1275, 1274, 1274, 1274, 1274, 1274, 1274, 1274,
 dirTextYPos = [722, 724, 725, 725, 727, 727, 727, 727, 727, 727, 727, 727, 727, 727, 727];
 
 %Y/N INPUT DIALOGUE FOR DATA RECORDING
-recordData = true;
 dataAnswer = questdlg('Record Data?', '', 'Yes', 'No', 'Cancel', 'Yes');
-if(char(dataAnswer(1)) == 'N')
-    recordData = false;
-end
+recordData = (char(dataAnswer(1)) == 'Y');
+
+%Y/N INPUT DIALOGUE FOR KEY REMAPPING
+dataAnswer = questdlg('Remap Keys?', '', 'Yes', 'No', 'Cancel', 'Yes');
+remap = (char(dataAnswer(1)) == 'Y');
+
+%Y/N INPUT DIALOGUE FOR GLASSES
+dataAnswer = questdlg('Does the subject wear glasses?', '', 'Yes', 'No', 'Cancel', 'Yes');
+glasses = (char(dataAnswer(1)) == 'Y');
 
 %OPEN NEW FOLDER, SET CSV NAME
 if(recordData)
@@ -103,10 +109,11 @@ screenNumber = 2;
 %DEFINE BLACK AND WHITE
 black = BlackIndex(screenNumber);
 white = WhiteIndex(screenNumber);
+gray=GrayIndex(screenNumber,0.3);
 
 %OPEN WHITE ON-SCREEN WINDOW
 grey = [.39 .39 .39];
-[window, windowRect] = PsychImaging('OpenWindow', screenNumber, grey);
+[window, windowRect] = PsychImaging('OpenWindow', screenNumber, gray);
 Screen('BlendFunction', window, 'GL_SRC_ALPHA', 'GL_ONE_MINUS_SRC_ALPHA');
 %ANTI-ALIASING
 Screen('BlendFunction', window, 'GL_SRC_ALPHA', 'GL_ONE_MINUS_SRC_ALPHA');
@@ -124,6 +131,9 @@ calibrationAngles = [ -20, -15, -10, -5, 0, 5, 10, 15, 20 ];
 calibrationXCoords = [ 896, 997, 1095, 1189, 1280, 1371, 1466, 1564, 1665 ];
 instructionText = 'Focus your eyes on the green dot and press any key once you have done so. Press any key to begin.';
 
+directionsG = [1, 2];
+directionsNG = [1, 2, 3, 4];
+
 for trialNum = 1:trials
     
     %GENERATE RANDOMIZED SIZE ARRAY
@@ -139,11 +149,17 @@ for trialNum = 1:trials
         centerRect = SetRect(centerRectXStart(size),centerRectYStart(size),centerRectXEnd(size),centerRectYEnd(size));
         
         %GENERATE RANDOMIZED DIRECTION ARRAY
-        directions = randperm(4,4);
+        if glasses
+            directions = directionsG(randperm(length(directionsG)));
+            directionCap = 2;
+        else
+            directions = directionsNG(randperm(length(directionsNG)));
+            directionCap = 4;
+        end
         directionIndex = 1;
         
         %LOOP THROUGH RANDOMIZED DIRECTION ARRAY
-        while(directionIndex <= 4)
+        while(directionIndex <= directionCap)
             numCorrect = 0;
             
             %SET DIRECTION
@@ -190,11 +206,11 @@ for trialNum = 1:trials
                 %DRAW TEXT ARRAY
                 wrappedString=WrapString(textArray,500);
                 Screen('TextSize', window, tS(size));
-                DrawFormattedText(window, wrappedString, arrayHorizontalStart(size), arrayVerticalStart(size), black);
+                DrawFormattedText(window, wrappedString, arrayHorizontalStart(size), arrayVerticalStart(size), white);
                 %DRAW CENTER MASKING RECTANGLE
-                Screen('FillRect', window, [], centerRect);
+                Screen('FillRect', window, gray, centerRect);
                 %DRAW CENTER DOT
-                Screen('DrawDots', window, [dotXPos(size) dotYPos(size)], dotSizePix(size), [0 1 0], [], 2);
+                Screen('glPoint', window, green, dotXPos(size), dotYPos(size), dotSizePix(size));
                 %DRAW DIRECTION INDICATOR
                 Screen('TextSize', window, dirTS(size));
                 DrawFormattedText(window, dirText(direction), dirTextXPos(size), dirTextYPos(size), black);
@@ -203,30 +219,45 @@ for trialNum = 1:trials
                 %WAIT FOR KEYPRESS
                 [secs, keyCode, deltaSecs] = KbWait();
 
-                %DISPLAY GREEN DOT TO INDICATE 0.5 SECOND WAIT PERIOD BEFORE
+                %DISPLAY RED DOT TO INDICATE 0.5 SECOND WAIT PERIOD BEFORE
                 %NEXT KEYPRESS
                 wrappedString=WrapString(textArray,500);
                 Screen('TextSize', window, tS(size));
-                DrawFormattedText(window, wrappedString, arrayHorizontalStart(size), arrayVerticalStart(size), black);
-                Screen('FillRect', window, [], centerRect);
-                Screen('DrawDots', window, [dotXPos(size) dotYPos(size)], dotSizePix(size), [1 0 0], [], 2);
+                DrawFormattedText(window, wrappedString, arrayHorizontalStart(size), arrayVerticalStart(size), white);
+                Screen('FillRect', window, gray, centerRect);
+                Screen('glPoint', window, red, dotXPos(size), dotYPos(size), dotSizePix(size));
                 Screen('TextSize', window, dirTS(size));
                 DrawFormattedText(window, dirText(direction), dirTextXPos(size), dirTextYPos(size), black);
                 Screen('Flip', window);
                 WaitSecs(0.5);
                 
                 %CHECK KEYBOARD INPUT
-                if keyCode(66) == 1 % B
-                    key = 'B';
-                elseif keyCode(69) == 1 % E 
-                    key = 'E';
-                elseif keyCode(80) == 1 % P
-                    key = 'P';
-                elseif keyCode(27) == 1 % ESC 
-                    sca; %CLEAR SCREEN IF ESC IS PRESSED
-                    return; 
+                if remap
+                    if keyCode(90) == 1 % Z
+                        key = 'E';
+                    elseif keyCode(88) == 1 % X
+                        key = 'B';
+                    elseif keyCode(78) == 1 % N
+                        key = 'P';
+                    elseif keyCode(27) == 1 % ESC 
+                        sca; %CLEAR SCREEN IF ESC IS PRESSED
+                        return; 
+                    else
+                        key = 'Q';
+                    end
                 else
-                    key = 'Q';
+                    if keyCode(66) == 1 % B
+                        key = 'B';
+                    elseif keyCode(69) == 1 % E 
+                        key = 'E';
+                    elseif keyCode(80) == 1 % P
+                        key = 'P';
+                    elseif keyCode(27) == 1 % ESC 
+                        sca; %CLEAR SCREEN IF ESC IS PRESSED
+                        return; 
+                    else
+                        key = 'Q';
+                    end
                 end
                 
                 %CONVERT TEXTARRAY TO CHAR, INDEX CURRENT CHAR
@@ -260,7 +291,7 @@ for trialNum = 1:trials
                         fileID = fopen(csvName, 'a');
                         fprintf(fileID, '%s, %d, %4.2f, %4.2f\n', dir, numCorrect, eccentricity, letterHeightDeg);
                     end
-
+                    
                     directionIndex = directionIndex + 1;
                     break;
                 end
@@ -269,15 +300,20 @@ for trialNum = 1:trials
         %5 SECOND BREAK BETWEEN TEXT SIZES
         if(sizeIndex ~= 8)
             Screen('TextSize', window, 25);
-            DrawFormattedText(window, '5 Second Break', halfX, halfY, black);
-            Screen('Flip', window);
-            WaitSecs(5);
+            for i = 1:5
+                seconds = int2str(6-i);
+                DrawFormattedText(window, 'Break', halfX, (halfY-30), white);
+                DrawFormattedText(window, 'Seconds', (halfX + 5), halfY, white);
+                DrawFormattedText(window, seconds, (halfX-15), halfY, white);
+                Screen('Flip', window);
+                WaitSecs(1);
+            end
         end
     end
     %BREAK UNTIL KEYPRESS BETWEEN TRIALS
     if(trialNum ~= trials)
         Screen('TextSize', window, 25);
-        DrawFormattedText(window, 'Break (Press Any Key to Continue)', halfX, halfY, black);
+        DrawFormattedText(window, 'Break (Press Any Key to Continue)', halfX, halfY, white);
         Screen('Flip', window);
         [secs, keyCode, deltaSecs] = KbWait();
         WaitSecs(2);
@@ -286,7 +322,7 @@ end
 
 %END, WAIT 5 SECONDS BEFORE CLEARING SCREEN
 Screen('TextSize', window, 25);
-DrawFormattedText(window, 'DONE!', halfX, halfY, black);
+DrawFormattedText(window, 'DONE!', halfX, halfY, white);
 Screen('Flip', window);
 WaitSecs(5);
 

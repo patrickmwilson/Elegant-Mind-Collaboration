@@ -187,9 +187,9 @@ def checkResponse(response, letter):
     key = '0'
     if(remap):
         if response[0] == 'z':
-            key = 'b'
-        elif response[0] == 'x':
             key = 'e'
+        elif response[0] == 'x':
+            key = 'b'
         elif response[0] == 'n':
             key = 'p'
         elif response[0] == 'm':
@@ -277,5 +277,16 @@ for dir in directions:
                 #CSV OUTPUT
                 if recordData:
                     csvOutput([direction, size, angle])
+    for i in range(10):
+        win.clearBuffer()
+        seconds = str(10-i)
+        breakText = genDisplay('Break', 0, 0, 5, 'white')
+        secondText = genDisplay('Seconds', +2, -5, 5, 'white')
+        numText = genDisplay(seconds, -11, -5, 5, 'white')
+        breakText.draw()
+        secondText.draw()
+        numText.draw()
+        win.flip()
+        time.sleep(1)
 
 endExp()
