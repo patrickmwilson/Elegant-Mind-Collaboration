@@ -55,7 +55,7 @@ if recordData:
     _thisDir = os.path.dirname(os.path.abspath(__file__))
     os.chdir(_thisDir)
     #STORE INFO ABOUT EXPERIMENT SESSION
-    expName = 'Crowded Center Flipped V2'
+    expName = 'Crowded Center Circle'
     date = data.getDateStr(format='%m-%d') 
     expInfo = {'Participant': ''}
     
@@ -137,10 +137,10 @@ def genArray(size, heightCm, centerChar):
     spacer = (size*1.4)*1.3
     diameter = angleCalc(foveaRadius) * 2
     
-    rows = 3
+    rows = int(diameter/heightCm) * 2
     if rows%2 == 0:
         rows = rows+1
-    cols = 3
+    cols = (rows*2)+1
     
     centerRow = int((rows-1)/2)
     centerCol = int((cols-1)/2)
@@ -237,7 +237,6 @@ def stairCase(thisResponse, numReversals, totalReversals, size, angle, stairCase
         stairCaseCompleted = True
         
     return stairCaseCompleted, size, numReversals, totalReversals, thisResponse, responses
-    
 
 #DISPLAY INSTRUCTIONS FOR CHINREST ALIGNMENT
 instructions = genDisplay('  Align the edge of the headrest stand \nwith the edge of the tape marked 50cm \n\n       Press Spacebar to continue', 0, 0, 5, 'white')
@@ -310,8 +309,8 @@ for dir in directions:
             
             genArray(size, heightCm, centerChar)
             
-            #mask = genMask(60)
-            #mask.draw()
+            mask = genMask(60)
+            mask.draw()
             displayText.draw()
             
             flash = 0
@@ -356,9 +355,9 @@ for dir in directions:
                 if recordData:
                     csvOutput([direction, size, angle])
                     
-    for i in range(30):
+    for i in range(10):
         win.clearBuffer()
-        seconds = str(30-i)
+        seconds = str(10-i)
         breakText = genDisplay('Break', 0, 0, 5, 'white')
         secondText = genDisplay('Seconds', +2, -5, 5, 'white')
         numText = genDisplay(seconds, -11, -5, 5, 'white')
@@ -367,5 +366,6 @@ for dir in directions:
         numText.draw()
         win.flip()
         time.sleep(1)
+        
 
 endExp()
