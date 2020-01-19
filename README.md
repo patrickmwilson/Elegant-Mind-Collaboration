@@ -1,4 +1,4 @@
-# Elegant-Mind-Collaboration
+# Visual-Acuity
 MATLAB/Python scripts written for the Elegant Mind Collaboration under Professor Katsushi Arisaka, at UCLA
 
 These are experiments coded to test visual acuity in human subjects under various conditions, to provide evidence for Professor Arisaka's theory about human processing of semantic visual information.
