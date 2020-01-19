@@ -59,7 +59,7 @@ if recordData:
     _thisDir = os.path.dirname(os.path.abspath(__file__))
     os.chdir(_thisDir)
     #STORE INFO ABOUT EXPERIMENT SESSION
-    expName = 'Crowded Periphery'
+    expName = 'Crowded Periphery Stripped'
     date = data.getDateStr(format='%m-%d') 
     expInfo = {'Participant': ''}
     
@@ -94,6 +94,7 @@ anglesV = [5, 10, 15, 20, 25, 30]
 directionsG = [0, 2]
 directionsNG = [0, 1, 2, 3]
 distToScreen = 50 #cm
+green = [.207,1,.259]
 
 if glasses:
     directions = directionsG
@@ -157,18 +158,6 @@ def angleCalc(angle):
     radians = math.radians(angle)
     spacer = (math.tan(radians)*distToScreen)
     return spacer
-    
-#GENERATE A RANDOMIZED 3X3 ARRAY OF LETTERS, RETURN CENTER LETTER
-def genArray():
-    array = ''
-    list = ['']*11
-    for i in range(11):
-        if i == 3 or i == 7:
-            list[i] = '\n'
-        else:
-            list[i] = random.choice(letters)
-    array = ''.join(list)
-    return array, list[5]
 
 #CALCULATE DISPLAY COORDINATES AND HEIGHT OF STIMULI
 def displayVariables(angle, dir):
@@ -183,6 +172,29 @@ def displayVariables(angle, dir):
         yPos += 0.2
     return heightCm, angleCm, xPos, yPos
     
+def genArray(size, heightCm, xPos, yPos):
+    spacer = (size*1.4)*1.3
+    
+    rows = 3
+    colsPerRow = [1, 3, 1]
+    
+    for i in range(rows):
+        yCoord = yPos + (spacer*(1 - i))
+        
+        line = list(range(0))
+        cols = colsPerRow[i]
+        for j in range(cols):
+            char = random.choice(letters)
+            line.append(char)
+            
+            if(i == 1 and j == 1):
+                centerChar = char
+            
+        line = ''.join(line)
+        lineDisplay = genDisplay(line, xPos, yCoord, heightCm, 'white')
+        lineDisplay.draw()
+    return centerChar
+
 def checkResponse(response, letter):
     key = '0'
     if(remap):
@@ -216,7 +228,6 @@ if remap:
     if theseKeys[0] == 'escape':
         endExp()
 
-#GENERATE CENTER DOT
 dot = genDisplay('.', 0, 1.1, 4, [.207,1,.259])
 
 shuffle(directions)
@@ -241,25 +252,28 @@ for dir in directions:
         
         while not stairCaseCompleted:
             
-            #GENERATE NEW STIMULI
-            array, letter = genArray()
-            heightCm, angleCm, xPos, yPos = displayVariables(angle, dir)
-            displayText = genDisplay(array, xPos, yPos, heightCm, 'white')
+            win.clearBuffer()
             
             if responses == 0:
                 dot.draw()
                 win.flip()
-            
             time.sleep(0.5)
+            
+            #GENERATE NEW STIMULI
+            heightCm, angleCm, xPos, yPos = displayVariables(angle, dir)
+            centerChar = genArray(size, heightCm, xPos, yPos)
             
             flash = 0
             while 1:
                 flash = (flash == 0)
                 if flash:
+                    dot = genDisplay('.', 0, 1.1, 4, green)
                     dot.draw()
-                displayText.draw()
+                else:
+                    dot = genDisplay('.', 0, 1.1, 4, 'grey')
+                    dot.draw()
                 win.callOnFlip(keyPress.clearEvents, eventType='keyboard')
-                win.flip()
+                win.flip(clearBuffer = False)
                 theseKeys = event.waitKeys(maxWait = 0.05, keyList = keys, clearEvents = False)
                 if theseKeys:
                     break
@@ -269,7 +283,7 @@ for dir in directions:
                 endExp()
             
             #CHECK KEYPRESS AGAINST TARGET LETTER
-            thisResponse = checkResponse(theseKeys, letter)
+            thisResponse = checkResponse(theseKeys, centerChar)
             
             #CALL STAIRCASE ALGORITHM
             stairCaseCompleted, size, numReversals, totalReversals, lastResponse, responses = stairCase(thisResponse, numReversals, totalReversals, size, stairCaseCompleted, lastResponse, responses)

@@ -83,11 +83,9 @@ if(recordData)
     
     %MAKE DIRECTORY, CREATE EYETRACKING AND DATA CSV
     folderName = 'Data';
-    innerFolderName = [coordinatorName underscore month dash day dash minute];
+    csvTitle = [coordinatorName underscore month dash day dash minute];
     mkdir(folderName);
-    cd(folderName);
-    mkdir(innerFolderName);
-    csvName = fullfile(innerFolderName, 'Data.csv');
+    csvName = fullfile(folderName, [csvTitle '_T1.csv']);
     printHeader = true;
     if(exist(csvName, 'file') == 2)
         printHeader = false;
@@ -99,7 +97,6 @@ if(recordData)
     end
     
 end
-
 
 %DEFAULT SETTINGS FOR PSYCHTOOLBOX
 PsychDefaultSetup(2);
@@ -130,6 +127,14 @@ halfY = 0.5 * screenYpixels;
 calibrationAngles = [ -20, -15, -10, -5, 0, 5, 10, 15, 20 ];
 calibrationXCoords = [ 896, 997, 1095, 1189, 1280, 1371, 1466, 1564, 1665 ];
 instructionText = 'Focus your eyes on the green dot and press any key once you have done so. Press any key to begin.';
+
+keyInstructions = '                        Keys Remapped \n Z = E, X = B, N = P, M = Do not know/Can not read \n                  Press any key to begin.';
+if remap
+    Screen('TextSize', window, 25);
+    DrawFormattedText(window, keyInstructions, (halfX-250), halfY, white);
+    Screen('Flip', window);
+    KbWait();
+end
 
 directionsG = [1, 2];
 directionsNG = [1, 2, 3, 4];

@@ -51,7 +51,7 @@ remap = datadlg.OK
 
 if recordData:
     #OUTPUT FILE PATH
-    PATH = 'C:\\Users\\chand\\OneDrive\\Documents\\GitHub\\Elegant-Mind-Collaboration\\Isolated Character'
+    PATH = 'C:\\Users\\chand\\OneDrive\\Desktop\\Visual-Acuity\\Isolated Character'
     OUTPATH = '{0:s}\\Data\\'.format(PATH)
     
     #CD TO SCRIPT DIRECTORY
@@ -187,25 +187,28 @@ def checkResponse(response, letter):
 
     
 #DISPLAY INSTRUCTIONS FOR CHINREST ALIGNMENT
-instructions = genDisplay('  Align the edge of the headrest stand \nwith the edge of the tape marked 50cm \n\n       Press Spacebar to continue', 0, 0, 5, 'black')
+instructions = genDisplay('  Align the edge of the headrest stand \nwith the edge of the tape marked 50cm \n\n       Press Spacebar to continue', 0, 0, 5, 'white')
 instructions.draw()
 win.flip()
 theseKeys = event.waitKeys(keyList = ['space', 'escape'], clearEvents = False)
 if theseKeys[0] == 'escape':
     endExp()
+    
+if remap:
+    #DISPLAY INSTRUCTIONS FOR REMAPPED KEYS
+    instructions = genDisplay('                           Keys Remapped\nZ = E, X = B, N = P, M = Do not know/can not read\n                 Press Spacebar to Continue', 0, 5, 5, 'white')
+    instructions.draw()
+    win.flip()
+    theseKeys = event.waitKeys(keyList = ['space', 'escape'], clearEvents = False)
+    if theseKeys[0] == 'escape':
+        endExp()
 
 #GENERATE CENTER DOT
 dot = genDisplay('.', 0, 1.1, 4, [.207,1,.259])
 
-#RANDOMIZE SIZES, LOOP THROUGH
-#shuffle(sizes)
-#for size in sizes:
 shuffle(directions)
 for dir in directions:
     
-    #RANDOMIZE DIRECTIONS, LOOP THROUGH
-    #shuffle(directions)
-    #for dir in directions:
     if(dir == 0 or dir == 2):
         angles = list(anglesH)
     else:
@@ -214,8 +217,6 @@ for dir in directions:
     shuffle(angles)
     for angle in angles:
         
-        #INITIALIZE TRIAL VARIABLES
-        #angle = 0
         size = angle/10
         if(size == 0):
             size = 1
@@ -257,10 +258,6 @@ for dir in directions:
             if theseKeys[0] == 'escape':
                 endExp()
                 
-            
-            #CHECK KEYPRESS AGAINST TARGET LETTER
-            #thisResponse = (letter.lower() == theseKeys[0])
-            
             thisResponse = checkResponse(theseKeys, letter)
             
             #CALL STAIRCASE ALGORITHM

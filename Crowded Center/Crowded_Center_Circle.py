@@ -48,7 +48,7 @@ glasses = datadlg.OK
 
 if recordData:
     #OUTPUT FILE PATH
-    PATH = 'C:\\Users\\chand\\OneDrive\\Documents\\GitHub\\Elegant-Mind-Collaboration\\Crowded Center'
+    PATH = 'C:\\Users\\chand\\OneDrive\\Desktop\\Visual-Acuity\\Crowded Center'
     OUTPATH = '{0:s}\\Data\\'.format(PATH)
     
     #CD TO SCRIPT DIRECTORY
@@ -313,26 +313,9 @@ for dir in directions:
             mask.draw()
             displayText.draw()
             
-            flash = 0
-            while 1:
-                flash = (flash == 0)
-                '''
-                if flash:
-                    centerCharDisplay = genDisplay(centerChar, 0, 0, heightCm, [.207,1,.259])
-                    centerCharDisplay.draw()
-                else:
-                    centerCharDisplay = genDisplay(centerChar, 0, 0, heightCm, 'white')
-                    centerCharDisplay.draw()
-                '''
-                win.callOnFlip(keyPress.clearEvents, eventType='keyboard')
-                
-                win.flip(clearBuffer = False)
-                
-                theseKeys = event.waitKeys(maxWait = 0.05, keyList = ['z', 'm', 'space', 'escape'], clearEvents = False)
-                
-                if theseKeys:
-                    break
+            win.flip()
             
+            theseKeys = event.waitKeys(keyList = ['z', 'm', 'space', 'escape'], clearEvents = False)
             
             #STOP SCRIPT IF ESCAPE IS PRESSED
             if theseKeys[0] == 'escape':

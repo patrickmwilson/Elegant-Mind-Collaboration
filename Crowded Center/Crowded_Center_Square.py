@@ -48,7 +48,7 @@ glasses = datadlg.OK
 
 if recordData:
     #OUTPUT FILE PATH
-    PATH = 'C:\\Users\\chand\\OneDrive\\Documents\\GitHub\\Elegant-Mind-Collaboration\\Crowded Center'
+    PATH = 'C:\\Users\\chand\\OneDrive\\Desktop\\Visual-Acuity\\Crowded Center'
     OUTPATH = '{0:s}\\Data\\'.format(PATH)
     
     #CD TO SCRIPT DIRECTORY
@@ -159,57 +159,6 @@ def genArray(size, heightCm, centerChar):
         lineDisplay = genDisplay(line, 0, yCoord, heightCm, 'white')
         lineDisplay.draw()
 
-def findQuadrant(i, points, interval, slice):
-    slice = slice + 1
-    xSign = ySign = 1
-    if slice == 3 or slice == 4:
-        xSign = -1
-    if slice == 2 or slice == 3:
-        ySign = -1
-    if i in range(int(interval*(slice-1)), int(interval*slice)):
-        return slice, interval, xSign, ySign
-    else:
-        return findQuadrant(i, points, interval, slice)
-
-def genMask(points):
-    radius = angleCalc(foveaRadius)
-    
-    maskVerts = list(range(0))
-    interval = points/4
-    
-    for i in range(2):
-        
-        vertices = list(range(0))
-        count = 0
-        
-        for i in range(points):
-            
-            quadrant, interval, xSign, ySign = findQuadrant(i, points, interval, 0)
-            
-            x = ((radius/interval)*count)
-            y = (math.sqrt((radius**2)-(x**2)))
-            if int(x) == 0:
-                x = 0.01
-            if int(y) == 0:
-                y = 0.01
-            x = round(x,2)*xSign
-            y = round(y,2)*ySign
-            
-            vertex = tuple([x,y])
-            vertices.append(vertex)
-            
-            if quadrant == 1 or quadrant == 3:
-                count = count + 1
-            else:
-                count = count - 1
-                
-        maskVerts.append(vertices)
-        radius = radius*15
-        
-    mask = ShapeStim(win, vertices = maskVerts, fillColor = 'grey', lineWidth = 0, size = 1, units = 'cm', pos = (0,0))
-    
-    return mask
-
 #STAIRCASE ALGORITHM TO DETERMINE MINIMUM LEGIBLE SIZE
 def stairCase(thisResponse, numReversals, totalReversals, size, angle, stairCaseCompleted, lastResponse, responses):
     responses += 1
@@ -282,7 +231,6 @@ for dir in directions:
         
         while not stairCaseCompleted:
             
-            win.clearBuffer()
             #CHOOSE RANDOM STIM LETTER, CALCULATE COORDINATES AND HEIGHT, GENERATE STIM
             letter = random.choice(letters)
             
@@ -304,36 +252,16 @@ for dir in directions:
             if responses == 0:
                 dot.draw()
                 win.flip()
-                win.clearBuffer()
             
             time.sleep(0.5)
             
             genArray(size, heightCm, centerChar)
-            
-            #mask = genMask(60)
-            #mask.draw()
             displayText.draw()
             
-            flash = 0
-            while 1:
-                flash = (flash == 0)
-                '''
-                if flash:
-                    centerCharDisplay = genDisplay(centerChar, 0, 0, heightCm, [.207,1,.259])
-                    centerCharDisplay.draw()
-                else:
-                    centerCharDisplay = genDisplay(centerChar, 0, 0, heightCm, 'white')
-                    centerCharDisplay.draw()
-                '''
-                win.callOnFlip(keyPress.clearEvents, eventType='keyboard')
+            win.callOnFlip(keyPress.clearEvents, eventType='keyboard')
+            win.flip()
                 
-                win.flip(clearBuffer = False)
-                
-                theseKeys = event.waitKeys(maxWait = 0.05, keyList = ['z', 'm', 'space', 'escape'], clearEvents = False)
-                
-                if theseKeys:
-                    break
-            
+            theseKeys = event.waitKeys(keyList = ['z', 'm', 'space', 'escape'], clearEvents = False)
             
             #STOP SCRIPT IF ESCAPE IS PRESSED
             if theseKeys[0] == 'escape':
