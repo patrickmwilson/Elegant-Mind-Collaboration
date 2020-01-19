@@ -98,7 +98,7 @@ def genDisplay(text, xPos, yPos, height, colour):
     pos=(xPos, yPos), height=height, wrapWidth=500, ori=0, 
     color=colour, colorSpace='rgb', opacity=1, 
     languageStyle='LTR',
-    depth=0.0);
+    depth=0.0)
     return displayText
 
 #STAIRCASE ALGORITHM TO DETERMINE MAXIMUM LEGIBLE ANGLE
@@ -134,7 +134,6 @@ def angleCalc(angle):
 chars = [3, 6, 8, 10, 8, 6, 3]
 yCoords = [9, 6, 3, 0, -3, -6, -9]
 def genCenter():
-    centerLines =[]
     for i in range(7):
         thisLine = ''
         thisList = ['']*chars[i]
