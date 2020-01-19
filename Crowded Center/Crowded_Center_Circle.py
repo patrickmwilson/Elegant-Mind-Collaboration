@@ -355,9 +355,9 @@ for dir in directions:
                 if recordData:
                     csvOutput([direction, size, angle])
                     
-    for i in range(10):
+    for i in range(30):
         win.clearBuffer()
-        seconds = str(10-i)
+        seconds = str(30-i)
         breakText = genDisplay('Break', 0, 0, 5, 'white')
         secondText = genDisplay('Seconds', +2, -5, 5, 'white')
         numText = genDisplay(seconds, -11, -5, 5, 'white')
