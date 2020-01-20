@@ -89,11 +89,11 @@ end
 
 cpT = table2array(table);
 
-cp = zeros(1,9);
-count = zeros(1,9);
+cp = zeros(1,5);
+count = zeros(1,5);
 
 for i = 1:size(cpT,1)
-    angle = (cpT(i,3)/5)+1;
+    angle = (cpT(i,3)/10)+1;
 
     cp(1,angle) = cp(1,angle) + cpT(i, 2);
     count(1,angle) = count(1,angle) + 1;
@@ -119,11 +119,11 @@ for i = 1:size(tcsvfiles,1)
 end
 
 icT = table2array(table);
-ic = zeros(1,9);
-count = zeros(1,9);
+ic = zeros(1,5);
+count = zeros(1,5);
 
 for i = 1:size(icT,1)
-    angle = (icT(i,3)/5)+1;
+    angle = (icT(i,3)/10)+1;
     
     ic(1,angle) = ic(1,angle) + icT(i, 2);
     count(1,angle) = count(1,angle) + 1;
