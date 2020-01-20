@@ -16,6 +16,7 @@ trials=3;
 
 %HARDCODED TEXT SIZES
 tS = [6, 13, 26, 39, 51, 64, 78, 91, 103, 130, 155, 181, 208, 235, 260];
+heights = [ 0.23, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 5, 6, 7, 8, 9, 10];
 cols = [200, 150, 151, 99, 76, 60, 51, 43, 38, 30, 25, 22, 19, 17, 15];
 center = [7582, 5092, 4513, 1969, 1209, 775, 556, 427, 340, 208, 148, 108, 73, 66, 76];
 charactersPerSize = [15074, 9966, 8850, 3850, 2400, 1500, 1050, 800, 625, 375, 259, 206, 151, 125, 127];
@@ -172,22 +173,18 @@ for trialNum = 1:trials
             
             %SET SPACER, OUTPUT TEXT, AND DISTANCE BASED ON DIRECTION
             if(direction == 1)
-                dir = 'Right';
                 distPerChar = distPerCharH(size);
                 spacer = 1;
             end
             if(direction == 2)
-                dir = 'Left';
                 distPerChar = distPerCharH(size);
                 spacer = -1;
             end
             if(direction == 3)
-                dir = 'Up';
                 distPerChar = distPerCharV(size);
                 spacer = -(cols(size)+2);
             end
             if(direction == 4)
-                dir = 'Down';
                 distPerChar = distPerCharV(size);
                 spacer = cols(size)+2;
             end
@@ -290,11 +287,11 @@ for trialNum = 1:trials
                 if(~correct)
                     %ECCENTRICITY CALCULATION & OUTPUT
                     eccentricity = atand((numCorrect*distPerChar)/(distToScreen));
-                    letterHeightDeg = atand((letterHeight(size))/(distToScreen));
+                    height = heights(size);
                     %DATA OUTPUT
                     if(recordData)
                         fileID = fopen(csvName, 'a');
-                        fprintf(fileID, '%s, %d, %4.2f, %4.2f\n', dir, numCorrect, eccentricity, letterHeightDeg);
+                        fprintf(fileID, '%d, %d, %4.2f, %4.2f\n', direction, numCorrect, eccentricity, height);
                     end
                     
                     directionIndex = directionIndex + 1;
