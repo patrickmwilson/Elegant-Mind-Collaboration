@@ -94,8 +94,10 @@ distToScreen = 50 #cm
 
 if glasses:
     directions = directionsG
+    dirCap = 2
 else:
     directions = directionsNG
+    dirCap = 4
 
 #SPACING ADJUSTMENTS FOR TEXT DISPLAY
 dirXMult = [1.62, 0, -1.68, 0]
@@ -256,6 +258,7 @@ if theseKeys[0] == 'escape':
 
 dot = genDisplay('.', 0, 1.1, 4, [.207,1,.259])
 
+directionIndex = 0
 shuffle(directions)
 for dir in directions:
     
@@ -338,17 +341,19 @@ for dir in directions:
                 if recordData:
                     csvOutput([direction, size, angle])
                     
-    for i in range(30):
-        win.clearBuffer()
-        seconds = str(30-i)
-        breakText = genDisplay('Break', 0, 0, 5, 'white')
-        secondText = genDisplay('Seconds', +2, -5, 5, 'white')
-        numText = genDisplay(seconds, -11, -5, 5, 'white')
-        breakText.draw()
-        secondText.draw()
-        numText.draw()
-        win.flip()
-        time.sleep(1)
+    directionIndex += 1
+    if directionIndex != dirCap:
+        for i in range(30):
+            win.clearBuffer()
+            seconds = str(30-i)
+            breakText = genDisplay('Break', 0, 0, 5, 'white')
+            secondText = genDisplay('Seconds', +2, -5, 5, 'white')
+            numText = genDisplay(seconds, -11, -5, 5, 'white')
+            breakText.draw()
+            secondText.draw()
+            numText.draw()
+            win.flip()
+            time.sleep(1)
         
 
 endExp()
