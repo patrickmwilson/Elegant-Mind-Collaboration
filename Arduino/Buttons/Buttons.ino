@@ -41,7 +41,7 @@ void loop() {
   }
   
   if(button != 0) {
-    Serial.print(button);
+    Serial.println(button);
     delay(500);
   }
 }
