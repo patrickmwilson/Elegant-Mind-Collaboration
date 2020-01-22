@@ -52,14 +52,14 @@ remap = datadlg.OK
 
 if recordData:
     #OUTPUT FILE PATH
-    PATH = 'C:\\Users\\chand\\OneDrive\\Desktop\\Visual-Acuity\\\\Crowded Periphery'
+    PATH = 'C:\\Users\\chand\\OneDrive\\Desktop\\Visual-Acuity\\Crowded Periphery'
     OUTPATH = '{0:s}\\Data\\'.format(PATH)
     
     #CD TO SCRIPT DIRECTORY
     _thisDir = os.path.dirname(os.path.abspath(__file__))
     os.chdir(_thisDir)
     #STORE INFO ABOUT EXPERIMENT SESSION
-    expName = 'Crowded Periphery Stripped'
+    expName = 'Crowded Periphery Outer'
     date = data.getDateStr(format='%m-%d') 
     expInfo = {'Participant': ''}
     
@@ -174,11 +174,26 @@ def displayVariables(angle, dir):
         yPos += 0.2
     return heightCm, angleCm, xPos, yPos
     
-def genArray(size, heightCm, xPos, yPos):
+def genArray(size, heightCm, xPos, yPos, direction):
     spacer = (size*1.4)*1.3
     
     rows = 3
     colsPerRow = [1, 3, 1]
+    
+    direction += 1
+    
+    if direction == 1:
+        outerRow = 1
+        outerCol = 2
+    elif direction == 2:
+        outerRow = 2
+        outerCol = 0
+    elif direction == 3:
+        outerRow = 1
+        outerCol = 0
+    elif direction == 4:
+        outerRow = 0
+        outerCol = 0
     
     for i in range(rows):
         yCoord = yPos + (spacer*(1 - i))
@@ -189,13 +204,13 @@ def genArray(size, heightCm, xPos, yPos):
             char = random.choice(letters)
             line.append(char)
             
-            if(i == 1 and j == 1):
-                centerChar = char
+            if(i == outerRow and j == outerCol):
+                outerChar = char
             
         line = ''.join(line)
         lineDisplay = genDisplay(line, xPos, yCoord, heightCm, 'white')
         lineDisplay.draw()
-    return centerChar
+    return outerChar
 
 def checkResponse(response, letter):
     key = '0'
@@ -264,7 +279,7 @@ for dir in directions:
             
             #GENERATE NEW STIMULI
             heightCm, angleCm, xPos, yPos = displayVariables(angle, dir)
-            centerChar = genArray(size, heightCm, xPos, yPos)
+            outerChar = genArray(size, heightCm, xPos, yPos, dir)
             
             flash = 0
             while 1:
@@ -286,7 +301,7 @@ for dir in directions:
                 endExp()
             
             #CHECK KEYPRESS AGAINST TARGET LETTER
-            thisResponse = checkResponse(theseKeys, centerChar)
+            thisResponse = checkResponse(theseKeys, outerChar)
             
             #CALL STAIRCASE ALGORITHM
             stairCaseCompleted, size, numReversals, totalReversals, lastResponse, responses = stairCase(thisResponse, numReversals, totalReversals, size, stairCaseCompleted, lastResponse, responses)
