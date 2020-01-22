@@ -20,10 +20,6 @@ from numpy.random import random, randint, normal, shuffle
 
 import os, sys, time, random, math, csv
 
-import serial
-
-ser = serial.Serial(port='COM3', baudrate = 9600, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE, bytesize=serial.EIGHTBITS, timeout=None)
-
 #CSVWRITER FUNCTION
 def csvOutput(output):
     with open(filename,'a', newline ='') as csvFile:
@@ -48,6 +44,10 @@ datadlg = gui.Dlg(title='Does the subject wear glasses?', pos=None, size=None, s
 ok_data = datadlg.show()
 glasses = datadlg.OK
 
+#Y/N INPUT DIALOGUE FOR KEY REMAPPING
+datadlg = gui.Dlg(title='Remap keys?', pos=None, size=None, style=None, labelButtonOK=' Yes ', labelButtonCancel=' No ', screen=-1)
+ok_data = datadlg.show()
+remap = datadlg.OK
 
 if recordData:
     #OUTPUT FILE PATH
@@ -101,6 +101,10 @@ else:
     directions = directionsNG
     dirCap = 4
     
+if remap:
+    keys = ['z', 'x', 'n', 'm', 'escape', 'space']
+else:
+    keys = ['e', 'p', 'b', 'escape', 'space']
 
 #SPACING ADJUSTMENTS FOR TEXT DISPLAY
 dirXMult = [1.62, 0, -1.68, 0]
@@ -167,32 +171,39 @@ def displayVariables(angle, dir, size):
         yPos += 0.2
     return heightCm, angleCm, xPos, yPos
 
-def checkResponse(button, letter):
+def checkResponse(response, letter):
     key = '0'
-
-    if button == 1:
-        key = 'e'
-    elif button == 2:
-        key = 'b'
-    elif button == 3:
-        key = 'p'
-    elif button == 4:
-        key = 'space'
+    if(remap):
+        if response[0] == 'z':
+            key = 'e'
+        elif response[0] == 'x':
+            key = 'b'
+        elif response[0] == 'n':
+            key = 'p'
+        elif response[0] == 'm':
+            key = 'space'
+    else:
+        key = response[0]
     
     return (key == letter.lower())
 
     
 #DISPLAY INSTRUCTIONS FOR CHINREST ALIGNMENT
-instructions = genDisplay('  Align the edge of the headrest stand \nwith the edge of the tape marked 50cm \n\n       Press Any button to continue', 0, 0, 5, 'white')
+instructions = genDisplay('  Align the edge of the headrest stand \nwith the edge of the tape marked 50cm \n\n       Press Spacebar to continue', 0, 0, 5, 'white')
 instructions.draw()
 win.flip()
-while(1):
-    if ser.in_waiting:
-        a = ser.readline()
-        break
-    else:
-        time.sleep(0.05)
+theseKeys = event.waitKeys(keyList = ['space', 'escape'], clearEvents = False)
+if theseKeys[0] == 'escape':
+    endExp()
     
+if remap:
+    #DISPLAY INSTRUCTIONS FOR REMAPPED KEYS
+    instructions = genDisplay('                           Keys Remapped\nZ = E, X = B, N = P, M = Do not know/can not read\n                 Press Spacebar to Continue', 0, 5, 5, 'white')
+    instructions.draw()
+    win.flip()
+    theseKeys = event.waitKeys(keyList = ['space', 'escape'], clearEvents = False)
+    if theseKeys[0] == 'escape':
+        endExp()
 
 #GENERATE CENTER DOT
 dot = genDisplay('.', 0, 1.1, 4, [.207,1,.259])
@@ -239,15 +250,18 @@ for dir in directions:
                 if flash:
                     dot.draw()
                 displayText.draw()
+                win.callOnFlip(keyPress.clearEvents, eventType='keyboard')
                 win.flip()
-                if ser.in_waiting:
-                    value = float(ser.readline().strip())
-                    button = int(value)
+                theseKeys = event.waitKeys(maxWait = 0.025, keyList = keys, clearEvents = False)
+                if theseKeys:
                     break
-                else:
-                    time.sleep(0.05)
+            
+            
+            #STOP SCRIPT IF ESCAPE IS PRESSED
+            if theseKeys[0] == 'escape':
+                endExp()
                 
-            thisResponse = checkResponse(button, letter)
+            thisResponse = checkResponse(theseKeys, letter)
             
             #CALL STAIRCASE ALGORITHM
             stairCaseCompleted, size, numReversals, totalReversals, lastResponse, responses = stairCase(thisResponse, numReversals, totalReversals, size, stairCaseCompleted, lastResponse, responses)

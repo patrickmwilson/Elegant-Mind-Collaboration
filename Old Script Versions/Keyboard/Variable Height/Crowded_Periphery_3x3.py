@@ -1,8 +1,9 @@
-#Isolated Character
-#Created by Patrick Wilson on 11/22/2019 
+#Crowded Periphery
+#Created by Patrick Wilson on 11/29/2019 
 #Github.com/patrickmwilson
 #Created for the Elegant Mind Collaboration at UCLA under Professor Katsushi Arisaka
 #Copyright © 2019 Elegant Mind Collaboration. All rights reserved.
+
 from __future__ import absolute_import, division
 
 import psychopy
@@ -19,10 +20,6 @@ from numpy import (sin, cos, tan, log, log10, pi, average,
 from numpy.random import random, randint, normal, shuffle
 
 import os, sys, time, random, math, csv
-
-import serial
-
-ser = serial.Serial(port='COM3', baudrate = 9600, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE, bytesize=serial.EIGHTBITS, timeout=None)
 
 #CSVWRITER FUNCTION
 def csvOutput(output):
@@ -48,17 +45,21 @@ datadlg = gui.Dlg(title='Does the subject wear glasses?', pos=None, size=None, s
 ok_data = datadlg.show()
 glasses = datadlg.OK
 
+#Y/N INPUT DIALOGUE FOR KEY REMAPPING
+datadlg = gui.Dlg(title='Remap keys?', pos=None, size=None, style=None, labelButtonOK=' Yes ', labelButtonCancel=' No ', screen=-1)
+ok_data = datadlg.show()
+remap = datadlg.OK
 
 if recordData:
     #OUTPUT FILE PATH
-    PATH = 'C:\\Users\\chand\\OneDrive\\Desktop\\Visual-Acuity\\Isolated Character'
+    PATH = 'C:\\Users\\chand\\OneDrive\\Desktop\\Visual-Acuity\\\\Crowded Periphery'
     OUTPATH = '{0:s}\\Data\\'.format(PATH)
     
     #CD TO SCRIPT DIRECTORY
     _thisDir = os.path.dirname(os.path.abspath(__file__))
     os.chdir(_thisDir)
     #STORE INFO ABOUT EXPERIMENT SESSION
-    expName = 'Isolated Character'
+    expName = 'Crowded Periphery'
     date = data.getDateStr(format='%m-%d') 
     expInfo = {'Participant': ''}
     
@@ -82,7 +83,7 @@ win = visual.Window(
     blendMode='avg', useFBO=True, 
     units='cm')
 
-#INITIALIZE DEFAULT KEYBOARD
+#CREATE DEFAULT KEYBOARD
 defaultKeyboard = keyboard.Keyboard()
 keyPress = keyboard.Keyboard()
 
@@ -100,13 +101,18 @@ if glasses:
 else:
     directions = directionsNG
     dirCap = 4
-    
+
+if remap:
+    keys = ['z', 'x', 'n', 'm', 'escape', 'space']
+else:
+    keys = ['e', 'p', 'b', 'escape', 'space']
 
 #SPACING ADJUSTMENTS FOR TEXT DISPLAY
 dirXMult = [1.62, 0, -1.68, 0]
 dirYMult = [0, -1.562, 0, 1.748]
 yOffset = [0.2, 0, 0.2, 0]
 
+#GENERATE TEXT STIM OBJECT
 def genDisplay(text, xPos, yPos, height, colour):
     displayText = visual.TextStim(win=win,
     text= text,
@@ -139,10 +145,10 @@ def stairCase(thisResponse, numReversals, totalReversals, size, stairCaseComplet
             size += 0.2
         else:
             size += 0.1
-            
     #COMPLETE STAIRCASE IF THE MAX ANGLE IS REACHED, OR 3 REVERSALS OR 25 RESPONSES OCCUR
     if numReversals >= 3 or responses >= 25 or totalReversals > 15:
         stairCaseCompleted = True
+        
     if size < 0.1:
         size = 0.1
         
@@ -154,8 +160,20 @@ def angleCalc(angle):
     spacer = (math.tan(radians)*distToScreen)
     return spacer
     
-#CALCULATE DISPLAY COORDINATES AND HEIGHT OF STIMULIe
-def displayVariables(angle, dir, size):
+#GENERATE A RANDOMIZED 3X3 ARRAY OF LETTERS, RETURN CENTER LETTER
+def genArray():
+    array = ''
+    list = ['']*11
+    for i in range(11):
+        if i == 3 or i == 7:
+            list[i] = '\n'
+        else:
+            list[i] = random.choice(letters)
+    array = ''.join(list)
+    return array, list[5]
+
+#CALCULATE DISPLAY COORDINATES AND HEIGHT OF STIMULI
+def displayVariables(angle, dir):
     #DISPLAY HEIGHT AND DISTANCE FROM CENTER IN CENTIMETERS
     heightCm = (angleCalc(size)*2.3378)
     angleCm = angleCalc(angle)
@@ -166,33 +184,39 @@ def displayVariables(angle, dir, size):
     if angle == 0 and dir%2 != 0:
         yPos += 0.2
     return heightCm, angleCm, xPos, yPos
-
-def checkResponse(button, letter):
+    
+def checkResponse(response, letter):
     key = '0'
-
-    if button == 1:
-        key = 'e'
-    elif button == 2:
-        key = 'b'
-    elif button == 3:
-        key = 'p'
-    elif button == 4:
-        key = 'space'
+    if(remap):
+        if response[0] == 'z':
+            key = 'e'
+        elif response[0] == 'x':
+            key = 'b'
+        elif response[0] == 'n':
+            key = 'p'
+        elif response[0] == 'm':
+            key = 'space'
+    else:
+        key = response[0]
     
     return (key == letter.lower())
 
-    
 #DISPLAY INSTRUCTIONS FOR CHINREST ALIGNMENT
-instructions = genDisplay('  Align the edge of the headrest stand \nwith the edge of the tape marked 50cm \n\n       Press Any button to continue', 0, 0, 5, 'white')
+instructions = genDisplay('  Align the edge of the headrest stand \nwith the edge of the tape marked 50cm \n\n       Press Spacebar to continue', 0, 5, 5, 'white')
 instructions.draw()
 win.flip()
-while(1):
-    if ser.in_waiting:
-        a = ser.readline()
-        break
-    else:
-        time.sleep(0.05)
+theseKeys = event.waitKeys(keyList = ['space', 'escape'], clearEvents = False)
+if theseKeys[0] == 'escape':
+    endExp()
     
+if remap:
+    #DISPLAY INSTRUCTIONS FOR REMAPPED KEYS
+    instructions = genDisplay('                           Keys Remapped\nZ = E, X = B, N = P, M = Do not know/can not read\n                 Press Spacebar to Continue', 0, 5, 5, 'white')
+    instructions.draw()
+    win.flip()
+    theseKeys = event.waitKeys(keyList = ['space', 'escape'], clearEvents = False)
+    if theseKeys[0] == 'escape':
+        endExp()
 
 #GENERATE CENTER DOT
 dot = genDisplay('.', 0, 1.1, 4, [.207,1,.259])
@@ -205,28 +229,26 @@ for dir in directions:
         angles = list(anglesH)
     else:
         angles = list(anglesV)
-
     shuffle(angles)
     for angle in angles:
-        
+
+        #INITIALIZE TRIAL VARIABLES
         size = angle/10
         if(size == 0):
             size = 1
         numReversals = 0
         totalReversals = 0
         responses = 0
-        lastResponse = False
         stairCaseCompleted = False
+        lastResponse = False
         
         while not stairCaseCompleted:
             
             #GENERATE NEW STIMULI
-            letter = random.choice(letters)
+            array, letter = genArray()
+            heightCm, angleCm, xPos, yPos = displayVariables(angle, dir)
+            displayText = genDisplay(array, xPos, yPos, heightCm, 'white')
             
-            heightCm, angleCm, xPos, yPos = displayVariables(angle, dir, size)
-            displayText = genDisplay(letter, xPos, yPos, heightCm, 'white')
-            
-            #ON FIRST TRIAL, DISPLAY BLANK SCREEN WITH CENTER DOT
             if responses == 0:
                 dot.draw()
                 win.flip()
@@ -239,26 +261,28 @@ for dir in directions:
                 if flash:
                     dot.draw()
                 displayText.draw()
+                win.callOnFlip(keyPress.clearEvents, eventType='keyboard')
                 win.flip()
-                if ser.in_waiting:
-                    value = float(ser.readline().strip())
-                    button = int(value)
+                theseKeys = event.waitKeys(maxWait = 0.05, keyList = keys, clearEvents = False)
+                if theseKeys:
                     break
-                else:
-                    time.sleep(0.05)
-                
-            thisResponse = checkResponse(button, letter)
+            
+            #STOP SCRIPT IF ESCAPE IS PRESSED
+            if theseKeys[0] == 'escape':
+                endExp()
+            
+            #CHECK KEYPRESS AGAINST TARGET LETTER
+            thisResponse = checkResponse(theseKeys, letter)
             
             #CALL STAIRCASE ALGORITHM
             stairCaseCompleted, size, numReversals, totalReversals, lastResponse, responses = stairCase(thisResponse, numReversals, totalReversals, size, stairCaseCompleted, lastResponse, responses)
             
             if stairCaseCompleted:
-                #ADVANCE DIRECTION
+                #INCREMENT DIR NUMBER FOR CSV OUTPUT TO FACILITATE ANALYSIS (1=R, 2=D...)
                 direction = dir+1
                 #CSV OUTPUT
                 if recordData:
                     csvOutput([direction, size, angle])
-                    
     directionIndex += 1
     if directionIndex != dirCap:
         for i in range(30):
