@@ -12,6 +12,8 @@ clear all;
 sca;
 Screen('Preference', 'SkipSyncTests', 1);
 
+ser = serialport("COM3",9600);
+
 trials=3;
 
 %HARDCODED TEXT SIZES
@@ -54,10 +56,6 @@ dirTextYPos = [722, 724, 725, 725, 727, 727, 727, 727, 727, 727, 727, 727, 727, 
 %Y/N INPUT DIALOGUE FOR DATA RECORDING
 dataAnswer = questdlg('Record Data?', '', 'Yes', 'No', 'Cancel', 'Yes');
 recordData = (char(dataAnswer(1)) == 'Y');
-
-%Y/N INPUT DIALOGUE FOR KEY REMAPPING
-dataAnswer = questdlg('Remap Keys?', '', 'Yes', 'No', 'Cancel', 'Yes');
-remap = (char(dataAnswer(1)) == 'Y');
 
 %Y/N INPUT DIALOGUE FOR GLASSES
 dataAnswer = questdlg('Does the subject wear glasses?', '', 'Yes', 'No', 'Cancel', 'Yes');
@@ -128,14 +126,6 @@ halfY = 0.5 * screenYpixels;
 calibrationAngles = [ -20, -15, -10, -5, 0, 5, 10, 15, 20 ];
 calibrationXCoords = [ 896, 997, 1095, 1189, 1280, 1371, 1466, 1564, 1665 ];
 instructionText = 'Focus your eyes on the green dot and press any key once you have done so. Press any key to begin.';
-
-keyInstructions = '                        Keys Remapped \n Z = E, X = B, N = P, M = Do not know/Can not read \n                  Press any key to begin.';
-if remap
-    Screen('TextSize', window, 25);
-    DrawFormattedText(window, keyInstructions, (halfX-250), halfY, white);
-    Screen('Flip', window);
-    KbWait();
-end
 
 directionsG = [1, 2];
 directionsNG = [1, 2, 3, 4];
@@ -218,8 +208,16 @@ for trialNum = 1:trials
                 DrawFormattedText(window, dirText(direction), dirTextXPos(size), dirTextYPos(size), black);
                 Screen('Flip', window);
               
-                %WAIT FOR KEYPRESS
-                [secs, keyCode, deltaSecs] = KbWait();
+                buttonPress = [];
+                while(1)
+                    buttonPress = readline(ser);
+                    if isempty(buttonPress)
+                         pause(.05);
+                    else
+                        button = str2num(buttonPress(1));
+                        break;
+                    end
+                end
 
                 %DISPLAY RED DOT TO INDICATE 0.5 SECOND WAIT PERIOD BEFORE
                 %NEXT KEYPRESS
@@ -234,32 +232,14 @@ for trialNum = 1:trials
                 WaitSecs(0.5);
                 
                 %CHECK KEYBOARD INPUT
-                if remap
-                    if keyCode(90) == 1 % Z
-                        key = 'E';
-                    elseif keyCode(88) == 1 % X
-                        key = 'B';
-                    elseif keyCode(78) == 1 % N
-                        key = 'P';
-                    elseif keyCode(27) == 1 % ESC 
-                        sca; %CLEAR SCREEN IF ESC IS PRESSED
-                        return; 
-                    else
-                        key = 'Q';
-                    end
-                else
-                    if keyCode(66) == 1 % B
-                        key = 'B';
-                    elseif keyCode(69) == 1 % E 
-                        key = 'E';
-                    elseif keyCode(80) == 1 % P
-                        key = 'P';
-                    elseif keyCode(27) == 1 % ESC 
-                        sca; %CLEAR SCREEN IF ESC IS PRESSED
-                        return; 
-                    else
-                        key = 'Q';
-                    end
+                if button == 1 
+                    key = 'E';
+                elseif button == 2  
+                    key = 'B';
+                elseif button == 3
+                    key = 'P';
+                elseif button == 4
+                    key = 'Q';
                 end
                 
                 %CONVERT TEXTARRAY TO CHAR, INDEX CURRENT CHAR

@@ -21,6 +21,10 @@ from numpy.random import random, randint, normal, shuffle
 
 import os, sys, time, random, math, csv
 
+import serial
+
+ser = serial.Serial(port='COM3', baudrate = 9600, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE, bytesize=serial.EIGHTBITS, timeout=None)
+
 #CSVWRITER FUNCTION
 def csvOutput(output):
     with open(filename,'a', newline ='') as csvFile:
@@ -44,11 +48,6 @@ recordData = datadlg.OK
 datadlg = gui.Dlg(title='Does the subject wear glasses?', pos=None, size=None, style=None, labelButtonOK=' Yes ', labelButtonCancel=' No ', screen=-1)
 ok_data = datadlg.show()
 glasses = datadlg.OK
-
-#Y/N INPUT DIALOGUE FOR KEY REMAPPING
-datadlg = gui.Dlg(title='Remap keys?', pos=None, size=None, style=None, labelButtonOK=' Yes ', labelButtonCancel=' No ', screen=-1)
-ok_data = datadlg.show()
-remap = datadlg.OK
 
 if recordData:
     #OUTPUT FILE PATH
@@ -94,6 +93,7 @@ anglesV = [5, 10, 15, 20, 25, 30]
 directionsG = [0, 2]
 directionsNG = [0, 1, 2, 3]
 distToScreen = 50 #cm
+green = [.207,1,.259]
 
 if glasses:
     directions = directionsG
@@ -101,11 +101,6 @@ if glasses:
 else:
     directions = directionsNG
     dirCap = 4
-
-if remap:
-    keys = ['z', 'x', 'n', 'm', 'escape', 'space']
-else:
-    keys = ['e', 'p', 'b', 'escape', 'space']
 
 #SPACING ADJUSTMENTS FOR TEXT DISPLAY
 dirXMult = [1.62, 0, -1.68, 0]
@@ -159,18 +154,6 @@ def angleCalc(angle):
     radians = math.radians(angle)
     spacer = (math.tan(radians)*distToScreen)
     return spacer
-    
-#GENERATE A RANDOMIZED 3X3 ARRAY OF LETTERS, RETURN CENTER LETTER
-def genArray():
-    array = ''
-    list = ['']*11
-    for i in range(11):
-        if i == 3 or i == 7:
-            list[i] = '\n'
-        else:
-            list[i] = random.choice(letters)
-    array = ''.join(list)
-    return array, list[5]
 
 #CALCULATE DISPLAY COORDINATES AND HEIGHT OF STIMULI
 def displayVariables(angle, dir):
@@ -185,40 +168,54 @@ def displayVariables(angle, dir):
         yPos += 0.2
     return heightCm, angleCm, xPos, yPos
     
-def checkResponse(response, letter):
+def genArray(size, heightCm, xPos, yPos):
+    spacer = (size*1.4)*1.3
+    
+    rows = 3
+    colsPerRow = [1, 3, 1]
+    
+    for i in range(rows):
+        yCoord = yPos + (spacer*(1 - i))
+        
+        line = list(range(0))
+        cols = colsPerRow[i]
+        for j in range(cols):
+            char = random.choice(letters)
+            line.append(char)
+            
+            if(i == 1 and j == 1):
+                centerChar = char
+            
+        line = ''.join(line)
+        lineDisplay = genDisplay(line, xPos, yCoord, heightCm, 'white')
+        lineDisplay.draw()
+    return centerChar
+
+def checkResponse(button, letter):
     key = '0'
-    if(remap):
-        if response[0] == 'z':
-            key = 'e'
-        elif response[0] == 'x':
-            key = 'b'
-        elif response[0] == 'n':
-            key = 'p'
-        elif response[0] == 'm':
-            key = 'space'
-    else:
-        key = response[0]
+
+    if button == 1:
+        key = 'e'
+    elif button == 2:
+        key = 'b'
+    elif button == 3:
+        key = 'p'
+    elif button == 4:
+        key = 'space'
     
     return (key == letter.lower())
 
 #DISPLAY INSTRUCTIONS FOR CHINREST ALIGNMENT
-instructions = genDisplay('  Align the edge of the headrest stand \nwith the edge of the tape marked 50cm \n\n       Press Spacebar to continue', 0, 5, 5, 'white')
+instructions = genDisplay('  Align the edge of the headrest stand \nwith the edge of the tape marked 50cm \n\n       Press Any Button to continue', 0, 5, 5, 'white')
 instructions.draw()
 win.flip()
-theseKeys = event.waitKeys(keyList = ['space', 'escape'], clearEvents = False)
-if theseKeys[0] == 'escape':
-    endExp()
-    
-if remap:
-    #DISPLAY INSTRUCTIONS FOR REMAPPED KEYS
-    instructions = genDisplay('                           Keys Remapped\nZ = E, X = B, N = P, M = Do not know/can not read\n                 Press Spacebar to Continue', 0, 5, 5, 'white')
-    instructions.draw()
-    win.flip()
-    theseKeys = event.waitKeys(keyList = ['space', 'escape'], clearEvents = False)
-    if theseKeys[0] == 'escape':
-        endExp()
+while(1):
+    if ser.in_waiting:
+        a = ser.readline()
+        break
+    else:
+        time.sleep(0.05)
 
-#GENERATE CENTER DOT
 dot = genDisplay('.', 0, 1.1, 4, [.207,1,.259])
 
 directionIndex = 0
@@ -244,35 +241,41 @@ for dir in directions:
         
         while not stairCaseCompleted:
             
-            #GENERATE NEW STIMULI
-            array, letter = genArray()
-            heightCm, angleCm, xPos, yPos = displayVariables(angle, dir)
-            displayText = genDisplay(array, xPos, yPos, heightCm, 'white')
+            win.clearBuffer()
             
             if responses == 0:
                 dot.draw()
                 win.flip()
-            
             time.sleep(0.5)
+            
+            #GENERATE NEW STIMULI
+            heightCm, angleCm, xPos, yPos = displayVariables(angle, dir)
+            centerChar = genArray(size, heightCm, xPos, yPos)
             
             flash = 0
             while 1:
                 flash = (flash == 0)
                 if flash:
+                    dot = genDisplay('.', 0, 1.1, 4, green)
                     dot.draw()
-                displayText.draw()
-                win.callOnFlip(keyPress.clearEvents, eventType='keyboard')
-                win.flip()
-                theseKeys = event.waitKeys(maxWait = 0.05, keyList = keys, clearEvents = False)
-                if theseKeys:
+                else:
+                    dot = genDisplay('.', 0, 1.1, 4, 'grey')
+                    dot.draw()
+                
+                win.flip(clearBuffer = False)
+                
+                
+                if ser.in_waiting:
+                    value = float(ser.readline().strip())
+                    button = int(value)
                     break
+                else:
+                    time.sleep(0.05)
+                
             
-            #STOP SCRIPT IF ESCAPE IS PRESSED
-            if theseKeys[0] == 'escape':
-                endExp()
             
             #CHECK KEYPRESS AGAINST TARGET LETTER
-            thisResponse = checkResponse(theseKeys, letter)
+            thisResponse = checkResponse(button, centerChar)
             
             #CALL STAIRCASE ALGORITHM
             stairCaseCompleted, size, numReversals, totalReversals, lastResponse, responses = stairCase(thisResponse, numReversals, totalReversals, size, stairCaseCompleted, lastResponse, responses)
@@ -283,6 +286,7 @@ for dir in directions:
                 #CSV OUTPUT
                 if recordData:
                     csvOutput([direction, size, angle])
+                    
     directionIndex += 1
     if directionIndex != dirCap:
         for i in range(30):
