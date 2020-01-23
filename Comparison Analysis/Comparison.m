@@ -308,7 +308,7 @@ grid on;
 
 %GRAPHING CROWDED PERIPHERY OUTER
 hold on
-scatter(angles(1,:), cpouter(1,:), 15, "b", "filled");
+scatter(angles(1,:), cpouter(1,:), 15, [1 0.5 0], "filled");
 coefficients = polyfit(angles(1,:), cpouter(1,:), 1);
 legends(7) = sprintf(txt, "Crowded Periphery Outer", coefficients(1,1), coefficients(1,2));
 xFit = linspace(min(angles(1,:)), max(angles(1,:)), 1000);
