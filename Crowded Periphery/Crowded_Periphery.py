@@ -58,7 +58,7 @@ if recordData:
     _thisDir = os.path.dirname(os.path.abspath(__file__))
     os.chdir(_thisDir)
     #STORE INFO ABOUT EXPERIMENT SESSION
-    expName = 'Crowded Periphery'
+    expName = 'Crowded Periphery Stripped Arduino'
     date = data.getDateStr(format='%m-%d') 
     expInfo = {'Participant': ''}
     
