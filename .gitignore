@@ -7,6 +7,7 @@ Crowded Periphery 7x7/__pycache__/
 Crowded Periphery Outer/__pycache__/
 Isolated Character/__pycache__/
 *.py[cod]
+*.pyc
 .DS_Store
 
 # C extensions
