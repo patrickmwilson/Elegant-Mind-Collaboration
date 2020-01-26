@@ -235,9 +235,8 @@ for dir in directions:
     for angle in angles:
         
         #INITIALIZE TRIAL VARIABLES
-        #/10
         size = angle/20
-        size = 3
+
         if(size == 0):
             size = 1
         

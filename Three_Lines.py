@@ -53,12 +53,13 @@ glasses = datadlg.OK
 if recordData:
     #OUTPUT FILE PATH
     PATH = 'C:\\Users\\chand\\OneDrive\\Desktop\\Visual-Acuity\\Data'
-    OUTPATH = '{0:s}\\Crowded Center 3x3\\'.format(PATH)
+    OUTPATH = '{0:s}\\Three Lines\\'.format(PATH)
+    
     #CD TO SCRIPT DIRECTORY
     _thisDir = os.path.dirname(os.path.abspath(__file__))
     os.chdir(_thisDir)
     #STORE INFO ABOUT EXPERIMENT SESSION
-    expName = 'Crowded Center 3x3'
+    expName = 'Three Lines'
     date = data.getDateStr(format='%m-%d') 
     expInfo = {'Participant': ''}
     
@@ -88,12 +89,14 @@ keyPress = keyboard.Keyboard()
 
 #EXPERIMENTAL VARIABLES
 letters = list("EPB")
-anglesH = [10, 15, 20, 25, 30, 35, 40]
-anglesV = [10, 15, 20, 25, 30]
+sizes = [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4]
+distH = [0.425, 0.85, 1.275, 1.7, 2.125, 2.55, 2.975, 3.4] 
+distV = [0.475, 0.95, 1.425, 1.9, 2.375, 2.85, 3.325, 3.8] 
 directionsG = [0, 2]
 directionsNG = [0, 1, 2, 3]
 foveaRadius = 7 #cm
 distToScreen = 50 #cm
+green = [.207,1,.259]
 
 if glasses:
     directions = directionsG
@@ -118,86 +121,124 @@ def genDisplay(text, xPos, yPos, height, colour):
     languageStyle='LTR',
     depth=0.0)
     return displayText
-
+    
 #CONVERT DEGREE INPUT TO DISTANCE IN CENTIMETERS
 def angleCalc(angle):
     radians = math.radians(angle)
-    spacer = (math.tan(radians)*50)
+    spacer = (math.tan(radians)*distToScreen)
     return spacer
+
+#CONVERT DEGREE INPUT TO DISTANCE IN CENTIMETERS
+def eccentricityCalc(size, responses, dir):
+    if dir == 0 or dir == 2:
+        dist = distH[int((size*2)-1)]
+    else:
+        dist = distV[int((size*2)-1)]
+    angleCm = dist*responses
+    radians = math.atan(angleCm/distToScreen)
+    angle = math.degrees(radians)
+    eccentricity = round(angle, 2)
+    return eccentricity
     
-#CALCULATE DISPLAY COORDINATES AND HEIGHT OF STIMULI
-def displayVariables(angle, dir, size):
-    #DISPLAY HEIGHT AND DISTANCE FROM CENTER IN CENTIMETERS
+    
+def rowsColsPerSize(size, dir):
+    totalDistH = 120
+    totalDistV = 68
+    
+    hDist = (size)*0.8
+    vDist = (size)*0.9
+    
+    if dir == 0 or dir == 2:
+        rows = 3
+        cols = (round(totalDistV/vDist))*2
+    else:
+        rows = (round(totalDistH/hDist))*2
+        cols = 3
+        
+    if rows % 2 == 0:
+        rows += 1
+    if cols % 2 == 0:
+        cols += 1
+        
+    return rows, cols
+    
+def checkCopy(row, centerRow, col, centerCol, dir):
+    copy = False
+    if row == centerRow:
+        if dir == 0 and col > centerCol:
+            copy = True
+        elif dir == 2 and col < centerCol:
+            copy = True
+    if col == centerCol:
+        if dir == 1 and row > centerRow:
+            copy = True
+        elif dir == 3 and row < centerRow:
+            copy = True
+    return copy
+    
+def genMask(size, dir):
+    xOne = -300
+    yOne = 300
+    yTwo = -300
+    xThree = 300
+
+    if dir == 0:
+        xThree = 0 + ((size*0.75)*2)
+    elif dir == 1:
+        yTwo = 0 - ((size*0.85)*2)
+    elif dir == 2:
+        xOne = 0 - ((size*0.75)*2)
+    elif dir == 3:
+        yOne = 0 + ((size*0.85)*1.5)
+        
+    xFour = xThree
+    yThree = yTwo
+    xTwo = xOne
+    yFour = yOne
+    
+    verts = [(xOne,yOne), (xTwo,yTwo), (xThree,yThree), (xFour,yFour)]
+    mask = ShapeStim(win, vertices=verts, fillColor='grey', size=.5, lineColor='grey')
+    mask.draw()
+
+def genArray(size, dir):
     heightCm = (angleCalc(size)*2.3378)
-    angleCm = angleCalc(angle)
-    #X AND Y DISPLAY COORDINATES
-    xPos = (dirXMult[dir]*angleCm) 
-    yPos = (dirYMult[dir]*angleCm) + yOffset[dir]
-    #ADJUSTMENT TO CENTER CHARACTER
-    if angle == 0 and dir%2 != 0:
-        yPos += 0.2
-    return heightCm, angleCm, xPos, yPos
+    spacer = (size*1.54)
     
-def genArray(size, heightCm, centerChar):
-    #1.3
-    spacer = (size*1.4)*1.1
-    diameter = angleCalc(foveaRadius) * 2
-    
-    rows = 3
-    if rows%2 == 0:
-        rows = rows+1
-    cols = 3
-    
+    rows, cols = rowsColsPerSize(size, dir)
     centerRow = int((rows-1)/2)
     centerCol = int((cols-1)/2)
     
+    targetLine = list(range(0))
     for i in range(rows):
         yCoord = spacer*(centerRow - i)
         
         line = list(range(0))
         for j in range(cols):
-            if((i == centerRow) and j == centerCol):
-                char = centerChar
-            else:
-                char = random.choice(letters)
+            char = random.choice(letters)
+            copy = checkCopy(i, centerRow, j, centerCol, dir)
+            if copy:
+                targetLine.append(char)
             line.append(char)
         line = ''.join(line)
         lineDisplay = genDisplay(line, 0, yCoord, heightCm, 'white')
         lineDisplay.draw()
-
-#STAIRCASE ALGORITHM TO DETERMINE MINIMUM LEGIBLE SIZE
-def stairCase(thisResponse, numReversals, totalReversals, size, angle, stairCaseCompleted, lastResponse, responses):
-    responses += 1
-    #IF TWO SEQUENTIAL IN/CORRECT ANSWERS, RESET NUMREVERSALS
-    if numReversals > 0 and lastResponse == thisResponse:
-        totalReversals += numReversals
-        numReversals = 0
-    #IF CORRECT, MOVE CHARACTER OUTWARD
-    if thisResponse:
-        if numReversals == 0 and size > 1:
-            size -= 0.5
-        elif(size > 0.5 and angle > 0):
-            size -= 0.2
-        else:
-            size -= 0.1
-    #IF INCORRECT, MOVE CHARACTER INWARD, INCREMENT NUMREVERSALS
-    else:
-        numReversals += 1
-        if size > 0.5:
-            size += 0.2
-        else:
-            size += 0.1
-    #COMPLETE STAIRCASE IF THE MAX ANGLE IS REACHED, OR 3 REVERSALS OR 25 RESPONSES OCCUR
-    if numReversals >= 3 or responses >= 25 or totalReversals > 15:
-        stairCaseCompleted = True
-        
-    return stairCaseCompleted, size, numReversals, totalReversals, thisResponse, responses
+    if dir == 2 or dir == 3:
+        targetLine.reverse()
+    return targetLine
     
-def checkResponse(button, match):
-    if button == 3 or button == 4:
-        return 0
-    response = (button == 1)
-    return (response == match)
+def checkResponse(button, letter):
+    key = '0'
+
+    if button == 1:
+        key = 'e'
+    elif button == 2:
+        key = 'b'
+    elif button == 3:
+        key = 'p'
+    elif button == 4:
+        key = 'space'
+    
+    return (key == letter.lower())
 
 #DISPLAY INSTRUCTIONS FOR CHINREST ALIGNMENT
 instructions = genDisplay('  Align the edge of the headrest stand \nwith the edge of the tape marked 50cm \n\n       Press Any Button to continue', 0, 0, 5, 'white')
@@ -224,82 +265,54 @@ while(1):
 dot = genDisplay('.', 0, 1.1, 4, [.207,1,.259])
 
 directionIndex = 0
-shuffle(directions)
-for dir in directions:
+shuffle(sizes)
+for size in sizes:
+    dotPos = 1 + ((4-size)/10)
     
-    if(dir == 0 or dir == 2):
-        angles = anglesH
-    else:
-        angles = anglesV
-    
-    shuffle(angles)
-    for angle in angles:
+    shuffle(directions)
+    for dir in directions:
         
-        #INITIALIZE TRIAL VARIABLES
-        size = angle/10
+        dot.draw()
+        win.flip()
+        time.sleep(0.5)
         
-        if(size == 0):
-            size = 1
-            
-        numReversals = 0
-        totalReversals = 0
+        genMask(size, dir)
+        targetLine = genArray(size, dir)
+        genMask(size, dir)
+        
         responses = 0
-        lastResponse = False
-        stairCaseCompleted = False
-        
-        while not stairCaseCompleted:
+        while(1):
+            print(responses)
+            letter = targetLine[responses]
             
-            #CHOOSE RANDOM STIM LETTER, CALCULATE COORDINATES AND HEIGHT, GENERATE STIM
-            letter = random.choice(letters)
-            
-            matching = random.randint(0,1)
-            
-            if matching == 1:
-                centerChar = letter
-            else:
-                centerChar = random.choice(letters)
-                
-            if centerChar == letter:
-                match = True
-            else:
-                match = False
-            
-            heightCm, angleCm, xPos, yPos = displayVariables(angle, dir, size)
-            displayText = genDisplay(letter, xPos, yPos, heightCm, 'white')
-            
-            if responses == 0:
-                dot.draw()
-                win.flip()
-            
-            time.sleep(0.5)
-            
-            genArray(size, heightCm, centerChar)
-            displayText.draw()
-            
-            win.flip()
-            
-            
-            #IF TARGET LETTER == CENTER LETTER, ENTER = CORRECT; IF TARGET LETTER != CENTER LETTER, SPACE = CORRECT
-            match = (letter == centerChar)
+            flash = 0
             while 1:
+                flash = (flash == 0)
+                if flash:
+                    dot = genDisplay('.', 0, dotPos, 4, green)
+                else:
+                    dot = genDisplay('.', 0, dotPos, 4, 'grey')
+                dot.draw()
+                win.flip(clearBuffer = False)
+                
                 if ser.in_waiting:
                     value = float(ser.readline().strip())
                     button = int(value)
                     break
                 else:
                     time.sleep(0.05)
-            thisResponse = checkResponse(button, match)
             
-            #CALL STAIRCASE ALGORITHM
-            stairCaseCompleted, size, numReversals, totalReversals, lastResponse, responses = stairCase(thisResponse, numReversals, totalReversals, size, angle, stairCaseCompleted, lastResponse, responses)
+            if checkResponse(button, letter):
+                responses += 1
+                continue
             
-            if stairCaseCompleted:
-                #INCREMENT DIR FOR DATA OUTPUT
-                direction = dir+1
-                #CSV OUTPUT
-                if recordData:
-                    csvOutput([direction, size, angle])
-                    
+            direction = dir+1
+            #CSV OUTPUT
+            if recordData:
+                angle = eccentricityCalc(size, responses, dir)
+                csvOutput([direction, size, angle])
+            break
+    
     directionIndex += 1
     if directionIndex != dirCap:
         for i in range(30):
@@ -312,6 +325,9 @@ for dir in directions:
             secondText.draw()
             numText.draw()
             win.flip()
+            if ser.in_waiting:
+                value = float(ser.readline().strip())
+                break
             time.sleep(1)
-
+    
 endExp()
