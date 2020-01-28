@@ -211,7 +211,7 @@ while(1):
         time.sleep(0.05)
     
 #DISPLAY INSTRUCTIONS FOR CHINREST ALIGNMENT
-instructions = genDisplay('  Press Red Button if the character matches \nthe green center character, Blue Button\n if they do not match, and either button on the right\n    if you can not read it \n\n      Press Any Button to continue', 0, 0, 5, 'white')
+instructions = genDisplay('  Press Red Button if the character matches \nthe green center character, Yellow Button\n if they do not match, and either button on the right\n    if you can not read it \n\n      Press Any Button to continue', 0, 0, 5, 'white')
 instructions.draw()
 win.flip()
 while(1):

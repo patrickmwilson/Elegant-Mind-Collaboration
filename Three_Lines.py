@@ -252,7 +252,7 @@ while(1):
         time.sleep(0.05)
     
 #DISPLAY INSTRUCTIONS FOR CHINREST ALIGNMENT
-instructions = genDisplay('  Press Red Button if the character matches \nthe green center character, Blue Button\n if they do not match, and either button on the right\n    if you can not read it \n\n      Press Any Button to continue', 0, 0, 5, 'white')
+instructions = genDisplay('Read the center line of text in the direction away from the center \nand press the corresponding button,\n and black button if you can not read it \n\n      Press Any Button to continue', 0, 0, 5, 'white')
 instructions.draw()
 win.flip()
 while(1):
@@ -264,7 +264,7 @@ while(1):
 
 dot = genDisplay('.', 0, 1.1, 4, [.207,1,.259])
 
-directionIndex = 0
+sizeIndex = 0
 shuffle(sizes)
 for size in sizes:
     dotPos = 1 + ((4-size)/10)
@@ -313,11 +313,11 @@ for size in sizes:
                 csvOutput([direction, size, angle])
             break
     
-    directionIndex += 1
-    if directionIndex != dirCap:
-        for i in range(30):
+    sizeIndex += 1
+    if sizeIndex != 7:
+        for i in range(15):
             win.clearBuffer()
-            seconds = str(30-i)
+            seconds = str(15-i)
             breakText = genDisplay('Break', 0, 0, 5, 'white')
             secondText = genDisplay('Seconds', +2, -5, 5, 'white')
             numText = genDisplay(seconds, -11, -5, 5, 'white')

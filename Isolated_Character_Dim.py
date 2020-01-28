@@ -88,8 +88,8 @@ keyPress = keyboard.Keyboard()
 
 #EXPERIMENTAL VARIABLES
 letters = list("EPB")
-anglesH = [0, 5, 10, 15, 20, 25, 30, 35, 40]
-anglesV = [5, 10, 15, 20, 25, 30]
+anglesH = [10, 20, 30, 40]
+anglesV = [10, 20, 30]
 directionsG = [0, 2]
 directionsNG = [0, 1, 2, 3]
 distToScreen = 50 #cm
