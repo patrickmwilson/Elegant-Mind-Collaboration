@@ -1,7 +1,20 @@
 clear variables;
 clear all;
 
-folder = '/Users/patrickwilson/Desktop/R/Visual-Acuity/T1/Data';
+%PLEASE READ
+%To make this script work, you must change the filepaths in the script to
+%your computer, eg. if you're on a mac, and your visual-acuity folder is
+%located on the desktop, you would use this for T1:
+%folder = '/Users/YOURUSERNAME/Desktop/Visual-Acuity/T1/Data';
+%You need to change the username in the filepath to your computer username.
+%To find this on a mac, open the Terminal app, and your username will come
+%before the $ symbol. To find all the spots you need to modify in this
+%script, use ctrl/cmd+f and search for "folder".
+
+%T1
+folder = 'C:\Users\chand\OneDrive\Desktop\Visual-Acuity\Data\T1\';
+%MAC:
+%folder = '/Users/YOURUSERNAME/Desktop/Visual-Acuity/Data/T1';
 tfiles = dir(folder);
 tfilenames={tfiles(:).name}';
 tcsvfiles=tfilenames(endsWith(tfilenames,'.csv'));
@@ -39,8 +52,10 @@ end
 t1 = t1./count;
 
 
-%CROWDED CENTER
-folder = '/Users/patrickwilson/Desktop/R/Visual-Acuity/Crowded Center/Data';
+%CROWDED CENTER 3x3
+folder = 'C:\Users\chand\OneDrive\Desktop\Visual-Acuity\Data\Crowded Center 3x3\';
+%MAC:
+%folder = '/Users/YOURUSERNAME/Desktop/Visual-Acuity/Data/Crowded Center 3x3';
 tfiles = dir(folder);
 tfilenames={tfiles(:).name}';
 tcsvfiles=tfilenames(endsWith(tfilenames,'.csv'));
@@ -57,21 +72,55 @@ for i = 1:size(tcsvfiles,1)
 end
 
 ccT = table2array(cctable);
-cc = zeros(1,7);
+ccthree = zeros(1,7);
 count = zeros(1,7);
 
 for i = 1:size(ccT,1)
     angle = (ccT(i, 3)/5)-1;
     
-    cc(1,angle) = cc(1,angle) + ccT(i, 2);
+    ccthree(1,angle) = ccthree(1,angle) + ccT(i, 2);
     count(1,angle) = count(1,angle) + 1;
 end
 
-cc = cc./count;
+ccthree = ccthree./count;
+
+%CROWDED CENTER 11x11
+folder = 'C:\Users\chand\OneDrive\Desktop\Visual-Acuity\Data\Crowded Center 11x11\';
+%MAC:
+%folder = '/Users/YOURUSERNAME/Desktop/Visual-Acuity/Data/Crowded Center 11x11';
+tfiles = dir(folder);
+tfilenames={tfiles(:).name}';
+tcsvfiles=tfilenames(endsWith(tfilenames,'.csv'));
+
+for i = 1:size(tcsvfiles,1)
+    filename = fullfile(folder, string(tcsvfiles(i,1)));
+    ccTable = readtable(filename);
+    if i == 1
+        cctable = ccTable;
+    else
+        temTable = cctable;
+        cctable = [temTable; ccTable];
+    end
+end
+
+ccT = table2array(cctable);
+cceleven = zeros(1,7);
+count = zeros(1,7);
+
+for i = 1:size(ccT,1)
+    angle = (ccT(i, 3)/5)-1;
+    
+    cceleven(1,angle) = cceleven(1,angle) + ccT(i, 2);
+    count(1,angle) = count(1,angle) + 1;
+end
+
+cceleven = cceleven./count;
 
 
 %CROWDED PERIPHERY
-folder = '/Users/patrickwilson/Desktop/R/Visual-Acuity/Crowded Periphery/Data';
+folder = 'C:\Users\chand\OneDrive\Desktop\Visual-Acuity\Data\Crowded Periphery\';
+%MAC:
+%folder = '/Users/YOURUSERNAME/Desktop/Visual-Acuity/Data/Crowded Periphery';
 tfiles = dir(folder);
 tfilenames={tfiles(:).name}';
 tcsvfiles=tfilenames(endsWith(tfilenames,'.csv'));
@@ -103,7 +152,9 @@ cp = cp./count;
 
 
 %CROWDED PERIPHERY 5x5
-folder = '/Users/patrickwilson/Desktop/R/Visual-Acuity/Crowded Periphery 5x5/Data';
+folder = 'C:\Users\chand\OneDrive\Desktop\Visual-Acuity\Data\Crowded Periphery 5x5\';
+%MAC:
+%folder = '/Users/YOURUSERNAME/Desktop/Visual-Acuity/Data/Crowded Periphery 5x5';
 tfiles = dir(folder);
 tfilenames={tfiles(:).name}';
 tcsvfiles=tfilenames(endsWith(tfilenames,'.csv'));
@@ -134,7 +185,9 @@ end
 cpfive = cpfive./count;
 
 %CROWDED PERIPHERY 7x7
-folder = '/Users/patrickwilson/Desktop/R/Visual-Acuity/Crowded Periphery Outer/Data';
+folder = 'C:\Users\chand\OneDrive\Desktop\Visual-Acuity\Data\Crowded Periphery 7x7\';
+%MAC:
+%folder = '/Users/YOURUSERNAME/Desktop/Visual-Acuity/Data/Crowded Periphery 7x7';
 tfiles = dir(folder);
 tfilenames={tfiles(:).name}';
 tcsvfiles=tfilenames(endsWith(tfilenames,'.csv'));
@@ -164,8 +217,43 @@ end
 
 cpseven = cpseven./count;
 
+%CROWDED PERIPHERY 11x11
+folder = 'C:\Users\chand\OneDrive\Desktop\Visual-Acuity\Data\Crowded Periphery 11x11\';
+%MAC:
+%folder = '/Users/YOURUSERNAME/Desktop/Visual-Acuity/Data/Crowded Periphery 11x11';
+tfiles = dir(folder);
+tfilenames={tfiles(:).name}';
+tcsvfiles=tfilenames(endsWith(tfilenames,'.csv'));
+
+for i = 1:size(tcsvfiles,1)
+    filename = fullfile(folder, string(tcsvfiles(i,1)));
+    tTable = readtable(filename);
+    if i == 1
+        table = tTable;
+    else
+        temTable = table;
+        table = [temTable; tTable];
+    end
+end
+
+cpT = table2array(table);
+
+cpeleven = zeros(1,9);
+count = zeros(1,9);
+
+for i = 1:size(cpT,1)
+    angle = (cpT(i,3)/5)+1;
+
+    cpeleven(1,angle) = cpeleven(1,angle) + cpT(i, 2);
+    count(1,angle) = count(1,angle) + 1;
+end
+
+cpeleven = cpeleven./count;
+
 %CROWDED PERIPHERY OUTER
-folder = '/Users/patrickwilson/Desktop/R/Visual-Acuity/Crowded Periphery 5x5/Data';
+folder = 'C:\Users\chand\OneDrive\Desktop\Visual-Acuity\Data\Crowded Periphery Outer\';
+%MAC:
+%folder = '/Users/YOURUSERNAME/Desktop/Visual-Acuity/Data/Crowded Periphery Outer';
 tfiles = dir(folder);
 tfilenames={tfiles(:).name}';
 tcsvfiles=tfilenames(endsWith(tfilenames,'.csv'));
@@ -195,8 +283,43 @@ end
 
 cpouter = cpouter./count;
 
+%CROWDED PERIPHERY INNER
+folder = 'C:\Users\chand\OneDrive\Desktop\Visual-Acuity\Data\Crowded Periphery Inner\';
+%MAC:
+%folder = '/Users/YOURUSERNAME/Desktop/Visual-Acuity/Data/Crowded Periphery Inner';
+tfiles = dir(folder);
+tfilenames={tfiles(:).name}';
+tcsvfiles=tfilenames(endsWith(tfilenames,'.csv'));
+
+for i = 1:size(tcsvfiles,1)
+    filename = fullfile(folder, string(tcsvfiles(i,1)));
+    tTable = readtable(filename);
+    if i == 1
+        table = tTable;
+    else
+        temTable = table;
+        table = [temTable; tTable];
+    end
+end
+
+cpinnerT = table2array(table);
+
+cpinner = zeros(1,9);
+count = zeros(1,9);
+
+for i = 1:size(cpouterT,1)
+    angle = (cpinnerT(i,3)/5)+1;
+
+    cpinner(1,angle) = cpinner(1,angle) + cpinnerT(i, 2);
+    count(1,angle) = count(1,angle) + 1;
+end
+
+cpinner = cpinner./count;
+
 %ISOLATED CHARACTER
-folder = '/Users/patrickwilson/Desktop/R/Visual-Acuity/Isolated Character/Data';
+folder = 'C:\Users\chand\OneDrive\Desktop\Visual-Acuity\Data\Isolated Character\';
+%MAC:
+%folder = '/Users/YOURUSERNAME/Desktop/Visual-Acuity/Data/Isolated Character';
 tfiles = dir(folder);
 tfilenames={tfiles(:).name}';
 tcsvfiles=tfilenames(endsWith(tfilenames,'.csv'));
@@ -242,7 +365,6 @@ newcolor = [0.6 0.6 0.6];
 %GRAPHING ANSTIS
 hold on
 scatter(anstisX(1,:), anstisY(1,:), 15, "k", "filled");
-%coefficients = polyfit(anstisX(1,:), anstisY(1,:), 1);
 coefficients = [0.046,-0.031];
 legends(1) = sprintf(txt, "Anstis", coefficients(1,1), coefficients(1,2));
 xFit = linspace(min(anstisX(1,:)), max(anstisX(1,:)), 1000);
@@ -264,8 +386,8 @@ grid on;
 
 %GRAPHING CROWDED CENTER
 hold on
-scatter(ccAngles(1,:), cc(1,:), 15, "c", "filled");
-coefficients = polyfit(ccAngles(1,:), cc(1,:), 1);
+scatter(ccAngles(1,:), ccthree(1,:), 15, "c", "filled");
+coefficients = polyfit(ccAngles(1,:), ccthree(1,:), 1);
 legends(3) = sprintf(txt, "Crowded Center", coefficients(1,1), coefficients(1,2));
 xFit = linspace(min(ccAngles(1,:)), max(ccAngles(1,:)), 1000);
 yFit = polyval(coefficients, xFit);
