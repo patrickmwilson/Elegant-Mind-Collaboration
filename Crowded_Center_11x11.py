@@ -89,7 +89,7 @@ keyPress = keyboard.Keyboard()
 
 #EXPERIMENTAL VARIABLES
 letters = list("EPB")
-anglesH = [20, 25, 30, 35, 40]
+anglesH = [25, 30, 35, 40]
 anglesV = [20, 25, 30]
 directionsG = [0, 2]
 directionsNG = [0, 1, 2, 3]

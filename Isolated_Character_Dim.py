@@ -93,7 +93,9 @@ anglesV = [10, 20, 30]
 directionsG = [0, 2]
 directionsNG = [0, 1, 2, 3]
 distToScreen = 50 #cm
-characterColor = [0.25,0.25,0.25]
+#characterColor = [0.25,0.25,0.25]
+#characterColor = [0.15,0.15,0.15]
+characterColor = [0.1,0.1,0.1]
 
 if glasses:
     directions = directionsG
