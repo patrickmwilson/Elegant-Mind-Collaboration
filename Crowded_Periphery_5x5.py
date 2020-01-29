@@ -215,6 +215,16 @@ while(1):
         break
     else:
         time.sleep(0.05)
+#DISPLAY INSTRUCTIONS FOR BUTTON PRESS
+instructions = genDisplay('    Press the button corresponding to the character \n         at the center of the square, or black button \n                        if you can not read it    \n\n                 Press Any Button to continue', 0, 5, 5, 'white')
+instructions.draw()
+win.flip()
+while(1):
+    if ser.in_waiting:
+        a = ser.readline()
+        break
+    else:
+        time.sleep(0.05)
 
 dot = genDisplay('.', 0, 1.1, 4, [.207,1,.259])
 

@@ -89,7 +89,7 @@ keyPress = keyboard.Keyboard()
 
 #EXPERIMENTAL VARIABLES
 letters = list("EPB")
-anglesH = [20, 25, 30, 35, 40]
+anglesH = [25, 30, 35, 40]
 anglesV = [20, 25, 30]
 directionsG = [0, 2]
 directionsNG = [0, 1, 2, 3]
@@ -210,7 +210,7 @@ while(1):
         time.sleep(0.05)
     
 #DISPLAY INSTRUCTIONS FOR CHINREST ALIGNMENT
-instructions = genDisplay('  Press Red Button if the character matches \nthe green center character, Blue Button\n if they do not match, and either button on the right\n    if you can not read it \n\n      Press Any Button to continue', 0, 0, 5, 'white')
+instructions = genDisplay('  Press Red Button if the character matches \nthe green center character, Yellow Button\n if they do not match, and either button on the right\n    if you can not read it \n\n      Press Any Button to continue', 0, 0, 5, 'white')
 instructions.draw()
 win.flip()
 while(1):
@@ -237,7 +237,7 @@ for dir in directions:
         #INITIALIZE TRIAL VARIABLES
         #/10
         size = angle/20
-        size = 3
+
         if(size == 0):
             size = 1
         

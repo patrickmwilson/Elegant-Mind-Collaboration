@@ -230,6 +230,17 @@ while(1):
         break
     else:
         time.sleep(0.05)
+        
+#DISPLAY INSTRUCTIONS FOR CHINREST ALIGNMENT
+instructions = genDisplay('  Press the key corresponding to the letter \nfarthest from the flashing green dot \n\n       Press Any button to continue', 0, 5, 5, 'white')
+instructions.draw()
+win.flip()
+while(1):
+    if ser.in_waiting:
+        a = ser.readline()
+        break
+    else:
+        time.sleep(0.05)
     
 
 dot = genDisplay('.', 0, 1.1, 4, [.207,1,.259])
