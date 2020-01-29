@@ -1,339 +1,183 @@
 clear variables;
 clear all;
 
-folder = '/Users/patrickwilson/Desktop/R/Visual-Acuity/T1/Data';
-tfiles = dir(folder);
-tfilenames={tfiles(:).name}';
-tcsvfiles=tfilenames(endsWith(tfilenames,'.csv'));
+global CHECKBOXES;
+ButtonUI();
 
-for i = 1:size(tcsvfiles,1)
-    filename = fullfile(folder, string(tcsvfiles(i,1)));
-    tTable = readtable(filename);
-    if i == 1
-        table = tTable;
-    else
-        temTable = table;
-        table = [temTable; tTable];
-    end
-end
-
-tT = table2array(table);
-t1 = zeros(1,15);
-count = zeros(1,15);
-
-for i = 1:size(tT,1)
-    angle = tT(i, 4);
-    
-    if(angle == 0.23)
-        angle = 1;
-    elseif(angle <= 4)
-        angle = (angle * 2) + 1;
-    else
-        angle = angle + 5;
-    end
-    t1(1,angle) = t1(1,angle) + tT(i, 3);
-    count(1,angle) = count(1,angle) + 1;
-
-end
-
-t1 = t1./count;
-
-
-%CROWDED CENTER
-folder = '/Users/patrickwilson/Desktop/R/Visual-Acuity/Crowded Center/Data';
-tfiles = dir(folder);
-tfilenames={tfiles(:).name}';
-tcsvfiles=tfilenames(endsWith(tfilenames,'.csv'));
-
-for i = 1:size(tcsvfiles,1)
-    filename = fullfile(folder, string(tcsvfiles(i,1)));
-    ccTable = readtable(filename);
-    if i == 1
-        cctable = ccTable;
-    else
-        temTable = cctable;
-        cctable = [temTable; ccTable];
-    end
-end
-
-ccT = table2array(cctable);
-cc = zeros(1,7);
-count = zeros(1,7);
-
-for i = 1:size(ccT,1)
-    angle = (ccT(i, 3)/5)-1;
-    
-    cc(1,angle) = cc(1,angle) + ccT(i, 2);
-    count(1,angle) = count(1,angle) + 1;
-end
-
-cc = cc./count;
-
-
-%CROWDED PERIPHERY
-folder = '/Users/patrickwilson/Desktop/R/Visual-Acuity/Crowded Periphery/Data';
-tfiles = dir(folder);
-tfilenames={tfiles(:).name}';
-tcsvfiles=tfilenames(endsWith(tfilenames,'.csv'));
-
-for i = 1:size(tcsvfiles,1)
-    filename = fullfile(folder, string(tcsvfiles(i,1)));
-    tTable = readtable(filename);
-    if i == 1
-        table = tTable;
-    else
-        temTable = table;
-        table = [temTable; tTable];
-    end
-end
-
-cpT = table2array(table);
-
-cp = zeros(1,9);
-count = zeros(1,9);
-
-for i = 1:size(cpT,1)
-    angle = (cpT(i,3)/5)+1;
-
-    cp(1,angle) = cp(1,angle) + cpT(i, 2);
-    count(1,angle) = count(1,angle) + 1;
-end
-
-cp = cp./count;
-
-
-%CROWDED PERIPHERY 5x5
-folder = '/Users/patrickwilson/Desktop/R/Visual-Acuity/Crowded Periphery 5x5/Data';
-tfiles = dir(folder);
-tfilenames={tfiles(:).name}';
-tcsvfiles=tfilenames(endsWith(tfilenames,'.csv'));
-
-for i = 1:size(tcsvfiles,1)
-    filename = fullfile(folder, string(tcsvfiles(i,1)));
-    tTable = readtable(filename);
-    if i == 1
-        table = tTable;
-    else
-        temTable = table;
-        table = [temTable; tTable];
-    end
-end
-
-cpfiveT = table2array(table);
-
-cpfive = zeros(1,9);
-count = zeros(1,9);
-
-for i = 1:size(cpfiveT,1)
-    angle = (cpfiveT(i,3)/5)+1;
-
-    cpfive(1,angle) = cpfive(1,angle) + cpfiveT(i, 2);
-    count(1,angle) = count(1,angle) + 1;
-end
-
-cpfive = cpfive./count;
-
-%CROWDED PERIPHERY 7x7
-folder = '/Users/patrickwilson/Desktop/R/Visual-Acuity/Crowded Periphery Outer/Data';
-tfiles = dir(folder);
-tfilenames={tfiles(:).name}';
-tcsvfiles=tfilenames(endsWith(tfilenames,'.csv'));
-
-for i = 1:size(tcsvfiles,1)
-    filename = fullfile(folder, string(tcsvfiles(i,1)));
-    tTable = readtable(filename);
-    if i == 1
-        table = tTable;
-    else
-        temTable = table;
-        table = [temTable; tTable];
-    end
-end
-
-cpsevenT = table2array(table);
-
-cpseven = zeros(1,9);
-count = zeros(1,9);
-
-for i = 1:size(cpsevenT,1)
-    angle = (cpsevenT(i,3)/5)+1;
-
-    cpseven(1,angle) = cpseven(1,angle) + cpsevenT(i, 2);
-    count(1,angle) = count(1,angle) + 1;
-end
-
-cpseven = cpseven./count;
-
-%CROWDED PERIPHERY OUTER
-folder = '/Users/patrickwilson/Desktop/R/Visual-Acuity/Crowded Periphery 5x5/Data';
-tfiles = dir(folder);
-tfilenames={tfiles(:).name}';
-tcsvfiles=tfilenames(endsWith(tfilenames,'.csv'));
-
-for i = 1:size(tcsvfiles,1)
-    filename = fullfile(folder, string(tcsvfiles(i,1)));
-    tTable = readtable(filename);
-    if i == 1
-        table = tTable;
-    else
-        temTable = table;
-        table = [temTable; tTable];
-    end
-end
-
-cpouterT = table2array(table);
-
-cpouter = zeros(1,9);
-count = zeros(1,9);
-
-for i = 1:size(cpouterT,1)
-    angle = (cpouterT(i,3)/5)+1;
-
-    cpouter(1,angle) = cpouter(1,angle) + cpouterT(i, 2);
-    count(1,angle) = count(1,angle) + 1;
-end
-
-cpouter = cpouter./count;
-
-%ISOLATED CHARACTER
-folder = '/Users/patrickwilson/Desktop/R/Visual-Acuity/Isolated Character/Data';
-tfiles = dir(folder);
-tfilenames={tfiles(:).name}';
-tcsvfiles=tfilenames(endsWith(tfilenames,'.csv'));
-
-for i = 1:size(tcsvfiles,1)
-    filename = fullfile(folder, string(tcsvfiles(i,1)));
-    tTable = readtable(filename);
-    if i == 1
-        table = tTable;
-    else
-        temTable = table;
-        table = [temTable; tTable];
-    end
-end
-
-icT = table2array(table);
-ic = zeros(1,9);
-count = zeros(1,9);
-
-for i = 1:size(icT,1)
-    angle = (icT(i,3)/5)+1;
-    
-    ic(1,angle) = ic(1,angle) + icT(i, 2);
-    count(1,angle) = count(1,angle) + 1;
-end
-
-ic = ic./count;
-
-anstisX = [4.02148, 8.94224, 16.2079, 17.3219, 23.249, 28.0508, 31.1738, 31.6387, 38.203, 55.2726, 55.8553];
-anstisY = [0.243199, 0.377233, 0.681458, 0.839386, 1.00387, 1.34426, 1.67235, 1.17467 , 2.34074, 4.00559, 3.33797];
-
-legends = [ "", "", "", "", "" ];
-lines = [0,0,0,0,0];
-txt = "%s : y = %4.2fx + %4.2f";
-t1LetterHeights = [ 0.23, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 5, 6, 7, 8, 9, 10 ];
-letterHeights = [ 0.25, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4 ];
-%angles = [0, 10, 20, 30, 40];
 angles = [0, 5, 10, 15, 20, 25, 30, 35, 40];
-ccAngles = [10, 15, 20, 25, 30, 35, 40];
 
-newcolor = [0.6 0.6 0.6];
-
-%GRAPHING ANSTIS
-hold on
-scatter(anstisX(1,:), anstisY(1,:), 15, "k", "filled");
-%coefficients = polyfit(anstisX(1,:), anstisY(1,:), 1);
-coefficients = [0.046,-0.031];
-legends(1) = sprintf(txt, "Anstis", coefficients(1,1), coefficients(1,2));
-xFit = linspace(min(anstisX(1,:)), max(anstisX(1,:)), 1000);
-yFit = polyval(coefficients, xFit);
-hold on;
-lines(1) = plot(xFit, yFit, "k-", 'LineWidth', 1);
-grid on;
-
-%GRAPHING T1
-hold on
-scatter(t1(1,:), t1LetterHeights(1,:), 15, "m", "filled");
-coefficients = polyfit(t1(1,:), t1LetterHeights(1,:), 1);
-legends(2) = sprintf(txt, "T1", coefficients(1,1), coefficients(1,2));
-xFit = linspace(min(t1(1,:)), max(t1(1,:)), 1000);
-yFit = polyval(coefficients, xFit);
-hold on;
-lines(2) = plot(xFit, yFit, "m-", 'LineWidth', 1);
-grid on;
-
-%GRAPHING CROWDED CENTER
-hold on
-scatter(ccAngles(1,:), cc(1,:), 15, "c", "filled");
-coefficients = polyfit(ccAngles(1,:), cc(1,:), 1);
-legends(3) = sprintf(txt, "Crowded Center", coefficients(1,1), coefficients(1,2));
-xFit = linspace(min(ccAngles(1,:)), max(ccAngles(1,:)), 1000);
-yFit = polyval(coefficients, xFit);
-hold on;
-lines(3) = plot(xFit, yFit, "c-", 'LineWidth', 1);
-grid on;
-
-%GRAPHING CROWDED PERIPHERY
-hold on
-scatter(angles(1,:), cp(1,:), 15, "b", "filled");
-coefficients = polyfit(angles(1,:), cp(1,:), 1);
-legends(4) = sprintf(txt, "Crowded Periphery", coefficients(1,1), coefficients(1,2));
-xFit = linspace(min(angles(1,:)), max(angles(1,:)), 1000);
-yFit = polyval(coefficients, xFit);
-hold on;
-lines(4) = plot(xFit, yFit, "b-", 'LineWidth', 1);
-grid on;
-
-%GRAPHING CROWDED PERIPHERY 5x5
-hold on
-scatter(angles(1,:), cpfive(1,:), 15, "y", "filled");
-coefficients = polyfit(angles(1,:), cpfive(1,:), 1);
-legends(5) = sprintf(txt, "Crowded Periphery 5x5", coefficients(1,1), coefficients(1,2));
-xFit = linspace(min(angles(1,:)), max(angles(1,:)), 1000);
-yFit = polyval(coefficients, xFit);
-hold on;
-lines(5) = plot(xFit, yFit, "y-", 'LineWidth', 1);
-grid on;
-
-%GRAPHING CROWDED PERIPHERY 7x7
-hold on
-scatter(angles(1,:), cpseven(1,:), 15, "g", "filled");
-coefficients = polyfit(angles(1,:), cpseven(1,:), 1);
-legends(6) = sprintf(txt, "Crowded Periphery 7x7", coefficients(1,1), coefficients(1,2));
-xFit = linspace(min(angles(1,:)), max(angles(1,:)), 1000);
-yFit = polyval(coefficients, xFit);
-hold on;
-lines(6) = plot(xFit, yFit, "g-", 'LineWidth', 1);
-grid on;
-
-%GRAPHING CROWDED PERIPHERY OUTER
-hold on
-scatter(angles(1,:), cpouter(1,:), 15, [1 0.5 0], "filled");
-coefficients = polyfit(angles(1,:), cpouter(1,:), 1);
-legends(7) = sprintf(txt, "Crowded Periphery Outer", coefficients(1,1), coefficients(1,2));
-xFit = linspace(min(angles(1,:)), max(angles(1,:)), 1000);
-yFit = polyval(coefficients, xFit);
-hold on;
-lines(7) = plot(xFit, yFit, 'Color', [1 0.5 0], 'LineWidth', 1);
-grid on;
-
-%GRAPHING ISOLATED CHARACTER
-hold on
-scatter(angles(1,:), ic(1,:), 15, "r", "filled");
-coefficients = polyfit(angles(1,:), ic(1,:), 1);
-legends(8) = sprintf(txt, "Isolated Character", coefficients(1,1), coefficients(1,2));
-xFit = linspace(min(angles(1,:)), max(angles(1,:)), 1000);
-yFit = polyval(coefficients, xFit);
-hold on;
-lines(8) = plot(xFit, yFit, "r-", 'LineWidth', 1);
-grid on;
+%T1 
+if CHECKBOXES(1)
+    table = readCsv('T1');
+    t1 = zeros(1,16);
+    count = zeros(1,16);
+    count(1) = 1;
+    for i = 1:size(table,1)
+        angle = table(i, 4);
+        if(angle == 0.23)
+            angle = 2;
+        elseif(angle <= 4)
+            angle = (angle * 2) + 2;
+        else
+            angle = angle + 6;
+        end
+        t1(1,angle) = t1(1,angle) + table(i, 3);
+        count(1,angle) = count(1,angle) + 1;
+    end
+    t1 = t1./count;
+    t1LetterHeights = [0, 0.23,0.5,1,1.5,2,2.5,3,3.5,4,5,6,7,8,9,10];
+    graphLine(t1, t1LetterHeights, "T1", [1 0 0]);
+end
+%Three Lines
+if CHECKBOXES(2)
+    table = readCsv('Three Lines');
+    threeL = zeros(1,9);
+    count = zeros(1,9);
+    for i = 1:size(table,1)
+        height = table(i, 2);
+        height = (height * 2) + 1;
+        threeL(1,height) = threeL(1,height) + table(i, 3);
+        count(1,height) = count(1,height) + 1;
+    end
+    threeLLetterHeights = [0,0.5,1,1.5,2,2.5,3,3.5,4];
+    graphLine(threeL, threeLLetterHeights, "Three Lines", [0.83 0.31 0.08]);
+end
+%CROWDED PERIPHERY 11x11
+if CHECKBOXES(3)
+    table = readCsv('Crowded Periphery 11x11');
+    cpeleven = zeros(1,9);
+    count = zeros(1,9);
+    for i = 1:size(table,1)
+        angle = (table(i,3)/5)+1;
+        cpeleven(1,angle) = cpeleven(1,angle) + table(i, 2);
+        count(1,angle) = count(1,angle) + 1;
+    end
+    cpeleven = cpeleven./count;
+    graphLine(angles, cpeleven, "Crowded Periphery 11x11", [1 0.5 0]);
+end
+%CROWDED PERIPHERY 7x7
+if CHECKBOXES(4)
+    table = readCsv('Crowded Periphery 7x7');
+    cpseven = zeros(1,9);
+    count = zeros(1,9);
+    for i = 1:size(table,1)
+        angle = (table(i,3)/5)+1;
+        cpseven(1,angle) = cpseven(1,angle) + table(i, 2);
+        count(1,angle) = count(1,angle) + 1;
+    end
+    cpseven = cpseven./count;
+    graphLine(angles, cpseven, "Crowded Periphery 7x7", [1 0.84 0]);
+end
+%CROWDED PERIPHERY 5x5
+if CHECKBOXES(5)
+    table = readCsv('Crowded Periphery 5x5');
+    cpfive = zeros(1,9);
+    count = zeros(1,9);
+    for i = 1:size(table,1)
+        angle = (table(i,3)/5)+1;
+        cpfive(1,angle) = cpfive(1,angle) + table(i, 2);
+        count(1,angle) = count(1,angle) + 1;
+    end
+    cpfive = cpfive./count;
+    graphLine(angles, cpfive, "Crowded Periphery 5x5", [1 1 0]);
+end
+%CROWDED PERIPHERY CROSS
+if CHECKBOXES(6)
+    table = readCsv('Crowded Periphery');
+    cp = zeros(1,9);
+    count = zeros(1,9);
+    for i = 1:size(table,1)
+        angle = (table(i,3)/5)+1;
+        cp(1,angle) = cp(1,angle) + table(i, 2);
+        count(1,angle) = count(1,angle) + 1;
+    end
+    cp = cp./count;
+    graphLine(angles, cp, "Crowded Periphery Cross", [0.33 1 0]);
+end
+%CROWDED PERIPHERY INNER
+if CHECKBOXES(7)
+    table = readCsv('Crowded Periphery Inner');
+    cpinner = zeros(1,9);
+    count = zeros(1,9);
+    count(1) = 1;
+    for i = 1:size(table,1)
+        angle = (table(i,3)/5)+1;
+        cpinner(1,angle) = cpinner(1,angle) + table(i, 2);
+        count(1,angle) = count(1,angle) + 1;
+    end
+    cpinner = cpinner./count;
+    cpIOAngles = [0, 5, 10, 15, 20, 25, 30, 35, 40];
+    graphLine(cpIOAngles, cpinner, "Crowded Periphery Inner", [0 0.69 0.125]);
+end
+%CROWDED PERIPHERY OUTER
+if CHECKBOXES(8)
+    table = readCsv('Crowded Periphery Outer');
+    cpouter = zeros(1,9);
+    count = zeros(1,9);
+    for i = 1:size(table,1)
+        angle = (table(i,3)/5)+1;
+        cpouter(1,angle) = cpouter(1,angle) + table(i, 2);
+        count(1,angle) = count(1,angle) + 1;
+    end
+    cpouter = cpouter./count;
+    cpIOAngles = [0, 5, 10, 15, 20, 25, 30, 35, 40];
+    graphLine(cpIOAngles, cpouter, "Crowded Periphery Outer", [0 0 1]);
+end
+%CROWDED CENTER 9x9
+if CHECKBOXES(9)
+    table = readCsv('Crowded Center 9x9');
+    ccnine = zeros(1,7);
+    count = zeros(1,7);
+    count(1) = 1;
+    for i = 1:size(table,1)
+        angle = (table(i, 3)/5)-1;
+        ccnine(1,angle) = ccnine(1,angle) + table(i, 2);
+        count(1,angle) = count(1,angle) + 1;
+    end
+    ccnine = ccnine./count;
+    ccNineAngles = [0, 15, 20, 25, 30, 35, 40];
+    graphLine(ccNineAngles, ccnine, "Crowded Center 9x9", [0 0.85 1]);
+end
+%CROWDED CENTER 3x3
+if CHECKBOXES(10)
+    table = readCsv('Crowded Center 3x3');
+    cc = zeros(1,8);
+    count = zeros(1,8);
+    count(1) = 1;
+    for i = 1:size(table,1)
+        angle = (table(i, 3)/5);
+        cc(1,angle) = cc(1,angle) + table(i, 2);
+        count(1,angle) = count(1,angle) + 1;
+    end
+    cc = cc./count;
+    ccThreeAngles = [0, 10, 15, 20, 25, 30, 35, 40];
+    graphLine(ccThreeAngles, cc, "Crowded Center 3x3", [0.72 0 0.92]);
+end
+%ISOLATED CHARACTER
+if CHECKBOXES(11)
+    table = readCsv('Isolated Character');
+    ic = zeros(1,9);
+    count = zeros(1,9);
+    for i = 1:size(table,1)
+        angle = (table(i,3)/5)+1;
+        ic(1,angle) = ic(1,angle) + table(i, 2);
+        count(1,angle) = count(1,angle) + 1;
+    end
+    ic = ic./count;
+    graphLine(angles, ic, "Isolated Character", [1 0 0.68]);
+end
+%ANSTIS
+if CHECKBOXES(12)
+    anstisX = [0, 4.02148, 8.94224, 16.2079, 17.3219, 23.249, 28.0508, 31.1738, 31.6387, 38.203, 55.2726, 55.8553];
+    anstisY = [0, 0.243199, 0.377233, 0.681458, 0.839386, 1.00387, 1.34426, 1.67235, 1.17467 , 2.34074, 4.00559, 3.33797];
+    graphLine(anstisX, anstisY, "Anstis", [0 0 0]);
+    %coefficients = [0.046,-0.031];
+end
 
 xlim([0 inf]);
 ylim([0 inf]);
 xlabel("Eccentricity (degrees)");
 ylabel("Letter Height (degrees)");
 title("Letter Height vs. Retinal Eccentricity");
-
-%fig.Color = [0.6 0.6 0.6];
-
-legend([lines(1), lines(2), lines(3), lines(4), lines(5), lines(6), lines(7), lines(8)], {legends(1), legends(2), legends(3), legends(4), legends(5), legends(6), legends(7), legends(8)}, 'Location', 'best');
+legend('show', 'Location', 'northwest');
+grid on;
