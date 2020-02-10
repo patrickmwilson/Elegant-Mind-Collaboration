@@ -1,5 +1,5 @@
 function graphDistLine(x, y, name, color, N)
-    txt = "%s: y = %5.4fx, Mean: %4.3f, Sigma: %5.4f, N = %4.2f";
+    txt = "%s: y = %4.3f Mean: %4.3f, Sigma: %5.4f, N = %4.2f";
     %txttwo = "%s ?:
     hold on
     sd = std(y);
@@ -7,7 +7,7 @@ function graphDistLine(x, y, name, color, N)
     m = mean(y);
     %[p, delta] = polyfix(x, y, 1, 0, 0);
     %legend = sprintf(txt, name, p(1,1));
-    [p,S,mu] = polyfit(x,y,1);
+    [p,S,mu] = polyfit(x,y,0);
     [poly,delta] = polyval(p,x,S,mu);
     hold on;
     scatter(x(1,:), y(1,:), 15, color, "filled", 'HandleVisibility', 'off');

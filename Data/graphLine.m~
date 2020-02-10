@@ -1,5 +1,5 @@
 function graphLine(pointSlope, fixedOrigin, logPlot, x, y, dir, name, color)
-    %x = normalize(x);
+    normalize(
     pos = 1;
     neg = 1;
     for i = 1:length(x)
