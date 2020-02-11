@@ -1,4 +1,4 @@
-function graphLine(pointSlope, fixedOrigin, logPlot, x, y, dir, name, color)
+function graphLine(pointSlope, fixedOrigin, logPlot, x, y, dir, name, color1, color2)
     %x = normalize(x);
     pos = 1;
     neg = 1;
@@ -16,33 +16,33 @@ function graphLine(pointSlope, fixedOrigin, logPlot, x, y, dir, name, color)
 
     negx = -negx;
     figure(pointSlope);
-    txt = "%s : y = %4.2fx + %4.2f";
+    txt = "%s %s : y = %4.2fx + %4.2f";
     posfit = polyfit(posx(1,:), posy(1,:), 1);
     yfit = polyval(posfit,posx);
     hold on;
-    plot(posx,posy,'.','Color', color, 'HandleVisibility', 'off');
-    plot(posx, yfit, 'Color', color, 'LineWidth', 1, 'DisplayName', sprintf(txt, name, posfit(1,1), posfit(1,2)));
+    plot(posx,posy,'.','Color', color1, 'HandleVisibility', 'off');
+    plot(posx, yfit, 'Color', color1, 'LineWidth', 1, 'DisplayName', sprintf(txt, name, '(Right)', posfit(1,1), posfit(1,2)));
     negfit = polyfit(negx(1,:), negy(1,:), 1);
     yfit = polyval(negfit,negx);
     hold on;
-    plot(negx,negy,'.','Color', color, 'HandleVisibility', 'off');
-    plot(negx, yfit, 'Color', color, 'LineWidth', 1, 'DisplayName', sprintf(txt, name, negfit(1,1), posfit(1,2)));
+    plot(negx,negy,'.','Color', color1, 'HandleVisibility', 'off');
+    plot(negx, yfit, 'Color', color1, 'LineWidth', 1, 'DisplayName', sprintf(txt, name, '(Left)', negfit(1,1), posfit(1,2)));
     grid on;
     
     figure(fixedOrigin);
-    txt = "%s : y = %4.2fx";
+    txt = "%s %s : y = %4.2fx";
     hold on
     posfit = polyfix(posx, posy, 1, 0, 0);
     yfit = polyval(posfit,posx);
     hold on;
-    plot(posx,posy,'.','Color', color, 'HandleVisibility', 'off');
-    plot(posx,yfit, 'Color', color, 'LineWidth', 1, 'DisplayName', sprintf(txt, name, posfit(1,1)));
+    plot(posx,posy,'.','Color', color1, 'HandleVisibility', 'off');
+    plot(posx,yfit, 'Color', color1, 'LineWidth', 1, 'DisplayName', sprintf(txt, name, '(Right)', posfit(1,1)));
     grid on;
     negfit = polyfix(negx, negy, 1, 0, 0);
     yfit = polyval(negfit,negx);
     hold on;
-    plot(negx,negy,'.','Color', color, 'HandleVisibility', 'off');
-    plot(negx,yfit, 'Color', color, 'LineWidth', 1, 'DisplayName', sprintf(txt, name, negfit(1,1)));
+    plot(negx,negy,'.','Color', color1, 'HandleVisibility', 'off');
+    plot(negx,yfit, 'Color', color1, 'LineWidth', 1, 'DisplayName', sprintf(txt, name, '(Left)', negfit(1,1)));
     grid on;
     
     figure(logPlot);
@@ -67,21 +67,23 @@ function graphLine(pointSlope, fixedOrigin, logPlot, x, y, dir, name, color)
     
     poslogx = log(posx);
     poslogy = log(posy);
-    neglogx = -log(-negx);
+    neglogx = log(-negx);
     neglogy = log(negy);
     
-    txt = "%s : y = %4.2fx + %4.2f";
+    txt = "%s %s : y = %4.2fx + %4.2f";
     hold on
     poslogfit = polyfit(poslogx(1,:), poslogy(1,:), 1);
     yfit = polyval(poslogfit,poslogx);
     hold on
-    plot(poslogx,poslogy,'.','Color', color, 'HandleVisibility', 'off');
-    plot(poslogx,yfit, 'Color', color, 'LineWidth', 1, 'DisplayName', sprintf(txt, name, poslogfit(1,1), poslogfit(1,2)));
+    plot(poslogx,poslogy,'.','Color', color1, 'HandleVisibility', 'off');
+    plot(poslogx,yfit, 'Color', color1, 'LineWidth', 1, 'DisplayName', sprintf(txt, name, '(Right)', poslogfit(1,1), poslogfit(1,2)));
     hold on
     neglogfit = polyfit(neglogx(1,:), neglogy(1,:), 1);
     yfit = polyval(neglogfit,neglogx);
     hold on
-    plot(neglogx,neglogy,'.','Color', color, 'HandleVisibility', 'off');
-    plot(neglogx,yfit, 'Color', color, 'LineWidth', 1, 'DisplayName', sprintf(txt, name, neglogfit(1,1), neglogfit(1,2)));
+    if name ~= "Anstis"
+        plot(neglogx,neglogy,'.','Color', color2, 'HandleVisibility', 'off');
+        plot(neglogx,yfit, 'Color', color2, 'LineWidth', 1, 'DisplayName', sprintf(txt, name, '(Left)', neglogfit(1,1), neglogfit(1,2)));
+    end
     grid on;
 end

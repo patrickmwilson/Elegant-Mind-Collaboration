@@ -21,7 +21,7 @@ if CHECKBOXES(1)
         y(i) = table(i, 4);
         dir(i) = table (i, 1);
     end
-    graphLine(pointSlope, fixedOrigin, logPlot, x, y, dir, "T1", [1 0 0]);
+    graphLine(pointSlope, fixedOrigin, logPlot, x, y, dir, "T1", [1 0 0], [1 0.5 0]);
 end
 %Three Lines
 if CHECKBOXES(2)
@@ -162,7 +162,7 @@ if CHECKBOXES(11)
         y(i) = height;
         dir(i) = direction;
     end
-    graphLine(pointSlope, fixedOrigin, logPlot, x, y, dir, "Isolated Character", [1 0 0.68]);
+    graphLine(pointSlope, fixedOrigin, logPlot, x, y, dir, "Isolated Character", [1 0 0.68], [0.8 0 1]);
 end
 %ANSTIS
 if CHECKBOXES(12)
@@ -171,7 +171,7 @@ if CHECKBOXES(12)
     anstisY = [0, 0.243199, 0.377233, 0.681458, 0.839386, 1.00387, 1.34426, 1.67235, 1.17467 , 2.34074, 4.00559, 3.33797 ...
         0, 0.243199, 0.377233, 0.681458, 0.839386, 1.00387, 1.34426, 1.67235, 1.17467 , 2.34074, 4.00559, 3.33797];
     dir = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3];
-    graphLine(pointSlope, fixedOrigin, logPlot, anstisX, anstisY, dir, "Anstis", [0 0 0]);
+    graphLine(pointSlope, fixedOrigin, logPlot, anstisX, anstisY, dir, "Anstis", [0 0 0], [0 0 0]);
     %coefficients = [0.046,-0.031];
 end
 

@@ -43,11 +43,12 @@ datadlg = gui.Dlg(title='Record Data?', pos=None, size=None, style=None, labelBu
 ok_data = datadlg.show()
 recordData = datadlg.OK
 
+'''
 #Y/N INPUT DIALOGUE FOR GLASSES
 datadlg = gui.Dlg(title='Does the subject wear glasses?', pos=None, size=None, style=None, labelButtonOK=' Yes ', labelButtonCancel=' No ', screen=-1)
 ok_data = datadlg.show()
 glasses = datadlg.OK
-
+'''
 
 if recordData:
     #OUTPUT FILE PATH
@@ -94,13 +95,16 @@ directionsG = [0, 2]
 directionsNG = [0, 1, 2, 3]
 distToScreen = 50 #cm
 
+'''
 if glasses:
     directions = directionsG
     dirCap = 2
 else:
     directions = directionsNG
     dirCap = 4
-    
+'''
+dirCap = 2
+angles = anglesH
 
 #SPACING ADJUSTMENTS FOR TEXT DISPLAY
 dirXMult = [1.62, 0, -1.68, 0]
@@ -169,7 +173,6 @@ def displayVariables(angle, dir, size):
 
 def checkResponse(button, letter):
     key = '0'
-
     if button == 1:
         key = 'e'
     elif button == 2:
@@ -178,7 +181,6 @@ def checkResponse(button, letter):
         key = 'p'
     elif button == 4:
         key = 'space'
-    
     return (key == letter.lower())
 
     
@@ -192,75 +194,73 @@ while(1):
         break
     else:
         time.sleep(0.05)
-    
 
 #GENERATE CENTER DOT
 dot = genDisplay('.', 0, 1.1, 4, [.207,1,.259])
 
-directionIndex = 0
-shuffle(directions)
-for dir in directions:
-    
-    if(dir == 0 or dir == 2):
-        angles = list(anglesH)
-    else:
-        angles = list(anglesV)
+trials = list(range(0))
 
-    shuffle(angles)
-    for angle in angles:
+for i in range(len(angles)):
+    for j in range(len(directions)):
+        trials.append((i*10)+j)
+
+shuffle(trials)
+run = 0
+for trial in trials:
+    angle = angles[int(trial/10)]
+    dir = directions[(trial%10)]
+
+    size = angle/10
+    if(size == 0):
+        size = 1
+    numReversals = 0
+    totalReversals = 0
+    responses = 0
+    lastResponse = False
+    stairCaseCompleted = False
         
-        size = angle/10
-        if(size == 0):
-            size = 1
-        numReversals = 0
-        totalReversals = 0
-        responses = 0
-        lastResponse = False
-        stairCaseCompleted = False
-        
-        while not stairCaseCompleted:
+    while not stairCaseCompleted:
             
-            #GENERATE NEW STIMULI
-            letter = random.choice(letters)
+        #GENERATE NEW STIMULI
+        letter = random.choice(letters)
             
-            heightCm, angleCm, xPos, yPos = displayVariables(angle, dir, size)
-            displayText = genDisplay(letter, xPos, yPos, heightCm, 'white')
+        heightCm, angleCm, xPos, yPos = displayVariables(angle, dir, size)
+        displayText = genDisplay(letter, xPos, yPos, heightCm, 'white')
             
-            #ON FIRST TRIAL, DISPLAY BLANK SCREEN WITH CENTER DOT
-            if responses == 0:
+        #ON FIRST TRIAL, DISPLAY BLANK SCREEN WITH CENTER DOT
+        if responses == 0:
+            dot.draw()
+            win.flip()
+            
+        time.sleep(0.5)
+            
+        flash = 0
+        while 1:
+            flash = (flash == 0)
+            if flash:
                 dot.draw()
-                win.flip()
-            
-            time.sleep(0.5)
-            
-            flash = 0
-            while 1:
-                flash = (flash == 0)
-                if flash:
-                    dot.draw()
-                displayText.draw()
-                win.flip()
-                if ser.in_waiting:
-                    value = float(ser.readline().strip())
-                    button = int(value)
-                    break
-                else:
-                    time.sleep(0.05)
+            displayText.draw()
+            win.flip()
+            if ser.in_waiting:
+                value = float(ser.readline().strip())
+                button = int(value)
+                break
+            else:
+                time.sleep(0.05)
                 
-            thisResponse = checkResponse(button, letter)
+        thisResponse = checkResponse(button, letter)
             
-            #CALL STAIRCASE ALGORITHM
-            stairCaseCompleted, size, numReversals, totalReversals, lastResponse, responses = stairCase(thisResponse, numReversals, totalReversals, size, stairCaseCompleted, lastResponse, responses)
+        #CALL STAIRCASE ALGORITHM
+        stairCaseCompleted, size, numReversals, totalReversals, lastResponse, responses = stairCase(thisResponse, numReversals, totalReversals, size, stairCaseCompleted, lastResponse, responses)
             
-            if stairCaseCompleted:
-                #ADVANCE DIRECTION
-                direction = dir+1
-                #CSV OUTPUT
-                if recordData:
-                    csvOutput([direction, size, angle])
-                    
-    directionIndex += 1
-    if directionIndex != dirCap:
+        if stairCaseCompleted:
+        #ADVANCE DIRECTION
+        direction = dir+1
+        #CSV OUTPUT
+        if recordData:
+            csvOutput([direction, size, angle])
+        
+    if run == (len(trials)/2):
         for i in range(30):
             win.clearBuffer()
             seconds = str(30-i)
@@ -272,5 +272,5 @@ for dir in directions:
             numText.draw()
             win.flip()
             time.sleep(1)
-
+    run += 1
 endExp()
