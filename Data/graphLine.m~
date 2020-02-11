@@ -16,7 +16,7 @@ function graphLine(pointSlope, fixedOrigin, logPlot, x, y, dir, name, color1, co
 
     negx = -negx;
     figure(pointSlope);
-    txt = "%s %s : y = %4.2fx + %4.2f";
+    txt = "%s : y = %4.2fx + %4.2f";
     posfit = polyfit(posx(1,:), posy(1,:), 1);
     yfit = polyval(posfit,posx);
     hold on;
@@ -82,8 +82,7 @@ function graphLine(pointSlope, fixedOrigin, logPlot, x, y, dir, name, color1, co
     yfit = polyval(neglogfit,neglogx);
     hold on
     if name ~= "Anstis"
-        plot(neglogx,neglogy,'.','Color', color2, 'HandleVisibility', 'off');
-        plot(neglogx,yfit, 'Color', color2, 'LineWidth', 1, 'DisplayName', sprintf(txt, name, '(Left)', neglogfit(1,1), neglogfit(1,2)));
-    end
+    plot(neglogx,neglogy,'.','Color', color2, 'HandleVisibility', 'off');
+    plot(neglogx,yfit, 'Color', color2, 'LineWidth', 1, 'DisplayName', sprintf(txt, name, '(Left)', neglogfit(1,1), neglogfit(1,2)));
     grid on;
 end
