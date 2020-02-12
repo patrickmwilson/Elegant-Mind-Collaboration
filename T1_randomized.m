@@ -99,10 +99,12 @@ end
 
 %GENERATE RANDOMIZED ARRAY OF SIZE AND DIRECTION PAIRS
 pairs = [];
-for i = 1:15
-    for j = 1:length(directions)
-        pair = ((i*10)+directions(j));
-        pairs = [pairs;pair];
+for m = 1:trials
+    for i = 1:15
+        for j = 1:length(directions)
+            pair = ((i*10)+directions(j));
+            pairs = [pairs;pair];
+        end
     end
 end
 pairs = pairs(randperm(length(pairs)));
@@ -140,8 +142,6 @@ instructionText = 'Focus your eyes on the green dot and press any key once you h
 for i = 1:length(pairs)
     size = int8(floor(pairs(i)/10));
     direction = int8(mod(pairs(i),10));
-    disp(size);
-    disp(direction);
     
     characters = charactersPerSize(size);
     centerRect = SetRect(centerRectXStart(size),centerRectYStart(size),centerRectXEnd(size),centerRectYEnd(size));
