@@ -21,6 +21,22 @@ if CHECKBOXES(1)
         y(i) = table(i, 4);
         dir(i) = table (i, 1);
     end
+    
+    table = readCsv('T1/Reference Data');
+    t1heights = [0.23, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 5, 6, 7, 8, 9, 10];
+    t1avg = zeros(1,length(t1heights));
+    count = zeros(1,length(t1heights));
+    for i = 1:length(t1heights)
+        [row, col] = find(table == t1heights(i));
+        for j = 1:size(row,1)
+            if table(row(j),3) ~= 0
+                t1avg(i) = t1avg(i) + table(row(j), 3);
+                count(i) = count(i) + 1;
+            end
+        end
+    end
+    t1avg = t1avg./count;
+    
     graphLine(pointSlope, fixedOrigin, logPlot, x, y, dir, "T1", [1 0 0], [1 0.5 0]);
 end
 %Three Lines
@@ -155,13 +171,26 @@ if CHECKBOXES(11)
     y = zeros(1,size(table,1));
     dir = zeros(1,size(table,1));
     for i = 1:size(table,1)
-        angle = table(i,3);
-        height = table(i,2);
-        direction = table(i, 1);
-        x(i) = angle;
-        y(i) = height;
-        dir(i) = direction;
+        x(i) = table(i,3);
+        y(i) = table(i,2);
+        dir(i) = table(i,1);
     end
+    
+    table = readCsv('Isolated Character/Reference Data');
+    t1heights = [0.23, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 5, 6, 7, 8, 9, 10];
+    t1avg = zeros(1,length(t1heights));
+    count = zeros(1,length(t1heights));
+    for i = 1:length(t1heights)
+        [row, col] = find(table == t1heights(i));
+        for j = 1:size(row,1)
+            if table(row(j),3) ~= 0
+                t1avg(i) = t1avg(i) + table(row(j), 3);
+                count(i) = count(i) + 1;
+            end
+        end
+    end
+    t1avg = t1avg./count;
+    
     graphLine(pointSlope, fixedOrigin, logPlot, x, y, dir, "Isolated Character", [1 0 0.68], [0.8 0 1]);
 end
 %ANSTIS

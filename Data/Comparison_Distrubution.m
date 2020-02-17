@@ -6,28 +6,29 @@ ButtonUI();
 
 angles = [5, 10, 15, 20, 25, 30, 35, 40];
 
+divided = figure('Name','Letter Height/Eccentricity vs Eccentricity');
+distribution = figure('Name','Distribution of Letter Height/Eccentricity');
+
 %T1 
 if CHECKBOXES(1)
     table = readCsv('T1');
-    t1 = zeros(1,15);
-    count = zeros(1,15);
-    count(1) = 1;
+    angles = [];
+    heights = [];
+    count = 1;
     for i = 1:size(table,1)
-        angle = table(i, 4);
-        if(angle == 0.23)
-            angle = 1;
-        elseif(angle <= 4)
-            angle = (angle * 2) + 1;
-        else
-            angle = angle + 5;
+        if table(i,3) ~= 0
+            angles(count) = table(i,3);
+            heights(count) = table(i,4);
+            count = count+1;
         end
-        t1(1,angle) = t1(1,angle) + table(i, 3);
-        count(1,angle) = count(1,angle) + 1;
     end
-    t1 = t1./count;
-    t1LetterHeights = [0.23,0.5,1,1.5,2,2.5,3,3.5,4,5,6,7,8,9,10];
-    t1LetterHeights = t1LetterHeights./t1;
-    graphDistLine(t1, t1LetterHeights, "T1", [1 0 0], size(table,1));
+    heights = heights./angles;
+    [fitheights, fitangles] = removeOutliers(heights, angles);
+    sigma = std(fitheights);
+    %fitheights = fitheights.*fitangles;
+    fitdeviations = sigma.*fitangles;
+    
+    graphDistLine(angles, heights, fitangles, fitheights, "T1", [1 0 0], size(table,1));
 end
 %Three Lines
 if CHECKBOXES(2)
@@ -184,18 +185,16 @@ end
 %ISOLATED CHARACTER
 if CHECKBOXES(11)
     table = readCsv('Isolated Character');
-    ic = zeros(1,8);
-    count = zeros(1,8);
+    angles = [];
+    heights = [];
+    count = 1;
     for i = 1:size(table,1)
-        angle = (table(i,3)/5);
-        if angle < 1
-            continue;
+        if(table(i,3) ~= 0 && table(i,2) ~= 0)
+            angles(count) = table(i,3);
+            heights(count) = table(i,2);
         end
-        ic(1,angle) = ic(1,angle) + table(i, 2);
-        count(1,angle) = count(1,angle) + 1;
     end
-    ic = ic./count;
-    ic = ic./angles;
+    angles = angles./heights;
     graphDistLine(angles, ic, "Isolated Character", [1 0 0.68], size(table,1));
 end
 %ANSTIS
