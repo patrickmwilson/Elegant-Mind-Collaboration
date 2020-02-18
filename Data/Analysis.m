@@ -1,43 +1,43 @@
 clear variables;
 clear all;
 
+prompt = {'Enter subject code:' };
+dlgtitle = 'Input';
+dims = [1 35];
+answer = inputdlg(prompt,dlgtitle,dims);
+subjectCode = char(answer(1,1));
+
 global CHECKBOXES;
 ButtonUI();
 
 pointSlope = figure('Name','Point Slope');
-fixedOrigin = figure('Name','Point Slope (fixed at origin)');
-logPlot = figure('Name','Log-Log Plot');
 
 angles = [0, 5, 10, 15, 20, 25, 30, 35, 40];
 
 %T1 
 if CHECKBOXES(1)
+    t1Divided = figure('Name','Letter Height/Eccentricity vs Eccentricity');
+    t1Distribution = figure('Name','Distribution of Letter Height/Eccentricity');
     table = readCsv('T1');
-    x = zeros(1,size(table,1));
-    y = zeros(1,size(table,1));
-    dir = zeros(1,size(table,1));
+    x = [];
+    y = [];
+    dir = [];
+    count = 1;
     for i = 1:size(table,1)
-        x(i) = table(i, 3);
-        y(i) = table(i, 4);
-        dir(i) = table (i, 1);
-    end
-    
-    table = readCsv('T1/Reference Data');
-    t1heights = [0.23, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 5, 6, 7, 8, 9, 10];
-    t1avg = zeros(1,length(t1heights));
-    count = zeros(1,length(t1heights));
-    for i = 1:length(t1heights)
-        [row, col] = find(table == t1heights(i));
-        for j = 1:size(row,1)
-            if table(row(j),3) ~= 0
-                t1avg(i) = t1avg(i) + table(row(j), 3);
-                count(i) = count(i) + 1;
-            end
+        if table(i,3) ~= 0
+            x(count) = table(i, 3);
+            y(count) = table(i, 4);
+            dir(count) = table (i, 1);
+            count = count+1;
         end
     end
-    t1avg = t1avg./count;
+    y = y./x;
+    [fity, fitx, fitdir, avg] = removeOutliers(y, x, dir);
+    delta = abs(y-avg);
+    delta = delta.*x;
+    y = y.*x;
     
-    graphLine(pointSlope, fixedOrigin, logPlot, x, y, dir, "T1", [1 0 0], [1 0.5 0]);
+    graphLine(x, y, dir, fitx, fity, fitdir, avg, delta, "T1", subjectCode, [1 0 0], t1Divided, t1Distribution, pointSlope);
 end
 %Three Lines
 if CHECKBOXES(2)
@@ -166,32 +166,28 @@ if CHECKBOXES(10)
 end
 %ISOLATED CHARACTER
 if CHECKBOXES(11)
+    icDivided = figure('Name','Letter Height/Eccentricity vs Eccentricity');
+    icDistribution = figure('Name','Distribution of Letter Height/Eccentricity');
     table = readCsv('Isolated Character');
-    x = zeros(1,size(table,1));
-    y = zeros(1,size(table,1));
-    dir = zeros(1,size(table,1));
+    x = [];
+    y = [];
+    dir = [];
+    count = 1;
     for i = 1:size(table,1)
-        x(i) = table(i,3);
-        y(i) = table(i,2);
-        dir(i) = table(i,1);
-    end
-    
-    table = readCsv('Isolated Character/Reference Data');
-    t1heights = [0.23, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 5, 6, 7, 8, 9, 10];
-    t1avg = zeros(1,length(t1heights));
-    count = zeros(1,length(t1heights));
-    for i = 1:length(t1heights)
-        [row, col] = find(table == t1heights(i));
-        for j = 1:size(row,1)
-            if table(row(j),3) ~= 0
-                t1avg(i) = t1avg(i) + table(row(j), 3);
-                count(i) = count(i) + 1;
-            end
+        if table(i,3) ~= 0
+            x(count) = table(i,3);
+            y(count) = table(i,2);
+            dir(count) = table(i,1);
+            count = count+1;
         end
     end
-    t1avg = t1avg./count;
+    y = y./x;
+    [fity, fitx, fitdir, avg] = removeOutliers(y, x, dir);
+    delta = abs(y-avg);
+    delta = delta.*x;
+    y = y.*x;
     
-    graphLine(pointSlope, fixedOrigin, logPlot, x, y, dir, "Isolated Character", [1 0 0.68], [0.8 0 1]);
+    graphLine(x, y, dir, fitx, fity, fitdir, avg, delta, "Isolated Character", subjectCode, [0 0 1], icDivided, icDistribution, pointSlope);
 end
 %ANSTIS
 if CHECKBOXES(12)
@@ -205,34 +201,40 @@ if CHECKBOXES(12)
 end
 
 figure(pointSlope);
-xlim([-inf inf]);
+xlim([0 inf]);
 ylim([0 inf]);
-xlabel("Eccentricity (degrees)");
-ylabel("Letter Height (degrees)");
-title("Letter Height vs. Retinal Eccentricity");
+xlabel("Eccentricity (degrees)", 'FontSize', 12);
+ylabel("Letter Height (degrees)", 'FontSize', 12);
+titleText = "Letter Height vs. Retinal Eccentricity (%s)";
+title(sprintf(titleText, subjectCode), 'FontSize', 14);
 legend('show', 'Location', 'best');
-ax = gca;
-ax.XAxisLocation = 'origin';
-ax.YAxisLocation = 'origin';
+% ax = gca;
+% ax.XAxisLocation = 'origin';
+% ax.YAxisLocation = 'origin';
 
-figure(fixedOrigin);
-xlim([-inf inf]);
-ylim([0 inf]);
-xlabel("Eccentricity (degrees)");
-ylabel("Letter Height (degrees)");
-title("Letter Height vs. Retinal Eccentricity (Fixed at Origin)");
-legend('show', 'Location', 'best');
-ax = gca;
-ax.XAxisLocation = 'origin';
-ax.YAxisLocation = 'origin';
+% figure(divided);
+% xlim([0 inf]);
+% ylim([0 inf]);
+% xlabel("Eccentricity (degrees)", 'FontSize', 18);
+% ylabel("Letter Height (degrees)/Eccentricity (degrees)", 'FontSize', 18);
+% title("Letter Height/Retinal Eccentricity vs. Retinal Eccentricity", 'FontSize', 24);
+% legend('show', 'Location', 'best');
+% ax = gca;
+% ax.XAxisLocation = 'origin';
+% ax.YAxisLocation = 'origin';
 
-figure(logPlot);
-xlim([-inf inf]);
-ylim([-inf inf]);
-xlabel("Log of Eccentricity (degrees)");
-ylabel("Log of Letter Height (degrees)");
-title("Log of Letter Height vs. Log of Retinal Eccentricity");
-legend('show', 'Location', 'best');
-ax = gca;
-ax.XAxisLocation = 'origin';
-ax.YAxisLocation = 'origin';
+% figure(distribution);
+% xlabel("Letter Height (degrees)/Eccentricity (degrees)", 'FontSize', 18);
+% ylabel("Number of occurences", 'FontSize', 18);
+% title("Distribution of Letter Height (degrees)/Eccentricity (degrees)", 'FontSize', 24);
+
+% figure(logPlot);
+% xlim([-inf inf]);
+% ylim([-inf inf]);
+% xlabel("Log of Eccentricity (degrees)");
+% ylabel("Log of Letter Height (degrees)");
+% title("Log of Letter Height vs. Log of Retinal Eccentricity");
+% legend('show', 'Location', 'best');
+% ax = gca;
+% ax.XAxisLocation = 'origin';
+% ax.YAxisLocation = 'origin';

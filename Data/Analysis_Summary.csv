@@ -1,0 +1,9 @@
+Subject,Protocol,Truncated Mean,Truncated Standard Dev,Truncated N
+IZCH, T1,0.3267,0.0964,82
+IZCH, Isolated Character,0.045,0.0171,16
+CNPC, T1,0.2928,0.0535,70
+CNPC, Isolated Character,0.0364,0.0089,15
+MMNK, T1,0.295,0.1081,71
+MMNK, Isolated Character,0.0369,0.0213,16
+OFBL, T1,0.3209,0.1153,72
+OFBL, Isolated Character,0.0243,0.0094,16

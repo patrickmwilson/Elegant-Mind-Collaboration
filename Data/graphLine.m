@@ -1,89 +1,70 @@
-function graphLine(pointSlope, fixedOrigin, logPlot, x, y, dir, name, color1, color2)
-    %x = normalize(x);
-    pos = 1;
-    neg = 1;
-    for i = 1:length(x)
-        if dir(i) == 1
-            posx(pos) = x(i);
-            posy(pos) = y(i);
-            pos = pos + 1;
-        else
-            negx(neg) = x(i);
-            negy(neg) = y(i);
-            neg = neg + 1;
-        end
-    end
-        i = 1;
-    while i <= length(posx)
-        if posx(i) == 0 || posy(i) == 0 || posx(i) > 20
-            posx(i) = [];
-            posy(i) = [];
-        else
-            i = i+1;
-        end
-    end
-    i = 1;
-    while i <= length(negx)
-        if negx(i) == 0 || negy(i) == 0 || negx(i) > 20
-            negx(i) = [];
-            negy(i) = [];
-        else
-            i = i+1;
-        end
-    end
-    negx = -negx;
-    figure(pointSlope);
-    txt = "%s %s : y = %4.3fx + %4.3f";
-    posfit = polyfit(posx(1,:), posy(1,:), 1);
-    yfit = polyval(posfit,posx);
-    hold on;
-    plot(posx,posy,'.','Color', color1, 'HandleVisibility', 'off', 'MarkerSize', 10);
-    plot(posx, yfit, 'Color', color1, 'LineWidth', 1, 'DisplayName', sprintf(txt, name, '(Right)', posfit(1,1), posfit(1,2)));
-    negfit = polyfit(negx(1,:), negy(1,:), 1);
-    yfit = polyval(negfit,negx);
-    hold on;
-    plot(negx,negy,'.','Color', color2, 'HandleVisibility', 'off', 'MarkerSize', 10);
-    plot(negx, yfit, 'Color', color2, 'LineWidth', 1, 'DisplayName', sprintf(txt, name, '(Left)', negfit(1,1), posfit(1,2)));
-    grid on;
-    
-    figure(fixedOrigin);
-    txt = "%s %s : y = %4.3fx";
-    hold on
-    posfit = polyfix(posx, posy, 1, 0, 0);
-    yfit = polyval(posfit,posx);
-    hold on;
-    plot(posx,posy,'.','Color', color1, 'HandleVisibility', 'off', 'MarkerSize', 10);
-    plot(posx,yfit, 'Color', color1, 'LineWidth', 1, 'DisplayName', sprintf(txt, name, '(Right)', posfit(1,1)));
-    grid on;
-    negfit = polyfix(negx, negy, 1, 0, 0);
-    yfit = polyval(negfit,negx);
-    hold on;
-    plot(negx,negy,'.','Color', color2, 'HandleVisibility', 'off', 'MarkerSize', 10);
-    plot(negx,yfit, 'Color', color2, 'LineWidth', 1, 'DisplayName', sprintf(txt, name, '(Left)', negfit(1,1)));
-    grid on;
-    
-    figure(logPlot);
+function graphLine(x, y, dir, fitx, fity, fitdir, avg, delta, name, subjectCode, color, divided, distribution, pointSlope)
 
-    
-    poslogx = log10(posx);
-    poslogy = log10(posy);
-    neglogx = log10(-negx);
-    neglogy = log10(negy);
-    
-    txt = "%s %s : y = %4.2fx + %4.2f";
-    hold on
-    poslogfit = polyfit(poslogx(1,:), poslogy(1,:), 1);
-    yfit = polyval(poslogfit,poslogx);
-    hold on
-    plot(poslogx,poslogy,'.','Color', color1, 'HandleVisibility', 'off', 'MarkerSize', 10);
-    plot(poslogx,yfit, 'Color', color1, 'LineWidth', 1, 'DisplayName', sprintf(txt, name, '(Right)', poslogfit(1,1), poslogfit(1,2)));
-    hold on
-    neglogfit = polyfit(neglogx(1,:), neglogy(1,:), 1);
-    yfit = polyval(neglogfit,neglogx);
-    hold on
-    if name ~= "Anstis"
-        plot(neglogx,neglogy,'.','Color', color2, 'HandleVisibility', 'off', 'MarkerSize', 10);
-        plot(neglogx,yfit, 'Color', color2, 'LineWidth', 1, 'DisplayName', sprintf(txt, name, '(Left)', neglogfit(1,1), neglogfit(1,2)));
-    end
+%     [posx, posy, negx, negy] = splitByDirection(x,y,dir);
+%     [posfitx, posfity, negfitx, negfity] = splitByDirection(fitx,fity,fitdir);
+    divy = y./x;
+    figure(divided);
+    txt = "%s: y = %4.3f Mean: %4.3f, Sigma: %5.4f, N = %4.2f";
+    sd = std(fity);
+    N = length(fitx);
+    p = polyfit(fitx,fity,0);
+    poly = polyval(p,fitx);
+    hold on;
+    scatter(x(1,:), divy(1,:), 15, color, "filled", 'HandleVisibility', 'off');
+    plot(fitx,poly, 'Color', color, 'LineWidth', 1, 'DisplayName', sprintf(txt, name, p(1,1), avg, sd, N));
     grid on;
+    xlim([0 inf]);
+    ylim([0 inf]);
+    titleText = "Letter Height/Retinal Eccentricity vs. Retinal Eccentricity (%s %s)";
+    xlabel("Eccentricity (degrees)", 'FontSize', 12);
+    ylabel("Letter Height (degrees)/Eccentricity (degrees)", 'FontSize', 12);
+    title(sprintf(titleText, name, subjectCode), 'FontSize', 14);
+    legend('show', 'Location', 'best');
+    
+    figure(distribution);
+    edges = [];
+    binWidth = (max(divy)/25);
+    upperEdge = (max(divy)*1.2)/binWidth;
+    for i = 1:upperEdge
+        edges(i) = (i-1)*binWidth;
+    end
+    histogram(divy, 'BinEdges', edges);
+    cutoff = (2.5*sd);
+    hold on;
+    line([(avg+cutoff), (avg+cutoff)], ylim, 'LineWidth', 1, 'Color', 'r');
+    hold on;
+    line([(avg-cutoff), (avg-cutoff)], ylim, 'LineWidth', 1, 'Color', 'r');
+%     [muHat,sigmaHat] = normfit(fity);
+%     gauss = normpdf(fity,muHat,sigmaHat);
+    hold on;
+%     plot(fity,gauss);
+%     f = fit(fitx',fity','gauss2');
+%     xspace = linspace(min(fitx), max(fitx));
+%     plot(xspace,f, 'HandleVisibility', 'off');
+    xlabel("Letter Height (degrees)/Eccentricity (degrees)", 'FontSize', 12);
+    ylabel("Number of occurences", 'FontSize', 12);
+    titleText = "Distribution of Letter Height (degrees)/Eccentricity (degrees) (%s %s)";
+    title(sprintf(titleText, name, subjectCode), 'FontSize', 14);
+    
+    figure(pointSlope);
+    txt = "%s : y = %4.3fx";
+    xfit = linspace(0, max(x));
+    yfit = xfit*avg;
+    hold on;
+    errorbar(x,y,delta,'both','.', 'HandleVisibility', 'off', 'Color', [0 0 0])
+    plot(x,y,'.','Color', color, 'HandleVisibility', 'off', 'MarkerSize', 10);
+    hold on;
+    plot(xfit, yfit, 'Color', color, 'LineWidth', 1, 'DisplayName', sprintf(txt, name, avg));
+    grid on;
+    
+    folder = pwd;
+    csvName = fullfile(folder, 'Analysis_Summary.csv');
+
+    fileID = fopen(csvName, 'a');
+    if(exist(csvName, 'file') ~= 2)
+        fprintf(fileID, '%s, %s, %s, %s, %s\n', 'Subject', 'Protocol', 'Truncated Mean', 'Truncated SD', 'Truncated N');
+    end
+    fileID = fopen(csvName, 'a');
+    fprintf(fileID, '%s, %s, %5.4f, %5.4f, %d\n', subjectCode, name, avg, sd, N);
+    
 end
