@@ -11,8 +11,27 @@ global CHECKBOXES;
 ButtonUI();
 
 pointSlope = figure('Name','Point Slope');
+names = ['T1','Three Lines','Crowded Periphery 11x11','Crowded Periphery 7x7', ...
+        'Crowded Periphery 5x5', 'Crowded Periphery Cross', 'Crowded Periphery Inner', ...
+        'Crowded Periphery Outer', 'Crowded Center 9x9', 'Crowded Center 3x3',  ... 
+        'Isolated Character', 'Anstis'];
 
 angles = [0, 5, 10, 15, 20, 25, 30, 35, 40];
+
+for p = 1:length(checkboxes)
+    name = names(p);
+    if STRCMP(name, 'T1') ~= 0
+        divided = figure('Name','Eccentricity/Letter Height vs Letter Height');
+        angleIndex = 3;
+        heightIndex = 4;
+    else
+        divided = figure('Name','Letter Height/Eccentricity vs Eccentricity');
+        angleIndex = 3;
+        heightIndex = 2;
+    end
+        
+    
+end
 
 %T1 
 if CHECKBOXES(1)
