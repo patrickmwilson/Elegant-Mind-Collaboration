@@ -1,8 +1,10 @@
-function graphLine(x, y, dir, fitx, fity, fitdir, avg, delta, name, subjectCode, color, divided, distribution, pointSlope)
-
+function graphLine(x, y, dir, fitx, fity, fitdir, avg, delta, name, subjectCode, color, pointSlope, logPlot)
+    divided = figure();
+    distribution = figure();
 %     [posx, posy, negx, negy] = splitByDirection(x,y,dir);
 %     [posfitx, posfity, negfitx, negfity] = splitByDirection(fitx,fity,fitdir);
     divy = y./x;
+    
     figure(divided);
     txt = "%s: y = %4.3f Mean: %4.3f, Sigma: %5.4f, N = %4.2f";
     sd = std(fity);
@@ -15,9 +17,15 @@ function graphLine(x, y, dir, fitx, fity, fitdir, avg, delta, name, subjectCode,
     grid on;
     xlim([0 inf]);
     ylim([0 inf]);
-    titleText = "Letter Height/Retinal Eccentricity vs. Retinal Eccentricity (%s %s)";
-    xlabel("Eccentricity (degrees)", 'FontSize', 12);
-    ylabel("Letter Height (degrees)/Eccentricity (degrees)", 'FontSize', 12);
+    if (strcmp(name, 'T1'))
+        titleText = "Eccentricity/Letter Height vs. Eccentricity (%s %s)";
+        xlabel("Letter Height (degrees)", 'FontSize', 12);
+        ylabel("Eccentricity (degrees)/Letter Height (degrees)", 'FontSize', 12);
+    else
+        titleText = "Letter Height/Eccentricity vs. Eccentricity (%s %s)";
+        xlabel("Eccentricity (degrees)", 'FontSize', 12);
+        ylabel("Letter Height (degrees)/Eccentricity (degrees)", 'FontSize', 12);
+    end
     title(sprintf(titleText, name, subjectCode), 'FontSize', 14);
     legend('show', 'Location', 'best');
     
@@ -41,24 +49,61 @@ function graphLine(x, y, dir, fitx, fity, fitdir, avg, delta, name, subjectCode,
 %     f = fit(fitx',fity','gauss2');
 %     xspace = linspace(min(fitx), max(fitx));
 %     plot(xspace,f, 'HandleVisibility', 'off');
-    xlabel("Letter Height (degrees)/Eccentricity (degrees)", 'FontSize', 12);
+    if (strcmp(name, 'T1'))
+        titleText = "Distribution of Eccentricity/Letter Height (%s %s)";
+        xlabel("Letter Height (degrees)/Eccentricity (degrees)", 'FontSize', 12);
+    else
+        titleText = "Distribution of Letter Height/Eccentricity (%s %s)";
+        xlabel("Letter Height (degrees)/Eccentricity (degrees)", 'FontSize', 12);
+    end
     ylabel("Number of occurences", 'FontSize', 12);
-    titleText = "Distribution of Letter Height (degrees)/Eccentricity (degrees) (%s %s)";
     title(sprintf(titleText, name, subjectCode), 'FontSize', 14);
     
     figure(pointSlope);
+%     if (strcmp(name, 'T1'))
+%         x = x - y;
+%         fitx = fitx - fity;
+%         y = x + y;
+%         fity = fitx + fity;
+%         x = y - x;
+%         fitx = fity - fitx;
+%     end
     txt = "%s : y = %4.3fx";
     xfit = linspace(0, max(x));
     yfit = xfit*avg;
     hold on;
-    errorbar(x,y,delta,'both','.', 'HandleVisibility', 'off', 'Color', [0 0 0])
+    if (strcmp(name,'T1'))
+        errorbar(x,y,delta,'horizontal','.', 'HandleVisibility', 'off', 'Color', [0 0 0]);
+    else
+        errorbar(x,y,delta,'vertical','.', 'HandleVisibility', 'off', 'Color', [0 0 0]);
+    end
     plot(x,y,'.','Color', color, 'HandleVisibility', 'off', 'MarkerSize', 10);
     hold on;
     plot(xfit, yfit, 'Color', color, 'LineWidth', 1, 'DisplayName', sprintf(txt, name, avg));
     grid on;
     
-    folder = pwd;
-    csvName = fullfile(folder, 'Analysis_Summary.csv');
+    figure(logPlot);
+    hold on;
+    txt = "%s : y = %5.4fx + %5.4fx";
+    x = log10(x);
+    y = log10(y);
+    fity = fity.*fitx;
+    fitx = log10(fitx);
+    fity = log10(fity);
+    delta = abs(log10(delta));
+    logfit = polyfit(fitx(1,:), fity(1,:), 1);
+    yfit = polyval(logfit,x);
+    hold on
+    if (strcmp(name,'T1'))
+        errorbar(x,y,delta,'horizontal','.', 'HandleVisibility', 'off', 'Color', [0 0 0]);
+    else
+        errorbar(x,y,delta,'vertical','.', 'HandleVisibility', 'off', 'Color', [0 0 0]);
+    end
+    plot(x,y,'.','Color', color, 'HandleVisibility', 'off');
+    plot(x,yfit, 'Color', color, 'LineWidth', 1, 'DisplayName', sprintf(txt, name, logfit(1,1), logfit(1,2)));
+    
+    
+    csvName = fullfile(pwd, 'Analysis_Summary.csv');
 
     fileID = fopen(csvName, 'a');
     if(exist(csvName, 'file') ~= 2)
