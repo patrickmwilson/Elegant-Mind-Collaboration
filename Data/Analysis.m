@@ -38,11 +38,6 @@ for p = 1:length(CHECKBOXES)
                 count = count+1;
             end
         end
-%         if (strcmp(name, 'T1'))
-%             x = x - y;
-%             y = x + y;
-%             x = y - x;
-%         end
         y = y./x;
         [fity, fitx, fitdir, avg] = removeOutliers(y, x, dir);
         delta = abs(y-avg);

@@ -60,14 +60,6 @@ function graphLine(x, y, dir, fitx, fity, fitdir, avg, delta, name, subjectCode,
     title(sprintf(titleText, name, subjectCode), 'FontSize', 14);
     
     figure(pointSlope);
-%     if (strcmp(name, 'T1'))
-%         x = x - y;
-%         fitx = fitx - fity;
-%         y = x + y;
-%         fity = fitx + fity;
-%         x = y - x;
-%         fitx = fity - fitx;
-%     end
     txt = "%s : y = %4.3fx";
     xfit = linspace(0, max(x));
     yfit = xfit*avg;
@@ -101,7 +93,6 @@ function graphLine(x, y, dir, fitx, fity, fitdir, avg, delta, name, subjectCode,
     end
     plot(x,y,'.','Color', color, 'HandleVisibility', 'off');
     plot(x,yfit, 'Color', color, 'LineWidth', 1, 'DisplayName', sprintf(txt, name, logfit(1,1), logfit(1,2)));
-    
     
     csvName = fullfile(pwd, 'Analysis_Summary.csv');
 
