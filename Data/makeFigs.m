@@ -1,8 +1,6 @@
-function graphLine(x, y, dir, fitx, fity, fitdir, avg, delta, name, subjectCode, color, pointSlope, logPlot)
+function makeFigs(x, y, fitx, fity, avg, delta, name, subjectCode, color, pointSlope, logPlot)
     divided = figure();
     distribution = figure();
-%     [posx, posy, negx, negy] = splitByDirection(x,y,dir);
-%     [posfitx, posfity, negfitx, negfity] = splitByDirection(fitx,fity,fitdir);
     divy = y./x;
     
     figure(divided);
@@ -12,20 +10,15 @@ function graphLine(x, y, dir, fitx, fity, fitdir, avg, delta, name, subjectCode,
     p = polyfit(fitx,fity,0);
     poly = polyval(p,fitx);
     hold on;
-    scatter(x(1,:), divy(1,:), 15, color, "filled", 'HandleVisibility', 'off');
     plot(fitx,poly, 'Color', color, 'LineWidth', 1, 'DisplayName', sprintf(txt, name, p(1,1), avg, sd, N));
+    scaledScatter(divided, x, divy, color, 10);
     grid on;
     xlim([0 inf]);
     ylim([0 inf]);
-    if (strcmp(name, 'T1'))
-        titleText = "Eccentricity/Letter Height vs. Eccentricity (%s %s)";
-        xlabel("Letter Height (degrees)", 'FontSize', 12);
-        ylabel("Eccentricity (degrees)/Letter Height (degrees)", 'FontSize', 12);
-    else
-        titleText = "Letter Height/Eccentricity vs. Eccentricity (%s %s)";
-        xlabel("Eccentricity (degrees)", 'FontSize', 12);
-        ylabel("Letter Height (degrees)/Eccentricity (degrees)", 'FontSize', 12);
-    end
+    titleText = "Letter Height/Eccentricity vs. Eccentricity (%s %s)";
+    xlabel("Eccentricity (degrees)", 'FontSize', 12);
+    ylabel("Letter Height (degrees)/Eccentricity (degrees)", 'FontSize', 12);
+
     title(sprintf(titleText, name, subjectCode), 'FontSize', 14);
     legend('show', 'Location', 'best');
     
@@ -42,20 +35,10 @@ function graphLine(x, y, dir, fitx, fity, fitdir, avg, delta, name, subjectCode,
     line([(avg+cutoff), (avg+cutoff)], ylim, 'LineWidth', 1, 'Color', 'r');
     hold on;
     line([(avg-cutoff), (avg-cutoff)], ylim, 'LineWidth', 1, 'Color', 'r');
-%     [muHat,sigmaHat] = normfit(fity);
-%     gauss = normpdf(fity,muHat,sigmaHat);
     hold on;
-%     plot(fity,gauss);
-%     f = fit(fitx',fity','gauss2');
-%     xspace = linspace(min(fitx), max(fitx));
-%     plot(xspace,f, 'HandleVisibility', 'off');
-    if (strcmp(name, 'T1'))
-        titleText = "Distribution of Eccentricity/Letter Height (%s %s)";
-        xlabel("Letter Height (degrees)/Eccentricity (degrees)", 'FontSize', 12);
-    else
-        titleText = "Distribution of Letter Height/Eccentricity (%s %s)";
-        xlabel("Letter Height (degrees)/Eccentricity (degrees)", 'FontSize', 12);
-    end
+
+    titleText = "Distribution of Letter Height/Eccentricity (%s %s)";
+    xlabel("Letter Height (degrees)/Eccentricity (degrees)", 'FontSize', 12);
     ylabel("Number of occurences", 'FontSize', 12);
     title(sprintf(titleText, name, subjectCode), 'FontSize', 14);
     
@@ -65,11 +48,11 @@ function graphLine(x, y, dir, fitx, fity, fitdir, avg, delta, name, subjectCode,
     yfit = xfit*avg;
     hold on;
     if (strcmp(name,'T1'))
-        errorbar(x,y,delta,'horizontal','.', 'HandleVisibility', 'off', 'Color', [0 0 0]);
+        %errorbar(x,y,delta,'both','.', 'HandleVisibility', 'off', 'Color', [0.6 0.6 0.6], 'CapSize', 0);
     else
-        errorbar(x,y,delta,'vertical','.', 'HandleVisibility', 'off', 'Color', [0 0 0]);
+        %errorbar(x,y,delta,'vertical','.', 'HandleVisibility', 'off', 'Color', [0.6 0.6 0.6], 'CapSize', 0);
     end
-    plot(x,y,'.','Color', color, 'HandleVisibility', 'off', 'MarkerSize', 10);
+    scaledScatter(pointSlope, x, y, color, 10);
     hold on;
     plot(xfit, yfit, 'Color', color, 'LineWidth', 1, 'DisplayName', sprintf(txt, name, avg));
     grid on;
@@ -85,14 +68,16 @@ function graphLine(x, y, dir, fitx, fity, fitdir, avg, delta, name, subjectCode,
     delta = abs(log10(delta));
     logfit = polyfit(fitx(1,:), fity(1,:), 1);
     yfit = polyval(logfit,x);
+    
+%     residuals = y-((logfit(1,1).*x)+logfit(1,2));
     hold on
     if (strcmp(name,'T1'))
-        errorbar(x,y,delta,'horizontal','.', 'HandleVisibility', 'off', 'Color', [0 0 0]);
+        %errorbar(x,y,delta,'both','.', 'HandleVisibility', 'off', 'Color', [0.6 0.6 0.6], 'CapSize', 0);
     else
-        errorbar(x,y,delta,'vertical','.', 'HandleVisibility', 'off', 'Color', [0 0 0]);
+        %errorbar(x,y,delta,'vertical','.', 'HandleVisibility', 'off', 'Color', [0.6 0.6 0.6], 'CapSize', 0);
     end
-    plot(x,y,'.','Color', color, 'HandleVisibility', 'off');
     plot(x,yfit, 'Color', color, 'LineWidth', 1, 'DisplayName', sprintf(txt, name, logfit(1,1), logfit(1,2)));
+    scaledScatter(logPlot, x, y, color, 10);
     
     csvName = fullfile(pwd, 'Analysis_Summary.csv');
 
@@ -103,4 +88,10 @@ function graphLine(x, y, dir, fitx, fity, fitdir, avg, delta, name, subjectCode,
     fileID = fopen(csvName, 'a');
     fprintf(fileID, '%s, %s, %5.4f, %5.4f, %d\n', subjectCode, name, avg, sd, N);
     
+    folderName = fullfile(pwd, 'Subject_Data', subjectCode);
+    mkdir(folderName);
+    fileName = sprintf('%s%s%s%s', subjectCode, '_', name, '_divided.png');
+    saveas(divided, fullfile(folderName, fileName));
+    fileName = sprintf('%s%s%s%s', subjectCode, '_', name, '_distribution.png');
+    saveas(distribution, fullfile(folderName, fileName));
 end
