@@ -48,7 +48,7 @@ dotXPos = [1280, 1280, 1280, 1280, 1280, 1280, 1280, 1280, 1280, 1280, 1280, 128
 dotYPos = [720, 720, 720, 720, 720, 720, 720, 720, 720, 720, 720, 720, 720, 720, 720];
 
 %HARDCODED DIRECTION INDICATOR SIZES AND DISPLAY COORDINATES
-dirText = '><^v';
+dirText = '>v<^';
 dirTS = [7, 10, 13, 15, 17, 19, 20, 20, 20, 20, 20, 20, 20, 20, 20];
 dirTextXPos = [1278, 1277, 1275, 1275, 1274, 1274, 1274, 1274, 1274, 1274, 1274, 1274, 1274, 1274, 1274];
 dirTextYPos = [722, 724, 725, 725, 727, 727, 727, 727, 727, 727, 727, 727, 727, 727, 727];
@@ -74,7 +74,7 @@ if(recordData)
     underscore = '_';
     
     %MAKE DIRECTORY, CREATE EYETRACKING AND DATA CSV
-    folderName = 'C:\Users\chand\OneDrive\Desktop\Visual-Acuity\Data\T1\';
+    folderName = 'C:\Users\chand\OneDrive\Desktop\Visual-Acuity\Data\Data\T1\';
     csvTitle = [coordinatorName underscore month dash day dash minute];
     csvName = fullfile(folderName, [csvTitle '_T1.csv']);
 
@@ -86,8 +86,28 @@ if(recordData)
 end
 
 %Y/N INPUT DIALOGUE FOR GLASSES
-dataAnswer = questdlg('Does the subject wear glasses?', '', 'Yes', 'No', 'Cancel', 'Yes');
-glasses = (char(dataAnswer(1)) == 'Y');
+dataAnswer = questdlg('Horizontal directions only?', '', 'Yes', 'No', 'Cancel', 'Yes');
+horizontalOnly = (char(dataAnswer(1)) == 'Y');
+
+directionsH = [1, 3];
+directionsHV = [1, 2, 3, 4];
+if horizontalOnly
+    directions = directionsH;
+else
+    directions = directionsHV;
+end
+
+%GENERATE RANDOMIZED ARRAY OF SIZE AND DIRECTION PAIRS
+pairs = [];
+for m = 1:trials
+    for i = 1:15
+        for j = 1:length(directions)
+            pair = ((i*10)+directions(j));
+            pairs = [pairs;pair];
+        end
+    end
+end
+pairs = pairs(randperm(length(pairs)));
 
 %DEFAULT SETTINGS FOR PSYCHTOOLBOX
 PsychDefaultSetup(2);
@@ -119,178 +139,131 @@ calibrationAngles = [ -20, -15, -10, -5, 0, 5, 10, 15, 20 ];
 calibrationXCoords = [ 896, 997, 1095, 1189, 1280, 1371, 1466, 1564, 1665 ];
 instructionText = 'Focus your eyes on the green dot and press any key once you have done so. Press any key to begin.';
 
-directionsG = [1, 2];
-directionsNG = [1, 2, 3, 4];
-
-for trialNum = 1:trials
+for i = 1:length(pairs)
+    size = int8(floor(pairs(i)/10));
+    direction = int8(mod(pairs(i),10));
     
-    %GENERATE RANDOMIZED SIZE ARRAY
-    sizes = randperm(15,15);
+    characters = charactersPerSize(size);
+    centerRect = SetRect(centerRectXStart(size),centerRectYStart(size),centerRectXEnd(size),centerRectYEnd(size));
     
-    %LOOP THROUGH RANDOMIZED SIZE ARRAY
-    for sizeIndex = 1:15
-        %SET SIZE
-        size = sizes(sizeIndex);
-        
-        %SET NUM OF CHARACTERS & CENTER MASKING RECTANGLE COORDINATES
-        characters = charactersPerSize(size);
-        centerRect = SetRect(centerRectXStart(size),centerRectYStart(size),centerRectXEnd(size),centerRectYEnd(size));
-        
-        %GENERATE RANDOMIZED DIRECTION ARRAY
-        if glasses
-            directions = directionsG(randperm(length(directionsG)));
-            directionCap = 2;
+    numCorrect = 0;
+    
+    if(direction == 1)
+        distPerChar = distPerCharH(size);
+        spacer = 1;
+    elseif(direction == 2)
+        distPerChar = distPerCharV(size);
+        spacer = cols(size)+2;
+    elseif(direction == 3)
+        distPerChar = distPerCharH(size);
+        spacer = -1;
+    else %(direction == 4)
+        distPerChar = distPerCharV(size);
+        spacer = -(cols(size)+2);
+    end
+    
+    %GENERATE RANDOM ARRAY OF 'EPB'
+    textArray = blanks(characters);
+    for j = 1:characters    
+        q = letters(randi(length(letters)));
+        if(mod(j,cols(size)+1)==0)
+            textArray = strcat(textArray,'\n');
         else
-            directions = directionsNG(randperm(length(directionsNG)));
-            directionCap = 4;
-        end
-        directionIndex = 1;
-        
-        %LOOP THROUGH RANDOMIZED DIRECTION ARRAY
-        while(directionIndex <= directionCap)
-            numCorrect = 0;
-            
-            %SET DIRECTION
-            direction = directions(directionIndex);
-            
-            %SET SPACER, OUTPUT TEXT, AND DISTANCE BASED ON DIRECTION
-            if(direction == 1)
-                distPerChar = distPerCharH(size);
-                spacer = 1;
-            end
-            if(direction == 2)
-                distPerChar = distPerCharH(size);
-                spacer = -1;
-            end
-            if(direction == 3)
-                distPerChar = distPerCharV(size);
-                spacer = -(cols(size)+2);
-            end
-            if(direction == 4)
-                distPerChar = distPerCharV(size);
-                spacer = cols(size)+2;
-            end
-            
-            %GENERATE RANDOM ARRAY OF 'EPB'
-            textArray = blanks(characters);
-            for i = 1:characters    
-                q = letters(randi(length(letters)));
-                if(mod(i,cols(size)+1)==0)
-                    textArray = strcat(textArray,'\n');
-                else
-                    textArray = strcat(textArray,q);
-                end
-            end
-            
-            %Set start position in text array
-            pos = center(size)+spacer;
-            
-            %LOOP UNTIL INCORRECT KEYPRESS
-            while(1)
-                %DRAW TEXT ARRAY
-                wrappedString=WrapString(textArray,500);
-                Screen('TextSize', window, tS(size));
-                DrawFormattedText(window, wrappedString, arrayHorizontalStart(size), arrayVerticalStart(size), white);
-                %DRAW CENTER MASKING RECTANGLE
-                Screen('FillRect', window, gray, centerRect);
-                %DRAW CENTER DOT
-                Screen('glPoint', window, green, dotXPos(size), dotYPos(size), dotSizePix(size));
-                %DRAW DIRECTION INDICATOR
-                Screen('TextSize', window, dirTS(size));
-                DrawFormattedText(window, dirText(direction), dirTextXPos(size), dirTextYPos(size), black);
-                Screen('Flip', window);
-              
-                buttonPress = [];
-                while(1)
-                    buttonPress = readline(ser);
-                    if isempty(buttonPress)
-                         pause(.05);
-                    else
-                        button = str2num(buttonPress(1));
-                        break;
-                    end
-                end
-
-                %DISPLAY RED DOT TO INDICATE 0.5 SECOND WAIT PERIOD BEFORE
-                %NEXT KEYPRESS
-                wrappedString=WrapString(textArray,500);
-                Screen('TextSize', window, tS(size));
-                DrawFormattedText(window, wrappedString, arrayHorizontalStart(size), arrayVerticalStart(size), white);
-                Screen('FillRect', window, gray, centerRect);
-                Screen('glPoint', window, red, dotXPos(size), dotYPos(size), dotSizePix(size));
-                Screen('TextSize', window, dirTS(size));
-                DrawFormattedText(window, dirText(direction), dirTextXPos(size), dirTextYPos(size), black);
-                Screen('Flip', window);
-                WaitSecs(0.5);
-                
-                %CHECK KEYBOARD INPUT
-                if button == 1 
-                    key = 'E';
-                elseif button == 2  
-                    key = 'B';
-                elseif button == 3
-                    key = 'P';
-                elseif button == 4
-                    key = 'Q';
-                end
-                
-                %CONVERT TEXTARRAY TO CHAR, INDEX CURRENT CHAR
-                T = char(textArray);
-                currentChar = T(pos);
-                
-                correct = true;
-                %IF KEY IS CORRECT, MOVE POS & CONTINUE
-                if key == currentChar
-                    pos = pos+spacer;
-                    if(pos < 0 || pos > characters)
-                        correct = false;
-                    end
-                end
-                %IF KEY IS INCORRECT, OUTPUT, ADVANCE DIRECTION, & BREAK
-                if key ~= currentChar
-                    correct = false;
-                end
-                
-                if(correct)
-                    numCorrect = numCorrect + 1;
-                    continue;
-                end
-                
-                if(~correct)
-                    %ECCENTRICITY CALCULATION & OUTPUT
-                    eccentricity = atand((numCorrect*distPerChar)/(distToScreen));
-                    height = heights(size);
-                    %DATA OUTPUT
-                    if(recordData)
-                        fileID = fopen(csvName, 'a');
-                        fprintf(fileID, '%d, %d, %4.2f, %4.2f\n', direction, numCorrect, eccentricity, height);
-                    end
-                    
-                    directionIndex = directionIndex + 1;
-                    break;
-                end
-            end    
-        end
-        %5 SECOND BREAK BETWEEN TEXT SIZES
-        if(sizeIndex ~= 8)
-            Screen('TextSize', window, 25);
-            for i = 1:5
-                seconds = int2str(6-i);
-                DrawFormattedText(window, 'Break', halfX, (halfY-30), white);
-                DrawFormattedText(window, 'Seconds', (halfX + 5), halfY, white);
-                DrawFormattedText(window, seconds, (halfX-15), halfY, white);
-                Screen('Flip', window);
-                WaitSecs(1);
-            end
+            textArray = strcat(textArray,q);
         end
     end
-    %BREAK UNTIL KEYPRESS BETWEEN TRIALS
-    if(trialNum ~= trials)
-        Screen('TextSize', window, 25);
-        DrawFormattedText(window, 'Break (Press Any Key to Continue)', halfX, halfY, white);
+    
+    %Set start position in text array
+    pos = center(size)+spacer;
+    
+    while(1)
+        %DRAW TEXT ARRAY
+        wrappedString=WrapString(textArray,500);
+        Screen('TextSize', window, tS(size));
+        DrawFormattedText(window, wrappedString, arrayHorizontalStart(size), arrayVerticalStart(size), white);
+        %DRAW CENTER MASKING RECTANGLE
+        Screen('FillRect', window, gray, centerRect);
+        %DRAW CENTER DOT
+        Screen('glPoint', window, green, dotXPos(size), dotYPos(size), dotSizePix(size));
+        %DRAW DIRECTION INDICATOR
+        Screen('TextSize', window, dirTS(size));
+        DrawFormattedText(window, dirText(direction), dirTextXPos(size), dirTextYPos(size), black);
         Screen('Flip', window);
-        [secs, keyCode, deltaSecs] = KbWait();
-        WaitSecs(2);
+              
+        buttonPress = [];
+        while(1)
+            buttonPress = readline(ser);
+            if isempty(buttonPress)
+                pause(.05);
+            else
+                button = str2num(buttonPress(1));
+                break;
+            end
+        end
+
+        %DISPLAY RED DOT TO INDICATE 0.5 SECOND WAIT PERIOD BEFORE
+        %NEXT KEYPRESS
+        wrappedString=WrapString(textArray,500);
+        Screen('TextSize', window, tS(size));
+        DrawFormattedText(window, wrappedString, arrayHorizontalStart(size), arrayVerticalStart(size), white);
+        Screen('FillRect', window, gray, centerRect);
+        Screen('glPoint', window, red, dotXPos(size), dotYPos(size), dotSizePix(size));
+        Screen('TextSize', window, dirTS(size));
+        DrawFormattedText(window, dirText(direction), dirTextXPos(size), dirTextYPos(size), black);
+        Screen('Flip', window);
+        WaitSecs(0.5);
+                
+        %CHECK KEYBOARD INPUT
+        if button == 1 
+            key = 'E';
+        elseif button == 2  
+            key = 'B';
+        elseif button == 3
+            key = 'P';
+        elseif button == 4
+            key = 'Q';
+        end
+                
+        %CONVERT TEXTARRAY TO CHAR, INDEX CURRENT CHAR
+        T = char(textArray);
+        currentChar = T(pos);
+                
+        correct = true;
+        %IF KEY IS CORRECT, MOVE POS & CONTINUE
+        if key == currentChar
+            pos = pos+spacer;
+            if(pos < 0 || pos > characters)
+                correct = false;
+            end
+        else
+            correct = false;
+        end
+                
+        if(correct)
+            numCorrect = numCorrect + 1;
+            continue;
+        else
+            %ECCENTRICITY CALCULATION & OUTPUT
+            eccentricity = atand((numCorrect*distPerChar)/(distToScreen));
+            height = heights(size);
+            %DATA OUTPUT
+            if(recordData)
+                fileID = fopen(csvName, 'a');
+                fprintf(fileID, '%d, %d, %4.2f, %4.2f\n', direction, numCorrect, eccentricity, height);
+            end    
+            break;
+        end
+    end   
+    if((mod(i,10) == 0) && (i ~= length(pairs)))
+        Screen('TextSize', window, 25);
+        for j = 1:15
+            seconds = int2str(16-j);
+            DrawFormattedText(window, 'Break', halfX, (halfY-30), white);
+            DrawFormattedText(window, 'Seconds', (halfX + 15), halfY, white);
+            DrawFormattedText(window, seconds, (halfX-15), halfY, white);
+            Screen('Flip', window);
+            WaitSecs(1);
+        end
     end
 end
 
@@ -301,5 +274,6 @@ Screen('Flip', window);
 WaitSecs(5);
 
 sca;
+delete(ser);
 clear all;
 return;

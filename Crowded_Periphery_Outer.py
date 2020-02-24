@@ -1,9 +1,8 @@
-#Crowded Periphery
-#Created by Patrick Wilson on 11/29/2019 
+#Isolated Character
+#Created by Patrick Wilson on 11/22/2019 
 #Github.com/patrickmwilson
 #Created for the Elegant Mind Collaboration at UCLA under Professor Katsushi Arisaka
 #Copyright © 2019 Elegant Mind Collaboration. All rights reserved.
-
 from __future__ import absolute_import, division
 
 import psychopy
@@ -45,13 +44,14 @@ ok_data = datadlg.show()
 recordData = datadlg.OK
 
 #Y/N INPUT DIALOGUE FOR GLASSES
-datadlg = gui.Dlg(title='Does the subject wear glasses?', pos=None, size=None, style=None, labelButtonOK=' Yes ', labelButtonCancel=' No ', screen=-1)
+datadlg = gui.Dlg(title='Horizontal angles only?', pos=None, size=None, style=None, labelButtonOK=' Yes ', labelButtonCancel=' No ', screen=-1)
 ok_data = datadlg.show()
-glasses = datadlg.OK
+horizontalOnly = datadlg.OK
+
 
 if recordData:
     #OUTPUT FILE PATH
-    PATH = 'C:\\Users\\chand\\OneDrive\\Desktop\\Visual-Acuity\\Data'
+    PATH = 'C:\\Users\\chand\\OneDrive\\Desktop\\Visual-Acuity\\Data\\Data'
     OUTPATH = '{0:s}\\Crowded Periphery Outer\\'.format(PATH)
     
     #CD TO SCRIPT DIRECTORY
@@ -82,7 +82,7 @@ win = visual.Window(
     blendMode='avg', useFBO=True, 
     units='cm')
 
-#CREATE DEFAULT KEYBOARD
+#INITIALIZE DEFAULT KEYBOARD
 defaultKeyboard = keyboard.Keyboard()
 keyPress = keyboard.Keyboard()
 
@@ -90,24 +90,17 @@ keyPress = keyboard.Keyboard()
 letters = list("EPB")
 anglesH = [5, 10, 15, 20, 25, 30, 35, 40]
 anglesV = [5, 10, 15, 20, 25, 30]
-directionsG = [0, 2]
-directionsNG = [0, 1, 2, 3]
+directionsH = [0, 2]
+directionsV = [1, 3]
 distToScreen = 50 #cm
+trials = 1
 green = [.207,1,.259]
-
-if glasses:
-    directions = directionsG
-    dirCap = 2
-else:
-    directions = directionsNG
-    dirCap = 4
 
 #SPACING ADJUSTMENTS FOR TEXT DISPLAY
 dirXMult = [1.62, 0, -1.68, 0]
 dirYMult = [0, -1.562, 0, 1.748]
 yOffset = [0.2, 0, 0.2, 0]
 
-#GENERATE TEXT STIM OBJECT
 def genDisplay(text, xPos, yPos, height, colour):
     displayText = visual.TextStim(win=win,
     text= text,
@@ -140,10 +133,10 @@ def stairCase(thisResponse, numReversals, totalReversals, size, stairCaseComplet
             size += 0.2
         else:
             size += 0.1
+            
     #COMPLETE STAIRCASE IF THE MAX ANGLE IS REACHED, OR 3 REVERSALS OR 25 RESPONSES OCCUR
     if numReversals >= 3 or responses >= 25 or totalReversals > 15:
         stairCaseCompleted = True
-        
     if size < 0.1:
         size = 0.1
         
@@ -154,9 +147,9 @@ def angleCalc(angle):
     radians = math.radians(angle)
     spacer = (math.tan(radians)*distToScreen)
     return spacer
-
-#CALCULATE DISPLAY COORDINATES AND HEIGHT OF STIMULI
-def displayVariables(angle, dir):
+    
+#CALCULATE DISPLAY COORDINATES AND HEIGHT OF STIMULIe
+def displayVariables(angle, dir, size):
     #DISPLAY HEIGHT AND DISTANCE FROM CENTER IN CENTIMETERS
     heightCm = (angleCalc(size)*2.3378)
     angleCm = angleCalc(angle)
@@ -188,7 +181,6 @@ def genArray(size, heightCm, xPos, yPos, direction):
     elif direction == 4:
         outerRow = 0
         outerCol = 0
-    
     for i in range(rows):
         yCoord = yPos + (spacer*(1 - i))
         
@@ -208,7 +200,6 @@ def genArray(size, heightCm, xPos, yPos, direction):
 
 def checkResponse(button, letter):
     key = '0'
-
     if button == 1:
         key = 'e'
     elif button == 2:
@@ -217,22 +208,11 @@ def checkResponse(button, letter):
         key = 'p'
     elif button == 4:
         key = 'space'
-    
     return (key == letter.lower())
 
+    
 #DISPLAY INSTRUCTIONS FOR CHINREST ALIGNMENT
-instructions = genDisplay('  Align the edge of the headrest stand \nwith the edge of the tape marked 50cm \n\n       Press Any button to continue', 0, 5, 5, 'white')
-instructions.draw()
-win.flip()
-while(1):
-    if ser.in_waiting:
-        a = ser.readline()
-        break
-    else:
-        time.sleep(0.05)
-        
-#DISPLAY INSTRUCTIONS FOR CHINREST ALIGNMENT
-instructions = genDisplay('  Press the key corresponding to the letter \nfarthest from the flashing green dot \n\n       Press Any button to continue', 0, 5, 5, 'white')
+instructions = genDisplay('  Take some time to familiarize yourself with the buttons\n\n                       Press any button to begin', 0, 0, 5, 'white')
 instructions.draw()
 win.flip()
 while(1):
@@ -243,75 +223,85 @@ while(1):
         time.sleep(0.05)
     
 
-dot = genDisplay('.', 0, 1.1, 4, [.207,1,.259])
+#GENERATE CENTER DOT
+dot = genDisplay('.', 0, 1.1, 4, green)
 
-directionIndex = 0
-shuffle(directions)
-for dir in directions:
-    
-    if(dir == 0 or dir == 2):
-        angles = list(anglesH)
+#GENERATE RANDOM LIST OF ANGLE AND DIRECTION PAIRS
+pairs = list(range(0))
+for i in range(trials):
+    for j in range(len(anglesH)):
+        for k in range(len(directionsH)):
+            pairs.append((j*10)+k)
+    if not horizontalOnly:
+        for l in range(len(anglesV)):
+            for m in range(len(directionsV)):
+                pairs.append(-((l*10)+m))
+shuffle(pairs)
+
+run = 0
+for pair in pairs:
+    if(pair >= 0):
+        angle = anglesH[int(pair/10)]
+        dir = directionsH[(pair%10)]
     else:
-        angles = list(anglesV)
-    shuffle(angles)
-    for angle in angles:
-
-        #INITIALIZE TRIAL VARIABLES
-        size = angle/10
-        if(size == 0):
-            size = 1
-        numReversals = 0
-        totalReversals = 0
-        responses = 0
-        stairCaseCompleted = False
-        lastResponse = False
+        angle = anglesV[abs(int(pair/10))]
+        dir = directionsV[abs(pair%10)]
         
-        while not stairCaseCompleted:
+    size = angle/10
+    if(size == 0):
+        size = 1
+    numReversals = 0
+    totalReversals = 0
+    responses = 0
+    lastResponse = False
+    stairCaseCompleted = False
+        
+    while not stairCaseCompleted:
+        
+        win.clearBuffer()
             
-            win.clearBuffer()
+        #ON FIRST TRIAL, DISPLAY BLANK SCREEN WITH CENTER DOT
+        if responses == 0 and run == 0:
+            dot.draw()
+            win.flip()
             
-            if responses == 0:
-                dot.draw()
-                win.flip()
-            time.sleep(0.5)
+        time.sleep(0.5)
+        #GENERATE NEW STIMULI
+        letter = random.choice(letters)
             
-            #GENERATE NEW STIMULI
-            heightCm, angleCm, xPos, yPos = displayVariables(angle, dir)
-            outerChar = genArray(size, heightCm, xPos, yPos, dir)
+        heightCm, angleCm, xPos, yPos = displayVariables(angle, dir, size)
+        outerChar = genArray(size, heightCm, xPos, yPos, dir)
             
-            flash = 0
-            while 1:
-                flash = (flash == 0)
-                if flash:
-                    dot = genDisplay('.', 0, 1.1, 4, green)
-                    dot.draw()
-                else:
-                    dot = genDisplay('.', 0, 1.1, 4, 'grey')
-                    dot.draw()
-                win.flip(clearBuffer = False)
-                if ser.in_waiting:
-                    value = float(ser.readline().strip())
-                    button = int(value)
-                    break
-                else:
-                    time.sleep(0.05)
+        flash = 0
+        while 1:
+            flash = (flash == 0)
+            if flash:
+                dot = genDisplay('.', 0, 1.1, 4, green)
+            else:
+                dot = genDisplay('.', 0, 1.1, 4, 'grey')
+            dot.draw()
+            win.flip(clearBuffer = False)
+            if ser.in_waiting:
+                value = float(ser.readline().strip())
+                button = int(value)
+                break
+            else:
+                time.sleep(0.05)
+                
+        thisResponse = checkResponse(button, outerChar)
             
+        #CALL STAIRCASE ALGORITHM
+        stairCaseCompleted, size, numReversals, totalReversals, lastResponse, responses = stairCase(thisResponse, numReversals, totalReversals, size, stairCaseCompleted, lastResponse, responses)
             
-            #CHECK KEYPRESS AGAINST TARGET LETTER
-            thisResponse = checkResponse(button, outerChar)
-            
-            #CALL STAIRCASE ALGORITHM
-            stairCaseCompleted, size, numReversals, totalReversals, lastResponse, responses = stairCase(thisResponse, numReversals, totalReversals, size, stairCaseCompleted, lastResponse, responses)
-            
-            if stairCaseCompleted:
-                #INCREMENT DIR NUMBER FOR CSV OUTPUT TO FACILITATE ANALYSIS (1=R, 2=D...)
-                direction = dir+1
-                #CSV OUTPUT
-                if recordData:
-                    csvOutput([direction, size, angle])
+        if stairCaseCompleted:
+            #ADVANCE DIRECTION
+            direction = dir+1
+            #CSV OUTPUT
+            if recordData:
+                csvOutput([direction, size, angle])
                     
-    directionIndex += 1
-    if directionIndex != dirCap:
+    run += 1
+    if run == (int(len(pairs)/2)):
         for i in range(30):
             win.clearBuffer()
             seconds = str(30-i)
