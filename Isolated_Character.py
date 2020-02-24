@@ -176,7 +176,7 @@ def checkResponse(button, letter):
 
     
 #DISPLAY INSTRUCTIONS FOR CHINREST ALIGNMENT
-instructions = genDisplay('  Align the edge of the headrest stand \nwith the edge of the tape marked 50cm \n\n       Press Any button to continue', 0, 0, 5, 'white')
+instructions = genDisplay('  Take some time to familiarize yourself with the buttons\n\n                       Press any button to begin', 0, 0, 5, 'white')
 instructions.draw()
 win.flip()
 while(1):
