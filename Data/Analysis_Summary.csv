@@ -1,3 +1,13 @@
 Subject,Protocol,Truncated Mean,Truncated Standard Dev,Truncated NJAEN, Crowded Center 9x9, 0.0929, 0.0078, 15
 JAEN, Crowded Center 3x3, 0.0898, 0.0139, 16
 JAEN, Isolated Character, 0.0716, 0.0311, 16
+JAEN_MOCK, Crowded Center 9x9, 0.0929, 0.0078, 15
+JAEN_MOCK, Crowded Center 3x3, 0.0898, 0.0139, 16
+JAEN_MOCK, Isolated Character, 0.0716, 0.0311, 16
+g, T1, 0.3209, 0.1153, 72
+g, Crowded Periphery, 0.1175, 0.0475, 32
+g, Crowded Periphery Outer, 0.0677, 0.0205, 30
+g, Crowded Center 9x9, 0.0929, 0.0078, 15
+g, Crowded Center 3x3, 0.0898, 0.0139, 16
+g, Isolated Character, 0.0716, 0.0311, 16
+g, Anstis, 0.0517, 0.0108, 11

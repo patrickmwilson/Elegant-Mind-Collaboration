@@ -1,6 +1,6 @@
 function table = readCsv(folder)
 basefolder = pwd;
-folder = fullfile(basefolder, folder);
+folder = fullfile(basefolder, 'Data', folder);
 files = dir(folder);
 filenames={files(:).name}';
 csvfiles=filenames(endsWith(filenames,'.csv'));
