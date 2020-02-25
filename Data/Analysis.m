@@ -18,6 +18,7 @@ names = ["T1", "Crowded Periphery", "Crowded Periphery Outer", ...
     
 colors = [0 0.8 0.8; 0.9 0.3 0.9; 0.5 0 0.9; ...
         0 0.1 1; 0.4 0.8 0.5; 1 0.6 0; 0 0 0];
+divLim = [45 1.5; inf inf; inf inf; inf inf; inf inf; 45 0.12; 0 0];
 
 for p = 1:length(CHECKBOXES)
     if(CHECKBOXES(p))
@@ -35,12 +36,15 @@ for p = 1:length(CHECKBOXES)
             end
         end
         y = y./x;
-        [fity, fitx, avg] = removeOutliers(y, x);
-        delta = abs(y-avg);
-        delta = delta.*x;
+        [fity, fitx] = removeOutliers(y, x);
+%         delta = abs(y-avg);
+%         delta = delta.*x;
         y = y.*x;
         color = [colors(p,1) colors(p,2) colors(p,3)];
-        makeFigs(x, y, fitx, fity, avg, delta, name, subjectCode, color, pointSlope, logPlot);
+        divXLim = divLim(p,1);
+        divYLim = divLim(p,2);
+        makeFigs(x, y, fitx, fity, avg, name, subjectCode, color, ...
+            divXLim, divYLim, pointSlope, logPlot);
 
     end
 end
