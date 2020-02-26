@@ -1,4 +1,4 @@
-function [newdata, newpair, avg] = removeOutliers(data, pair)
+function [newdata, newpair] = removeOutliers(data, pair)
     Z = zscore(data);
     outliers = 0;
     i = 1;
@@ -14,10 +14,9 @@ function [newdata, newpair, avg] = removeOutliers(data, pair)
     end
     
     if outliers == 0
-        avg = mean(data);
         newdata = data;
         newpair = pair;
     else
-        [newdata, newpair, avg] = removeOutliers(data, pair);
+        [newdata, newpair] = removeOutliers(data, pair);
     end
 end
