@@ -1,8 +1,8 @@
-%T1
-%Created by Patrick Wilson on 6/25/2019
-%Github.com/patrickmwilson
-%Created for the Elegant Mind Collaboration at UCLA under Professor Katsushi Arisaka
-%Copyright ï¿½ 2019 Elegant Mind Collaboration. All rights reserved.
+% T1
+% Created by Patrick Wilson on 6/25/2019
+% Github.com/patrickmwilson
+% Created for the Elegant Mind Collaboration at UCLA under Professor Katsushi Arisaka
+% Copyright © 2019 Elegant Mind Collaboration. All rights reserved.
 
 % Clear the workspace and the screen
 close all hidden;

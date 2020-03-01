@@ -1,10 +1,22 @@
-function ButtonUI()
+% ButtonUI
+% Created by Patrick Wilson on 1/20/2020
+% Github.com/patrickmwilson
+% Created for the Elegant Mind Collaboration at UCLA under Professor Katsushi Arisaka
+% Copyright © 2020 Elegant Mind Collaboration. All rights reserved.
+
+% Creates a UI figure with checkboxes that upon callback, edit the values stored
+% in the global checkboxes array. Usage of this script is not reccommended as 
+% global variables can be tricky to work with. These were used here to avoid 
+% issues with transferring variables from the figure's workspace to the base 
+% workspace.
+
+function ButtonUI(names)
     global CHECKBOXES;
-    CHECKBOXES = [0,0,0,0,0,0,0];
-    names = ["T1", 'Crowded Periphery', 'Crowded Periphery Outer', ...
-        'Crowded Center 9x9', 'Crowded Center 3x3', 'Isolated Character', 'Anstis'];
+    CHECKBOXES = zeros(length(names));
+    
+    % Create the figure with named checkboxes
     f = figure;
-    for k=1:7 
+    for k=1:length(names) 
         cbh(k) = uicontrol('Style','checkbox','String',names(k), ...
                       'Value',0,'Position',[30 (280-(20*k)) 200 20],        ...
                        'Callback',{@checkBoxCallback,k});
@@ -12,23 +24,11 @@ function ButtonUI()
     uiwait(f);
 end
 
-function checkBoxCallback(hObject,eventData,checkBoxId)
+% Upon checkbox callback, reverse the value held by the checkbox.
+function checkBoxCallback(~,~,checkBoxId)
+
     global CHECKBOXES
-    switch checkBoxId
-        case 1
-            CHECKBOXES(1) = (CHECKBOXES(1)==0);
-        case 2
-            CHECKBOXES(2) = (CHECKBOXES(2)==0);
-        case 3
-            CHECKBOXES(3) = (CHECKBOXES(3)==0);
-        case 4
-            CHECKBOXES(4) = (CHECKBOXES(4)==0);
-        case 5
-            CHECKBOXES(5) = (CHECKBOXES(5)==0);
-        case 6
-            CHECKBOXES(6) = (CHECKBOXES(6)==0);
-        case 7
-            CHECKBOXES(7) = (CHECKBOXES(7)==0);
-    end
+    CHECKBOXES(checkBoxId) = (CHECKBOXES(checkBoxId)==0);
+    
 end
 

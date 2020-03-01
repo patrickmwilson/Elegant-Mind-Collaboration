@@ -1,0 +1,27 @@
+% scaledScatter
+% Created by Patrick Wilson on 1/20/2020
+% Github.com/patrickmwilson
+% Created for the Elegant Mind Collaboration at UCLA 
+% with Professor Katsushi Arisaka
+% Copyright © 2020 Elegant Mind Collaboration. All rights reserved.
+
+% Accepts a figure, a matrix containing x-
+function scaledScatter(plot, data, color, dotSize)
+    figure(plot);
+%     z = x';
+%     z(:,2) = y';
+
+    [q, I, ~] = unique(data, 'rows');
+    hold on;
+    scatter(q(:,1), q(:,2), dotSize, color, "filled", 'HandleVisibility', 'off');
+    
+    dupIndeces = setdiff(1:size(data,1),I);
+    dupes = data(dupIndeces,:);
+    
+    if(size(dupRows,1) > 0)
+%         dupX = (dupRows(:,1))';
+%         dupY = (dupRows(:,2))';
+        scaledScatter(plot,dupes,color,dotSize+5);
+    end
+    
+end
