@@ -174,9 +174,9 @@ function csvOutput = makeFigs(data, name, csvOutput, tableIndex, color, divLim, 
     
     % SAVING FIGURES, CSV OUTPUT ------------------------------------------------
     if(strcmp(name,'Anstis') == 0)
-        
+        mkdir(fullfile(pwd, 'Analysis Results'));
         % If the csv doesn't exist, create it and print a header
-        rawCsvName = fullfile(pwd, 'Analysis_Summary_Raw.csv');
+        rawCsvName = fullfile(pwd, 'Analysis Results', 'Analysis_Summary_Raw.csv');
         if(exist(rawCsvName, 'file') ~= 2)
             fileID = fopen(rawCsvName, 'a');
             fprintf(fileID, '%s, %s, %s, %s, %s, %s, %s, %s\n', ...
@@ -204,7 +204,7 @@ function csvOutput = makeFigs(data, name, csvOutput, tableIndex, color, divLim, 
             sError);
         fclose(fileID);
         
-        csvName = fullfile(pwd, 'Compiled_Paramaters.csv');
+        csvName = fullfile(pwd, 'Analysis Results', 'Compiled_Paramaters.csv');
         if(exist(csvName, 'file') ~= 2)
             fileID = fopen(csvName, 'a');
             formatSpec = '%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s\n';
@@ -273,13 +273,8 @@ function csvOutput = makeFigs(data, name, csvOutput, tableIndex, color, divLim, 
         
         % Save divided and distribution figures to a folder titled with the
         % subject code
-        folderName = fullfile(pwd, 'Plots');
-        mkdir(folderName);
-        disp(string(csvOutput{1,2}));
-        folderName = fullfile(pwd, 'Plots', string(csvOutput{1,2}));
-        mkdir(folderName);
         fFolderName = strcat(string(csvOutput{1,3}), "_", string(csvOutput{1,4}));
-        folderName = fullfile(pwd, 'Plots', string(csvOutput{1,2}), ...
+        folderName = fullfile(pwd, 'Analysis Results', 'Plots', string(csvOutput{1,2}), ...
             fFolderName);
         mkdir(folderName);
         fileName = sprintf('%s%s%s%s', string(csvOutput{1,3}), '_', name, ...

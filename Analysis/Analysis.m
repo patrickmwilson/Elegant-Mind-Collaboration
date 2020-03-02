@@ -12,6 +12,10 @@
 
 clear variables;
 close all;
+% Add helper functions to path (readCsv.m, makeFigs.m, scaledScatter.m,
+% ButtonUI.m)
+functionPath = fullfile(pwd, 'Functions');
+addpath(functionPath);  
 
 % Input dialogue for session index, type, subject code, and date of session 
 csvOutput = inputdlg({'Session Index','Type (Study/Mock/Internal)', ...
@@ -41,21 +45,10 @@ divLims = [45 1.5; 45 0.35; 45 0.35; 45 0.2; 45 0.2; 45 0.15; 45 0.15];
 for p = 1:length(CHECKBOXES)
     if(CHECKBOXES(p))
         name = names(p);
-%         table = readCsv(name);
-%         
-%         % Creates a 2 column matrix of the data. Eccentricity is placed in
-%         % column 1, letter height in column 2. 
-%         data = zeros(size(table,1),2);
-%         data(:,1) = table(:,3);
-%         % T1 data is stored differently, letter height is in column 4 of
-%         % the csv rather than column 2
-%         data(:,2) = table(:,(2 + 2*(strcmp(name,'T1'))));
-        
         data = readCsv(name);
         
         % Creates a 2 column matrix of the data. Eccentricity is placed in
         % column 1, letter height in column 2. 
-%         data = zeros(size(table,1),2);
         data(:,1) = data(:,3);
         % T1 data is stored differently, letter height is in column 4 of
         % the csv rather than column 2
@@ -103,14 +96,14 @@ ax.YAxisLocation = 'origin';
 
 % Saving point slope and log-log plots as png
 fFolderName = strcat(string(csvOutput{1,3}), "_", string(csvOutput{1,4}));
-folderName = fullfile(pwd, 'Plots', string(csvOutput{1,2}), ...
+folderName = fullfile(pwd, 'Analysis Results', 'Plots', string(csvOutput{1,2}), ...
     fFolderName);
 fileName = sprintf('%s%s', string(csvOutput{1,3}), '_point_slope.png');
 saveas(pointSlope, fullfile(folderName, fileName));
 fileName = sprintf('%s%s', string(csvOutput{1,3}), '_log_log_plot.png');
 saveas(logPlot, fullfile(folderName, fileName));
 
-csvName = fullfile(pwd, 'Compiled_Paramaters.csv');
+csvName = fullfile(pwd, 'Analysis Results', 'Compiled_Paramaters.csv');
 formatSpec = '%s, %s, %s, %s, %4.3f, %5.4f, %10.9f, %s, %4.3f, %5.4f, %10.9f, %s, %4.3f, %5.4f, %10.9f, %s, %4.3f, %5.4f, %10.9f, %s, %4.3f, %5.4f, %10.9f, %s, %4.3f, %5.4f, %10.9f\n';
 fileID = fopen(csvName, 'a');
 fprintf(fileID, formatSpec, csvOutput{1,:});
