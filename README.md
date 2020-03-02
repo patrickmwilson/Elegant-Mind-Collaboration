@@ -1,8 +1,9 @@
 # Visual-Acuity
-Python, MATLAB, Arduino, and LabVIEW scripts written for the Elegant Mind Collaboration under Professor Katsushi Arisaka, at UCLA
+Python, MATLAB, Arduino, and LabVIEW scripts written for the Elegant Mind Collaboration under Professor Katsushi Arisaka at UCLA
 
-All Python, MATLAB, and Arduino scripts written by Patrick Wilson
-LabVIEW scripts written by River Govin and Javier Carmona
+All Python, MATLAB, and Arduino scripts written by Patrick Wilson.
+
+LabVIEW scripts written by River Govin and Javier Carmona.
 
 These are experiments coded to test visual acuity in human subjects under various conditions, to provide evidence for Professor Arisaka's theory about human processing of semantic visual information.
 
