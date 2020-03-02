@@ -30,3 +30,9 @@ SABAM, 2-14-20, Isolated Character, 0.0267, 0.0091, 15, 0.002340
 SABAi, 2-27-20, Crowded Center 9x9, 0.0259, 0.0093, 14, 0.002484
 SABAi, 2-27-20, Crowded Center 3x3, 0.0273, 0.0091, 14, 0.002429
 SABAi, 2-27-20, Isolated Character, 0.0377, 0.0144, 16, 0.003610
+AVG, 02-12-20, T1, 0.3209, 0.1153, 72, 0.013588
+AVG, 02-12-20, Crowded Periphery, 0.0856, 0.0267, 16, 0.006673
+AVG, 02-12-20, Crowded Periphery Outer, 0.1166, 0.0522, 15, 0.013484
+AVG, 02-12-20, Crowded Center 9x9, 0.0259, 0.0093, 14, 0.002484
+AVG, 02-12-20, Crowded Center 3x3, 0.0273, 0.0091, 14, 0.002429
+AVG, 02-12-20, Isolated Character, 0.0377, 0.0144, 16, 0.003610
