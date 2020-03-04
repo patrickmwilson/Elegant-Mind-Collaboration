@@ -73,8 +73,8 @@ function csvOutput = makeFigs(data, name, csvOutput, tableIndex, color, divLim, 
     figure(distribution);
     
     hold on;
-    histogram(data(:,2), 100, 'HandleVisibility', 'off');
-    [Y,E] = discretize(data(:,2),100);
+    histogram(data(:,2), 25, 'HandleVisibility', 'off');
+    [Y,E] = discretize(data(:,2),25);
     m = mode(Y);
     gaussHeight = length(find(Y == m));
     peak = (E(m)+E(m+1))/2;
