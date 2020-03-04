@@ -53,7 +53,7 @@ function csvOutput = makeFigs(data, name, csvOutput, tableIndex, color, divLim, 
     grid on; box on;
     
     cutoff = (2.5*sd);
-    yline((avg+cutoff), 'LineWidth', 1, 'Color', 'r', ...
+    yline((avg+cutoff), 'LineWidth', 1, 'Color', 'r', 'LineStyle', '--', ...
         'HandleVisibility', 'off');
     
     % Setting axis limits based on experiment to facilitate visual 
@@ -73,32 +73,38 @@ function csvOutput = makeFigs(data, name, csvOutput, tableIndex, color, divLim, 
     figure(distribution);
     
     hold on;
-%     histogram(data(:,2), 'BinEdges', edges);
-    histogram(data(:,2), 100);
-%     histfit(data(:,2),100);
+    histogram(data(:,2), 100, 'HandleVisibility', 'off');
+    [Y,E] = discretize(data(:,2),100);
+    m = mode(Y);
+    gaussHeight = length(find(Y == m));
+    peak = (E(m)+E(m+1))/2;
+    
+    % Gaussian start/end are mean +/- sigma*5
+    gaussMin = floor(1e4*(avg - (5*sd)))/1e4;
+    gaussMax = round(1e4*(avg + (5*sd)))/1e4;
+    gaussX = gaussMin:1e-6:gaussMax;
+    % Generate normpdf values and rescale them to the height of the
+    % histogram
+    gaussY = normpdf(gaussX,avg,sd);
+    gaussY = rescale(gaussY, 0, (gaussHeight*1.1));
+    hold on;
+    plot(gaussX,gaussY, 'LineWidth', 0.75, 'Color', [1 0 0], 'DisplayName',  ...
+        sprintf("Peak: %5.4f", peak));
     
     % Plotting vertical red lines at +/-2.5 standard deviations to
     % demarcate the truncated data from the removed outliers
     cutoff = (2.5*sd);
-    line([(avg+cutoff), (avg+cutoff)], ylim, 'LineWidth', 1, 'Color', 'r');
-    line([(avg-cutoff), (avg-cutoff)], ylim, 'LineWidth', 1, 'Color', 'r');
+    line([(avg+cutoff), (avg+cutoff)], ylim, 'LineStyle', '--', ...
+        'LineWidth', 1, 'Color', 'r', 'HandleVisibility', 'off');
+    line([(avg-cutoff), (avg-cutoff)], ylim, 'LineStyle', '--',  ...
+        'LineWidth', 1, 'Color', 'r', 'HandleVisibility', 'off');
     
-%     % minimum value = mean - 5 signma
-%     x_min = floor(1e4*(avg - (5*sd)))/1e4;
-%     % maximum value = mean + 5 signma
-%     x_max = round(1e4*(avg + (5*sd)))/1e4;
-%     % create the x-values, in the range from +5 sigma to - 5 sigma
-%     x_values = x_min:1e-6:x_max;
-%     % create y-values for normal distribution
-%     y_values = normpdf(x_values,avg,sd);
-%     hold on;
-%     plot(x_values,y_values/10, 'LineWidth', 1, 'Color', [1 0 0], 'HandleVisibility', 'off');
-%     box on;
+    box on;
     
     % Setting axis limits based on experiment to facilitate visual 
     % comparison between subjects
     xlim([0 divLim(1,2)]);
-    ylim([0 inf]);
+    ylim([0 round(gaussHeight*1.5)]);
     
     % Axis labels and title
     titleText = "Distribution of Letter Height/Eccentricity (%s %s) (%s)";
@@ -106,7 +112,7 @@ function csvOutput = makeFigs(data, name, csvOutput, tableIndex, color, divLim, 
     ylabel("Number of occurences", 'FontSize', 10);
     title(sprintf(titleText, name, char(csvOutput{1,3}),  ...
         char(csvOutput{1,4})), 'FontSize', 12);
-    
+    legend('show', 'Location', 'best');
     
     % POINT SLOPE FIGURE ------------------------------------------------
     figure(pointSlope);
@@ -143,7 +149,7 @@ function csvOutput = makeFigs(data, name, csvOutput, tableIndex, color, divLim, 
     
     % LOG-LOG FIGURE ------------------------------------------------
     figure(logPlot);
-    txt = "%s : y = %3.2fx + %3.2fx";
+    txt = "%s : y = %3.2fx %3.2fx";
     
     % Logarithmic error bars -> delta(z) = 0.434 * (delta(y))/y 
     % see https://faculty.washington.edu/stuve/log_error.pdf
@@ -178,8 +184,8 @@ function csvOutput = makeFigs(data, name, csvOutput, tableIndex, color, divLim, 
         % If the csv doesn't exist, create it and print a header
         rawCsvName = fullfile(pwd, 'Analysis Results', 'Analysis_Summary_Raw.csv');
         if(exist(rawCsvName, 'file') ~= 2)
-            fileID = fopen(rawCsvName, 'a');
-            fprintf(fileID, '%s, %s, %s, %s, %s, %s, %s, %s\n', ...
+            fileID = fopen(rawCsvName, 'a+');
+            fprintf(fileID, '%s, %s, %s, %s, %s, %s, %s, %s', ...
                 'Session Index', ...
                 'Type', ...
                 'Subject Code', ...
@@ -192,8 +198,8 @@ function csvOutput = makeFigs(data, name, csvOutput, tableIndex, color, divLim, 
         end
         
         % Print statistics for each subject, for each experiment to csv
-        fileID = fopen(rawCsvName, 'a');
-        fprintf(fileID, '%s, %s, %s, %s, %s, %5.4f, %5.4f, %7.6f\n', ...
+        fileID = fopen(rawCsvName, 'a+');
+        fprintf(fileID, '\n%s, %s, %s, %s, %s, %5.4f, %5.4f, %7.6f', ...
             char(csvOutput{1,1}), ...
             char(csvOutput{1,2}), ...
             char(csvOutput{1,3}), ...
@@ -206,8 +212,8 @@ function csvOutput = makeFigs(data, name, csvOutput, tableIndex, color, divLim, 
         
         csvName = fullfile(pwd, 'Analysis Results', 'Compiled_Paramaters.csv');
         if(exist(csvName, 'file') ~= 2)
-            fileID = fopen(csvName, 'a');
-            formatSpec = '%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s\n';
+            fileID = fopen(csvName, 'a+');
+            formatSpec = '%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s';
             fprintf(fileID, formatSpec, ...
                 '', ...
                 '', ...

@@ -11,6 +11,7 @@
 % (divided and distribution figures).
 
 clear variables;
+clear all;
 close all;
 % Add helper functions to path (readCsv.m, makeFigs.m, scaledScatter.m,
 % ButtonUI.m)
@@ -104,8 +105,7 @@ fileName = sprintf('%s%s', string(csvOutput{1,3}), '_log_log_plot.png');
 saveas(logPlot, fullfile(folderName, fileName));
 
 csvName = fullfile(pwd, 'Analysis Results', 'Compiled_Paramaters.csv');
-formatSpec = '%s, %s, %s, %s, %4.3f, %5.4f, %10.9f, %s, %4.3f, %5.4f, %10.9f, %s, %4.3f, %5.4f, %10.9f, %s, %4.3f, %5.4f, %10.9f, %s, %4.3f, %5.4f, %10.9f, %s, %4.3f, %5.4f, %10.9f\n';
-fileID = fopen(csvName, 'a');
+formatSpec = '\n%s, %s, %s, %s, %4.3f, %5.4f, %10.9f, %s, %4.3f, %5.4f, %10.9f, %s, %4.3f, %5.4f, %10.9f, %s, %4.3f, %5.4f, %10.9f, %s, %4.3f, %5.4f, %10.9f, %s, %4.3f, %5.4f, %10.9f';
+fileID = fopen(csvName, 'a+');
 fprintf(fileID, formatSpec, csvOutput{1,:});
 fclose(fileID);
-

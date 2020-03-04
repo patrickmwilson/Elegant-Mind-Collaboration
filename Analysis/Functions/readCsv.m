@@ -13,8 +13,12 @@ function table = readCsv(name)
     
     % Suppress warning about modified csv headers
     warning('off','MATLAB:table:ModifiedAndSavedVarnames');
-
-    folder = fullfile(pwd, 'Active Data');
+    
+    if(strcmp(name,'Anstis'))
+        folder = fullfile(pwd, 'Active Data', 'Anstis');
+    else
+        folder = fullfile(pwd, 'Active Data');
+    end
     
     % Create list of names of all files within directory that end in '.csv'
     files = dir(folder);
