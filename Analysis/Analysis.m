@@ -26,7 +26,7 @@ csvOutput = csvOutput';
 
 names = ["T1", "Crowded Periphery", "Crowded Periphery Outer", ...
         "Crowded Center 9x9", "Crowded Center 3x3",  ... 
-        "Isolated Character", "Anstis"];
+        "Isolated Character", "Crowded Periphery 9x9", "Anstis"];
 
 % Checkbox input dialogue - chooses which data to analyze
 global CHECKBOXES;
@@ -37,8 +37,8 @@ logPlot = figure('Name', 'Log-Log Plot');
     
 % List of plot colors and axis limits for divided and distribution figures
 colors = [0 0.8 0.8; 0.9 0.3 0.9; 0.5 0 0.9; ...
-        0 0.1 1; 0.4 0.8 0.5; 1 0.6 0; 0 0 0];
-divLims = [45 1.5; 45 0.35; 45 0.35; 45 0.2; 45 0.2; 45 0.15; 45 0.15];
+        0 0.1 1; 0.4 0.8 0.5; 1 0.6 0; 0.83 0.86 .035; 0 0 0];
+divLims = [45 1.5; 45 0.35; 45 0.35; 45 0.2; 45 0.2; 45 0.15; 45 inf; 45 0.15];
 
 % Plots data from each experiment one at a time, producing a divided and a
 % distribution figure for each experiment, and a point-slope and
@@ -104,8 +104,8 @@ saveas(pointSlope, fullfile(folderName, fileName));
 fileName = sprintf('%s%s', string(csvOutput{1,3}), '_log_log_plot.png');
 saveas(logPlot, fullfile(folderName, fileName));
 
-csvName = fullfile(pwd, 'Analysis Results', 'Compiled_Paramaters.csv');
-formatSpec = '\n%s, %s, %s, %s, %4.3f, %5.4f, %10.9f, %s, %4.3f, %5.4f, %10.9f, %s, %4.3f, %5.4f, %10.9f, %s, %4.3f, %5.4f, %10.9f, %s, %4.3f, %5.4f, %10.9f, %s, %4.3f, %5.4f, %10.9f';
+csvName = fullfile(pwd, 'Analysis Results', 'Compiled_Parameters.csv');
+formatSpec = '\n%s, %s, %s, %s, %4.3f, %5.4f, %10.9f, %s, %4.3f, %5.4f, %10.9f, %s, %4.3f, %5.4f, %10.9f, %s, %4.3f, %5.4f, %10.9f, %s, %4.3f, %5.4f, %10.9f, %s, %4.3f, %5.4f, %10.9f, %s, %4.3f, %5.4f, %10.9f';
 fileID = fopen(csvName, 'a+');
 fprintf(fileID, formatSpec, csvOutput{1,:});
 fclose(fileID);
