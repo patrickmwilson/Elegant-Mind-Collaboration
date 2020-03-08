@@ -12,15 +12,18 @@
 
 function ButtonUI(names)
     global CHECKBOXES;
-    CHECKBOXES = zeros(length(names));
+    CHECKBOXES = ones(length(names));
     
     % Create the figure with named checkboxes
     f = figure;
     for k=1:length(names) 
         cbh(k) = uicontrol('Style','checkbox','String',names(k), ...
-                      'Value',0,'Position',[30 (280-(20*k)) 200 20],        ...
+                      'Value',1,'Position',[30 (280-(20*k)) 200 20],        ...
                        'Callback',{@checkBoxCallback,k});
     end
+%     cbh(k+1) = uicontrol('Style','checkbox','String',"Plot Histograms Separately", ...
+%                       'Value',1,'Position',[30 (280-(20*(k+1))) 200 20],        ...
+%                        'Callback',{@checkBoxCallback,(k+1)});
     uiwait(f);
 end
 
