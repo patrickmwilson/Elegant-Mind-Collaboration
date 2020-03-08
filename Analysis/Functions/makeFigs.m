@@ -1,6 +1,4 @@
-function csvOutput = makeFigs(data, name, csvOutput, tableIndex, color, divLim, pointSlope, logPlot)
-    divided = figure();
-    distribution = figure();
+function [csvOutput, rawCsvOutput] = makeFigs(data, name, csvOutput, rawCsvOutput, tableIndex, color, divLim, pointSlopeGraph, logPlot, llogPlot, combinedDist, logCombinedDist)
     
     warning('off','MATLAB:MKDIR:DirectoryExists');
     
@@ -19,268 +17,63 @@ function csvOutput = makeFigs(data, name, csvOutput, tableIndex, color, divLim, 
     
     % Recursively removing outliers more than 2.5 standard deviations (99%
     % confidence interval) from this distribution (see removeOutliers.m)
-    fitData = removeOutliers(data, 2.5, 2);
+    outliers = [];
+    [fitData,outliers] = removeOutliers(data, [], 2.5, 2);
     
     % Calculate useful statistics from this truncated distribution for
     % fitting
     sd = std(fitData(:,2));
-    avg = mean(fitData(:,2));
+    avg = (mean(fitData(:,2)));
     N = size(fitData,1);
-    sError = (sd/(sqrt(N)));
+    sError = (sd/(sqrt(N-1)));
     
-    % DIVIDED FIGURE ------------------------------------------------
-    figure(divided);
-    txt = "%s: y = %4.3f Mean: %4.3f, Sigma: %5.4f, N = %4.2f";
-    
-    % Calculating a 0 degree linear regression best fit line for the normalized,
-    % truncated distribution with (becomes y = avg of distribution).
-    p = polyfit(fitData(:,1),fitData(:,2),0);
-    poly = polyval(p,fitData(:,1));
-    
-    % Plotting error bars (one standard deviation from mean)
-    data(:,3) = sd;
-    hold on;
-    errorbar(data(:,1), data(:,2), data(:,3), 'vertical','.', ...
-        'HandleVisibility', 'off', 'Color', [0.43 0.43 0.43], 'CapSize', 0);
-    
-    % Plotting best fit line for normalized data
-    hold on;
-    plot(fitData(:,1),poly, 'Color', color, 'LineWidth', 1, 'DisplayName', ...
-        sprintf(txt, name, p(1,1), avg, sd, N));
-    
-    % Scattering data with scaled dot sizes (see scaledScatter.m)
-    scaledScatter(divided, data, color, 10, 5);
-    grid on; box on;
-    
-    cutoff = (2.5*sd);
-    yline((avg+cutoff), 'LineWidth', 1, 'Color', 'r', 'LineStyle', '--', ...
-        'HandleVisibility', 'off');
-    
-    % Setting axis limits based on experiment to facilitate visual 
-    % comparison between subjects
-    xlim([0 divLim(1,1)]);
-    ylim([0 divLim(1,2)]);
-    
-    % Axis labels and title
-    xlabel("Eccentricity (degrees)", 'FontSize', 12);
-    ylabel("Letter Height (degrees)/Eccentricity (degrees)", 'FontSize', 12);
-    title(sprintf("Letter Height/Eccentricity vs. Eccentricity (%s %s) (%s)", ...
-        name, char(csvOutput{1,3}), char(csvOutput{1,4})), 'FontSize', 12);
-    legend('show', 'Location', 'best');
-    
-    
-    % DISTRIBUTION FIGURE ------------------------------------------------
-    figure(distribution);
-    
-    hold on;
-    histogram(data(:,2), 25, 'HandleVisibility', 'off');
-    [Y,E] = discretize(data(:,2),25);
-    m = mode(Y);
-    gaussHeight = length(find(Y == m));
-%     peak = (E(m)+E(m+1))/2;
-    peak = avg;
-    
-    % Gaussian start/end are mean +/- sigma*5
-    gaussMin = floor(1e4*(avg - (5*sd)))/1e4;
-    gaussMax = round(1e4*(avg + (5*sd)))/1e4;
-    gaussX = gaussMin:1e-6:gaussMax;
-    % Generate normpdf values and rescale them to the height of the
-    % histogram
-    gaussY = normpdf(gaussX,avg,sd);
-    gaussY = rescale(gaussY, 0, (gaussHeight*1.1));
-    hold on;
-    plot(gaussX,gaussY, 'LineWidth', 0.75, 'Color', [1 0 0], 'DisplayName',  ...
-        sprintf("Peak: %5.4f", peak));
-    
-    % Plotting vertical red lines at +/-2.5 standard deviations to
-    % demarcate the truncated data from the removed outliers
-    cutoff = (2.5*sd);
-    line([(avg+cutoff), (avg+cutoff)], ylim, 'LineStyle', '--', ...
-        'LineWidth', 1, 'Color', 'r', 'HandleVisibility', 'off');
-    line([(avg-cutoff), (avg-cutoff)], ylim, 'LineStyle', '--',  ...
-        'LineWidth', 1, 'Color', 'r', 'HandleVisibility', 'off');
-    
-    box on;
-    
-    % Setting axis limits based on experiment to facilitate visual 
-    % comparison between subjects
-    xlim([0 divLim(1,2)]);
-    ylim([0 round(gaussHeight*1.5)]);
-    
-    % Axis labels and title
-    titleText = "Distribution of Letter Height/Eccentricity (%s %s) (%s)";
-    xlabel("Letter Height (degrees)/Eccentricity (degrees)", 'FontSize', 10);
-    ylabel("Number of occurences", 'FontSize', 10);
-    title(sprintf(titleText, name, char(csvOutput{1,3}),  ...
-        char(csvOutput{1,4})), 'FontSize', 12);
-    legend('show', 'Location', 'best');
-    
-    % POINT SLOPE FIGURE ------------------------------------------------
-    figure(pointSlope);
-    txt = "%s : y = %4.3fx";
-    
-    % Chi-squared minimization for fit line was completed by previous
-    % normalization of letter height/eccentricity. y = avg*x
-    xfit = linspace(0, max((data(:,1))'));
-    yfit = xfit*avg;
-    
+    if(~strcmp(name,'Anstis'))
+        
+        divided = figure();
+        dividedFig(data, fitData, avg, sd, N, csvOutput, name, color, divLim, divided);
+        
+        distribution = figure();
+        histFig(data, name, csvOutput, color, divLim, distribution, 0, 0);
+        
+        histFig(data, name, csvOutput, color, divLim, combinedDist, 1, 0);
+        
+        histFig(data, name, csvOutput, color, divLim, logCombinedDist, 1, 1);
+       
+    end
+
     % Converting letter heights back from letter height/eccentricity to
     % real values
     data(:,2) = data(:,2).*data(:,1);
+    fitData(:,2) = fitData(:,2).*fitData(:,1);
     
     % Adding values for error bars. Error bars represent one standard
     % deviation from the mean, multiplied by their corresponding
     % eccentricity value. Higher eccentricity values have higher error.
-    data(:,3) = data(:,1).*sd;
+    data(:,3) = sd.*data(:,1);
+        
+    pointSlope(data, avg, name, color, errorBarDirection, pointSlopeGraph);
     
-    % Plotting error bars
-    hold on;
-    errorbar(data(:,1), data(:,2), data(:,3), errorBarDirection,'.', ...
-        'HandleVisibility', 'off', 'Color', [0.43 0.43 0.43], 'CapSize', 0);
+    logfit = logLogFig(data, fitData, name, errorBarDirection, color, logPlot);
     
-    % Plotting fit line
-    hold on;
-    plot(xfit, yfit, 'Color', color, 'LineWidth', 1, 'DisplayName', ...
-        sprintf(txt, name, avg));
+    if(~strcmp(name,'Anstis'))
+        residualHist = figure();
+        residualPlot = figure();
+        residualFigs(fitData,outliers,([avg 0]),name,color,csvOutput,residualPlot,residualHist,0);
+        
+        logResidualHist = figure();
+        logResidualPlot = figure();
+        residualFigs(fitData,outliers,logfit,name,color,csvOutput,logResidualPlot,logResidualHist,1);
+        
+    end
     
-    % Scattering data with scaled dot sizes (see scaledScatter.m)
-    scaledScatter(pointSlope, data, color, 10, 5);
-    grid on; box on;
-    
-    
-    % LOG-LOG FIGURE ------------------------------------------------
-    figure(logPlot);
-    txt = "%s : y = %3.2fx %3.2fx";
-    
-    % Logarithmic error bars -> delta(z) = 0.434 * (delta(y))/y 
-    % see https://faculty.washington.edu/stuve/log_error.pdf
-    data(:,3) = data(:,3)./data(:,2);
-    data(:,3) = data(:,3).*0.434;
-    
-    % Multiplying letter height by eccentricity to get real values for the
-    % log-log polyfit
-    fitData(:,2) = fitData(:,2).*fitData(:,1);
-    
-    % Least-squares regression best fit for log10/log10 data
-    logfit = polyfit(log10(fitData(:,1)), log10(fitData(:,2)), 1);
-    yfit = polyval(logfit,log10(data(:,1)));
-    
-    % Plotting error bars first
-    hold on; 
-    errorbar(log10(data(:,1)),log10(data(:,2)),data(:,3), ...
-        errorBarDirection,'.', 'HandleVisibility', 'off', 'Color', ...
-        [0.43 0.43 0.43], 'CapSize', 0);
-
-    % Plotting best fit line over all log10(x) values
-    plot(log10(data(:,1)),yfit, 'Color', color, 'LineWidth', 1, 'DisplayName', ...
-        sprintf(txt, name, logfit(1,1), logfit(1,2)));
-    
-    % Scattering data with scaled dot size
-    scaledScatter(logPlot, log10(data), color, 10, 5);
-    grid on; box on;
-    
-    % SAVING FIGURES, CSV OUTPUT ------------------------------------------------
     if(strcmp(name,'Anstis') == 0)
-        mkdir(fullfile(pwd, 'Analysis Results'));
-        % If the csv doesn't exist, create it and print a header
-        rawCsvName = fullfile(pwd, 'Analysis Results', 'Analysis_Summary_Raw.csv');
-        if(exist(rawCsvName, 'file') ~= 2)
-            fileID = fopen(rawCsvName, 'a+');
-            fprintf(fileID, '%s, %s, %s, %s, %s, %s, %s, %s', ...
-                'Session Index', ...
-                'Type', ...
-                'Subject Code', ...
-                'Date', ...
-                'Protocol', ...
-                'Mean', ...
-                'Standard Deviation', ...
-                'Standard Error');
-            fclose(fileID);
+        if(size(rawCsvOutput,2) > 4)
+            rawCsvOutput((size(rawCsvOutput,1)+1),:) = rawCsvOutput((size(rawCsvOutput,1)),:);
         end
-        
-        % Print statistics for each subject, for each experiment to csv
-        fileID = fopen(rawCsvName, 'a+');
-        fprintf(fileID, '\n%s, %s, %s, %s, %s, %5.4f, %5.4f, %7.6f', ...
-            char(csvOutput{1,1}), ...
-            char(csvOutput{1,2}), ...
-            char(csvOutput{1,3}), ...
-            char(csvOutput{1,4}), ...
-            name, ...
-            avg, ...
-            sd, ...
-            sError);
-        fclose(fileID);
-        
-        csvName = fullfile(pwd, 'Analysis Results', 'Compiled_Parameters.csv');
-        if(exist(csvName, 'file') ~= 2)
-            fileID = fopen(csvName, 'a+');
-            formatSpec = '%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s';
-            fprintf(fileID, formatSpec, ...
-                '', ...
-                '', ...
-                '', ...
-                '', ...
-                'T1', ...
-                'T1', ...
-                'T1', ...
-                '', ...
-                'CP', ...
-                'CP', ...
-                'CP', ...
-                '', ...
-                'CPO', ...
-                'CPO', ...
-                'CPO', ...
-                '', ...
-                'CC 9x9', ...
-                'CC 9x9', ...
-                'CC 9x9', ...
-                '', ...
-                'CC 3x3', ...
-                'CC 3x3', ...
-                'CC 3x3', ...
-                '', ...
-                'IC', ...
-                'IC', ...
-                'IC', ...
-                '', ...
-                'CP 9x9', ...
-                'CP 9x9', ...
-                'CP 9x9');
-            fprintf(fileID, formatSpec, ...
-                'Session Index', ...
-                'Type', ...
-                'Subject Code', ...
-                'Date', ...
-                'Mean', ...
-                'Standard Deviation', ...
-                'Standard Error', ...
-                '', ...
-                'Mean', ...
-                'Standard Deviation', ...
-                'Standard Error', ...
-                '', ...
-                'Mean', ...
-                'Standard Deviation', ...
-                'Standard Error', ...
-                '', ...
-                'Mean', ...
-                'Standard Deviation', ...
-                'Standard Error', ...
-                '', ...
-                'Mean', ...
-                'Standard Deviation', ...
-                'Standard Error', ...
-                '', ...
-                'Mean', ...
-                'Standard Deviation', ...
-                'Standard Error', ...
-                '', ...
-                'Mean', ...
-                'Standard Deviation', ...
-                'Standard Error');
-            fclose(fileID);
-        end
+        rawCsvOutput{(size(rawCsvOutput,1)),5} = name;
+        rawCsvOutput{(size(rawCsvOutput,1)),6} = avg;
+        rawCsvOutput{(size(rawCsvOutput,1)),7} = sd;
+        rawCsvOutput{(size(rawCsvOutput,1)),8} = sError;
         
         csvOutput{1,tableIndex} = avg;
         csvOutput{1,(tableIndex+1)} = sd;
@@ -292,11 +85,28 @@ function csvOutput = makeFigs(data, name, csvOutput, tableIndex, color, divLim, 
         folderName = fullfile(pwd, 'Analysis Results', 'Plots', string(csvOutput{1,2}), ...
             fFolderName);
         mkdir(folderName);
+        
         fileName = sprintf('%s%s%s%s', string(csvOutput{1,3}), '_', name, ...
             '_divided.png');
         saveas(divided, fullfile(folderName, fileName));
+        
         fileName = sprintf('%s%s%s%s', string(csvOutput{1,3}), '_', name, ...
             '_distribution.png');
         saveas(distribution, fullfile(folderName, fileName));
+        
+        fileName = sprintf('%s%s%s%s', string(csvOutput{1,3}), '_', name, ...
+            '_residual_distribution.png');
+        saveas(residualHist, fullfile(folderName, fileName));
+        
+        fileName = sprintf('%s%s%s%s', string(csvOutput{1,3}), '_', name, ...
+            '_residual_plot.png');
+        saveas(residualPlot, fullfile(folderName, fileName));
+        
+        fileName = sprintf('%s%s%s%s', string(csvOutput{1,3}), '_', name, ...
+            '_log_residual_distribution.png');
+        saveas(logResidualHist, fullfile(folderName, fileName));
+        
+        fileName = sprintf('%s%s%s%s', string(csvOutput{1,3}), '_', name, ...
+            '_log_residual_plot.png');
+        saveas(logResidualPlot, fullfile(folderName, fileName));
     end
-end

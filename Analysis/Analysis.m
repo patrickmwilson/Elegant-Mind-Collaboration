@@ -11,8 +11,8 @@
 % (divided and distribution figures).
 
 clear variables;
-clear all;
 close all;
+
 % Add helper functions to path (readCsv.m, makeFigs.m, scaledScatter.m,
 % ButtonUI.m)
 functionPath = fullfile(pwd, 'Functions');
@@ -23,6 +23,7 @@ csvOutput = inputdlg({'Session Index','Type (Study/Mock/Internal)', ...
     'Subject Code (all caps)', 'Date of Session (MM-DD-YY)' },  ...
     'Session Info', [1 70]); 
 csvOutput = csvOutput';
+rawCsvOutput = csvOutput;
 
 names = ["T1", "Crowded Periphery", "Crowded Periphery Outer", ...
         "Crowded Center 9x9", "Crowded Center 3x3",  ... 
@@ -32,18 +33,25 @@ names = ["T1", "Crowded Periphery", "Crowded Periphery Outer", ...
 global CHECKBOXES;
 ButtonUI(names);
 
-pointSlope = figure('Name','Point Slope');
+pointSlopeGraph = figure('Name','Point Slope');
 logPlot = figure('Name', 'Log-Log Plot');
+llogPlot = figure('Name', 'Log-Log Plot');
+combinedDist = figure('Name', 'Combined Histogram');
+logCombinedDist = figure('Name', 'Log Combined Histogram');
     
 % List of plot colors and axis limits for divided and distribution figures
 colors = [0 0.8 0.8; 0.9 0.3 0.9; 0.5 0 0.9; ...
         0 0.1 1; 0.4 0.8 0.5; 1 0.6 0; 0.83 0.86 .035; 0 0 0];
 divLims = [45 1.5; 45 0.35; 45 0.35; 45 0.2; 45 0.2; 45 0.15; 45 inf; 45 0.15];
+maxDistX = 0;
+maxGaussHeight = 0;
+
+mkdir(fullfile(pwd, 'Analysis Results'));
 
 % Plots data from each experiment one at a time, producing a divided and a
 % distribution figure for each experiment, and a point-slope and
 % log10-log10 plot on which data from all experiments is graphed
-for p = 1:length(CHECKBOXES)
+for p = 1:(length(names))
     if(CHECKBOXES(p))
         name = names(p);
         data = readCsv(name);
@@ -67,13 +75,14 @@ for p = 1:length(CHECKBOXES)
         end
         
         % See makeFigs.m
-        csvOutput = makeFigs(data, name, csvOutput, (((p-1)*4)+5),  ...
-            colors(p,:), divLims(p,:), pointSlope, logPlot);
+        [csvOutput, rawCsvOutput] = makeFigs(data, name, csvOutput, ...
+            rawCsvOutput, (((p-1)*4)+5), colors(p,:), divLims(p,:), ...
+            pointSlopeGraph, logPlot, llogPlot, combinedDist, logCombinedDist);
     end
 end
 
 % Axes and text formatting for point slope plot
-figure(pointSlope);
+figure(pointSlopeGraph);
 xlim([0 45]);
 ylim([0 11]);
 xlabel("Eccentricity (degrees)");
@@ -95,17 +104,44 @@ ax = gca;
 ax.XAxisLocation = 'origin';
 ax.YAxisLocation = 'origin';
 
-% Saving point slope and log-log plots as png
+% Axes, title, and labels for combined distribution graph
+figure(combinedDist);
+xlim([0 inf]);
+ylim([0 0.7]);
+title(sprintf("Distribution of Letter Height/Eccentricity (%s) (%s)", ...
+char(csvOutput{1,3}), char(csvOutput{1,4})), 'FontSize', 12);
+xlabel("Letter Height (degrees)/Eccentricity (degrees)", ...
+            'FontSize', 10);
+ylabel("Number of Occurences (Normalized to Probability)", 'FontSize', 10);
+legend('show', 'Location', 'best');
+box on; grid on;
+
+% Axes, title, and labels for log combined distribution graph
+figure(logCombinedDist);
+xlim([-2 0.5]);
+ylim([0 0.7]);
+title(sprintf("Distribution of Log10[Letter Height/Eccentricity] (%s) (%s)", ...
+    char(csvOutput{1,3}), char(csvOutput{1,4})), 'FontSize', 12);
+xlabel("Log10[Letter Height (deg)/Eccentricity (deg)]", ...
+            'FontSize', 10);
+ylabel("Number of Occurences (Normalized to Probability)", 'FontSize', 10);
+legend('show', 'Location', 'best');
+box on; grid on;
+
+% Saving point slope, log-log, and combined dist plots as png
 fFolderName = strcat(string(csvOutput{1,3}), "_", string(csvOutput{1,4}));
 folderName = fullfile(pwd, 'Analysis Results', 'Plots', string(csvOutput{1,2}), ...
     fFolderName);
 fileName = sprintf('%s%s', string(csvOutput{1,3}), '_point_slope.png');
-saveas(pointSlope, fullfile(folderName, fileName));
+saveas(pointSlopeGraph, fullfile(folderName, fileName));
 fileName = sprintf('%s%s', string(csvOutput{1,3}), '_log_log_plot.png');
 saveas(logPlot, fullfile(folderName, fileName));
+fileName = sprintf('%s%s', string(csvOutput{1,3}), '_combined_histogram.png');
+saveas(combinedDist, fullfile(folderName, fileName));
+fileName = sprintf('%s%s', string(csvOutput{1,3}), '_log_combined_histogram.png');
+saveas(logCombinedDist, fullfile(folderName, fileName));
 
 csvName = fullfile(pwd, 'Analysis Results', 'Compiled_Parameters.csv');
-formatSpec = '\n%s, %s, %s, %s, %4.3f, %5.4f, %10.9f, %s, %4.3f, %5.4f, %10.9f, %s, %4.3f, %5.4f, %10.9f, %s, %4.3f, %5.4f, %10.9f, %s, %4.3f, %5.4f, %10.9f, %s, %4.3f, %5.4f, %10.9f, %s, %4.3f, %5.4f, %10.9f';
-fileID = fopen(csvName, 'a+');
-fprintf(fileID, formatSpec, csvOutput{1,:});
-fclose(fileID);
+rawCsvName = fullfile(pwd, 'Analysis Results', 'Analysis_Summary_Raw.csv');
+writeToCsv(csvOutput, rawCsvOutput, rawCsvName, csvName);
+

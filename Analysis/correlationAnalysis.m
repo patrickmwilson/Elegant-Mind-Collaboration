@@ -17,90 +17,102 @@ cp = figure();
 cpo = figure();
 cc9 = figure();
 cc3 = figure();
+cp9 = figure();
 cc39 = figure();
 cpocp = figure();
 
-
-figures = [t1,cp,cpo,cc9,cc3,cc39,cpocp];
 names = strings(0);
-nameNumbers = [];
 params = [];
+errors = [];
+
 count = 1;
 for i = 2:size(table,1)
     name = string(table{i,3});
-%     t1Slope = str2double(table{i,5});
-%     cpSlope = str2double(table{i,9});
-%     cpoSlope = str2double(table{i,13});
-%     cc9Slope = str2double(table{i,17});
-%     cc3Slope = str2double(table{i,21});
-%     icSlope = str2double(table{i,25});
+
+    for j = 1:7
+        currParams(j) = str2double(table{i,(((j-1)*4)+5)});
+        currErrors(j) = str2double(table{i,(((j-1)*4)+7)});
+    end
     
-    currParams(1) = str2double(table{i,5});
-    currParams(2) = str2double(table{i,9});
-    currParams(3) = str2double(table{i,13});
-    currParams(4) = str2double(table{i,17});
-    currParams(5) = str2double(table{i,21});
-    currParams(6) = str2double(table{i,25});
-    
+    currParams(isnan(currParams)) = 0;
+    currErrors(isnan(currErrors)) = 0;
     if(isempty(names) || ~any(strcmp(names(1,:),name)))
         index = count;
         count = count+1;
         names(index) = name;
         params(index,:) = currParams;
+        errors(index,:) = currErrors;
     else
         index = find(names == name);
-        div = (~isnan(params(index,:))) + (~isnan(currParams(1,:)));
-        params(index,:) = (params(index,:) + currParams)/div;
+        div = (1*(currParams(1,:) ~= 0))+1;
+        params(index,:) = (params(index,:) + currParams)./div;
+        div = (1*(currErrors(1,:) ~= 0))+1;
+        errors(index,:) = (errors(index,:) + currErrors)./div;
     end
 end
 
-yIndex = [1, 2, 3, 4, 5, 4, 3];
-xIndex = [6, 6, 6, 6, 6, 5, 2];
+figures = [t1,cp,cpo,cc9,cc3,cp9,cc39,cpocp];
 
-for i = 1:size(params,1)
-    for j = 1:length(figures)
-        xI = xIndex(j);
-        yI = yIndex(j);
-        if ~isnan(params(i,yI))
-            hold on;
+yIndex = [1, 2, 3, 4, 5, 7, 4, 3];
+xIndex = [6, 6, 6, 6, 6, 6, 5, 2];
+
+for j = 1:length(figures)
+    
+    xI = xIndex(j);
+    yI = yIndex(j);
+    
+    for i = 1:size(params,1)
+        if((params(i,yI) ~= 0) && (params(i,xI) ~= 0))
+            
             figure(figures(j));
+            hold on;
+            errorbar(params(i,xI), params(i,yI), errors(i,xI), ...
+                'horizontal','.', 'HandleVisibility', 'off', ...
+                'Color', [0.43 0.43 0.43], 'CapSize', 0);
+            
+            errorbar(params(i,xI), params(i,yI), errors(i,yI), ...
+                'vertical','.', 'HandleVisibility', 'off', ...
+                'Color', [0.43 0.43 0.43], 'CapSize', 0);
+            
             scatter(params(i,xI), params(i,yI), 10, [0 0 1], ...
                 "filled", 'HandleVisibility', 'off');
             
-%             dx = 0.005; dy = 0.005; % displacement so the text does not overlay the data points
-            text((params(i,xI)*1.01), params(i,yI), names(i), 'FontSize', 8);
-            
+            text((params(i,xI)*1.01), (params(i,yI)*1.01), names(i), 'FontSize', 8);
+
         end
     end
 end
 
-% t1 = figure();
-% cp = figure();
-% cpo = figure();
-% cc9 = figure();
-% cc3 = figure();
 
-titles = ["T1 slope vs. IC slope", "Crowded Periphery Center slope vs. IC slope", ...
+titles = ["T1 slope vs. IC slope", ...
+    "Crowded Periphery Center slope vs. IC slope", ...
     "Crowded Periphery outer slope vs. IC slope", ...
     "Crowded Center 9x9 slope vs. IC slope", ...
     "Crowded Center 3x3 slope vs. IC slope", ...
+    "Crowded Periphery 9x9 slope vs. IC slope", ...
     "Crowded Center 9x9 slope vs. Crowded Center 3x3 slope", ...
     "Crowded Periphery Outer slope vs. Crowded Periphery Center slope"];
 yLabels = ["T1 slope", ...
-    "Crowded Periphery Center slope", ...
-    "Crowded Periphery outer slope", ...
-    "Crowded Center 9x9 slope", ...
-    "Crowded Center 3x3 slope", ...
-    "Crowded Center 9x9 Slope", ...
-    "Crowded Periphery Outer Slope"];
+    "CPC slope", ...
+    "CPO slope", ...
+    "CC9x9 slope", ...
+    "CC3x3 slope", ...
+    "CP9x9 slope", ...
+    "CC9x9 Slope", ...
+    "CPO Slope"];
 xLabels = ["IC slope", ...
     "IC slope", ...
     "IC slope", ...
     "IC slope", ...
     "IC slope", ...
-    "Crowded Center 3x3 Slope", ...
-    "Crowded Periphery Center Slope"];
+    "IC slope", ...
+    "CC3x3 Slope", ...
+    "CPC Slope"];
 
+filenames = [ "T1vsIC", "CPCvsIC", "CPOvsIC", "CC9x9vsIC", "CC3x3vsIC", ...
+    "CP9x9vsIC", "CC9x9vsCC3x3", "CPOvsCPC"];
+
+params(params == 0) = NaN;
 for i = 1:length(figures)
     figure(figures(i));
     xlim([0, (max(params(:,xIndex(i)))*1.3)]);
@@ -110,22 +122,23 @@ for i = 1:length(figures)
     ylabel(yLabels(i));
     grid on;
     box on;
-%     xvals = 0:1e-6:(max(params(:,xIndex(i)))*2);
-%     yvals = 0:1e-6:(max(params(:,yIndex(i)))*2);
+    
+    yavg = nanmean(params(:,yIndex(i)));
+    xavg = nanmean(params(:,xIndex(i)));
+    
+    slope = yavg/xavg;
+
     xvals = linspace(0,(max(params(:,xIndex(i)))*2));
-    yvals = linspace(0,(max(params(:,yIndex(i)))*2));
-%     yfit = xvals
+    yvals = xvals.*slope;
+
     plot(xvals,yvals,'Color', [1 0 0], 'LineWidth', 0.8, 'HandleVisibility', ...
         'off');
+    
+    folderName = fullfile(pwd, 'Analysis Results', 'Correlation Analysis'); 
+    mkdir(folderName);
+    fileName = sprintf('%s%s', filenames(i), '.png');
+    saveas(figures(i), fullfile(folderName, fileName));
 end
 
-% for i = 1:length(figures)
-%     xMax = (max(params(:,i))*1.3);
-%     divs = [1, 
-%     for j = 1:6
-%         xStart = 
-%         line(
-%     end
-% end
 
 

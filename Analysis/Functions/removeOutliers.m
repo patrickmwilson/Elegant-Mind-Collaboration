@@ -9,7 +9,7 @@
 % Recursively computes the Z-score of the column of interest and removes 
 % row elements that have a Z-score higher than the cutoff. 
 
-function newData = removeOutliers(data, cutOff, columnOfInterest)
+function [newData,outliers] = removeOutliers(data, outliers, cutOff, columnOfInterest)
     
     % Compute Z-score of the column of interest and store it in a new
     % column
@@ -21,6 +21,7 @@ function newData = removeOutliers(data, cutOff, columnOfInterest)
     i = 1;
     while(i <= size(newData,1))
         if(abs(newData(i,(size(data,2)+1))) > cutOff)
+            outliers = [outliers; newData(i,:)];
             newData(i,:) = [];
             continue;
         end
@@ -33,7 +34,7 @@ function newData = removeOutliers(data, cutOff, columnOfInterest)
     % If elements were removed, function is called again with the modified
     % data
     if(size(newData,1) ~= size(data,1))
-        newData = removeOutliers(newData, cutOff, columnOfInterest);
+        [newData,outliers] = removeOutliers(newData, outliers, cutOff, columnOfInterest);
     end
     
 end
