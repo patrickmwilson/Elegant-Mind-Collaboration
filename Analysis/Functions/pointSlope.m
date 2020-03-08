@@ -1,7 +1,7 @@
-function pointSlope(data, avg, name, color, errorBarDirection, pointSlopeGraph, sum)
+function pointSlope(data, avg, name, color, errorBarDirection, pointSlopeGraph)
 
     figure(pointSlopeGraph);
-    txt = "%s : y = %4.3fx Squares: %8.1f";
+    txt = "%s : y = %4.3fx";
     
     % Chi-squared minimization for fit line was completed by previous
     % normalization of letter height/eccentricity. y = avg*x
@@ -16,7 +16,7 @@ function pointSlope(data, avg, name, color, errorBarDirection, pointSlopeGraph, 
     % Plotting fit line
     hold on;
     plot(xfit, yfit, 'Color', color, 'LineWidth', 1, 'DisplayName', ...
-        sprintf(txt, name, avg, sum));
+        sprintf(txt, name, avg));
     
     % Scattering data with scaled dot sizes (see scaledScatter.m)
     scaledScatter(pointSlopeGraph, data, color, 10, 5);

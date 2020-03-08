@@ -1,6 +1,14 @@
-function histFig(data, avg, N, name, csvOutput, color, distribution, combined)
+function histFig(data, name, csvOutput, color, divLim, distribution, combined, log)
 
     figure(distribution);
+    
+    if log
+        data(:,2) = log10(data(:,2));
+    end
+    
+    avg = mean(data(:,2));
+    sd = std(data(:,2));
+    N = size(data,1);
     
     hold on;
     % Optimum bin number for distribution 
@@ -26,7 +34,7 @@ function histFig(data, avg, N, name, csvOutput, color, distribution, combined)
     gaussY = rescale(gaussY, 0, (gaussHeight*1.1));
     hold on;
     plot(gaussX,gaussY, 'LineWidth', 0.75, 'Color', color, 'DisplayName',  ...
-            sprintf("%s Average: %5.4f", avg));
+            sprintf("%s Average: %5.4f", name, avg));
     
     % Plotting vertical red lines at +/-2.5 standard deviations to
     % demarcate the truncated data from the removed outliers
@@ -36,24 +44,16 @@ function histFig(data, avg, N, name, csvOutput, color, distribution, combined)
     line([(avg-cutoff), (avg-cutoff)], ylim, 'LineStyle', '--',  ...
             'LineWidth', 1, 'Color', color, 'HandleVisibility', 'off');
     box on;
-    
-    % Setting axis limits based on experiment to facilitate visual 
-    % comparison between subjects
-%     xlim([0 divLim(1,2)]);
-    xlim([-inf inf]);
-    ylim([0 0.6]);
-    
-    if combined
-        title(sprintf("Distribution of Letter Height/Eccentricity (%s) (%s)", ...
-            char(csvOutput{1,3}), char(csvOutput{1,4})), 'FontSize', 12);
-    else
+
+    % Axis labels and title
+    if ~combined
         title(sprintf("Distribution of Letter Height/Eccentricity (%s %s) (%s)", ...
             name, char(csvOutput{1,3}), char(csvOutput{1,4})), 'FontSize', 12);
+        xlabel("Letter Height (deg)/Eccentricity (deg)", 'FontSize', 10);
+        ylabel("Number of Occurences (Normalized to Probability)", 'FontSize', 10);
+        legend('show', 'Location', 'best');
+        ylim([0 0.7]);
+        xlim([0 divLim(1,2)]);
     end
-    % Axis labels and title
-    ylabel("Number of Occurences (Normalized to Probability)", 'FontSize', 10);
-    xlabel("Log10[Letter Height (deg)/Eccentricity (deg)]", 'FontSize', 10);
-    legend('show', 'Location', 'best');
-
 
 end

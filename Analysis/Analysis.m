@@ -34,9 +34,10 @@ global CHECKBOXES;
 ButtonUI(names);
 
 pointSlopeGraph = figure('Name','Point Slope');
-logpointSlopeGraph = figure('Name','Log Point Slope');
 logPlot = figure('Name', 'Log-Log Plot');
-combinedDist = figure('Name', 'Histogram');
+llogPlot = figure('Name', 'Log-Log Plot');
+combinedDist = figure('Name', 'Combined Histogram');
+logCombinedDist = figure('Name', 'Log Combined Histogram');
     
 % List of plot colors and axis limits for divided and distribution figures
 colors = [0 0.8 0.8; 0.9 0.3 0.9; 0.5 0 0.9; ...
@@ -74,27 +75,14 @@ for p = 1:(length(names))
         end
         
         % See makeFigs.m
-%         [csvOutput, rawCsvOutput] = makeFigs(data, name, csvOutput, ...
-%         rawCsvOutput, tableIndex, color, divLim, pointSlopeGraph, logPlot, ...
-%         combinedDist)
         [csvOutput, rawCsvOutput] = makeFigs(data, name, csvOutput, ...
             rawCsvOutput, (((p-1)*4)+5), colors(p,:), divLims(p,:), ...
-            pointSlopeGraph, logpointSlopeGraph, logPlot, combinedDist);
+            pointSlopeGraph, logPlot, llogPlot, combinedDist, logCombinedDist);
     end
 end
 
 % Axes and text formatting for point slope plot
 figure(pointSlopeGraph);
-xlim([0 45]);
-ylim([0 11]);
-xlabel("Eccentricity (degrees)");
-ylabel("Letter Height (degrees)");
-title(sprintf("Letter Height vs. Retinal Eccentricity (%s %s)", ...
-    char(csvOutput{1,3}), char(csvOutput{1,4})));
-legend('show', 'Location', 'best');
-
-% Axes and text formatting for point slope plot
-figure(logpointSlopeGraph);
 xlim([0 45]);
 ylim([0 11]);
 xlabel("Eccentricity (degrees)");
@@ -116,20 +104,31 @@ ax = gca;
 ax.XAxisLocation = 'origin';
 ax.YAxisLocation = 'origin';
 
+% Axes, title, and labels for combined distribution graph
 figure(combinedDist);
-xlim([-inf inf]);
+xlim([0 inf]);
 ylim([0 0.7]);
 title(sprintf("Distribution of Letter Height/Eccentricity (%s) (%s)", ...
 char(csvOutput{1,3}), char(csvOutput{1,4})), 'FontSize', 12);
-xlabel("Letter Height (degrees)/Eccentricity (degrees) (Logarithmic Scale)", ...
+xlabel("Letter Height (degrees)/Eccentricity (degrees)", ...
             'FontSize', 10);
-% set(gca,'xscale','log');
-% Axis labels and title
 ylabel("Number of Occurences (Normalized to Probability)", 'FontSize', 10);
 legend('show', 'Location', 'best');
 box on; grid on;
 
-% Saving point slope and log-log plots as png
+% Axes, title, and labels for log combined distribution graph
+figure(logCombinedDist);
+xlim([-2 0.5]);
+ylim([0 0.7]);
+title(sprintf("Distribution of Log10[Letter Height/Eccentricity] (%s) (%s)", ...
+    char(csvOutput{1,3}), char(csvOutput{1,4})), 'FontSize', 12);
+xlabel("Log10[Letter Height (deg)/Eccentricity (deg)]", ...
+            'FontSize', 10);
+ylabel("Number of Occurences (Normalized to Probability)", 'FontSize', 10);
+legend('show', 'Location', 'best');
+box on; grid on;
+
+% Saving point slope, log-log, and combined dist plots as png
 fFolderName = strcat(string(csvOutput{1,3}), "_", string(csvOutput{1,4}));
 folderName = fullfile(pwd, 'Analysis Results', 'Plots', string(csvOutput{1,2}), ...
     fFolderName);
@@ -139,11 +138,10 @@ fileName = sprintf('%s%s', string(csvOutput{1,3}), '_log_log_plot.png');
 saveas(logPlot, fullfile(folderName, fileName));
 fileName = sprintf('%s%s', string(csvOutput{1,3}), '_combined_histogram.png');
 saveas(combinedDist, fullfile(folderName, fileName));
+fileName = sprintf('%s%s', string(csvOutput{1,3}), '_log_combined_histogram.png');
+saveas(logCombinedDist, fullfile(folderName, fileName));
 
 csvName = fullfile(pwd, 'Analysis Results', 'Compiled_Parameters.csv');
 rawCsvName = fullfile(pwd, 'Analysis Results', 'Analysis_Summary_Raw.csv');
 writeToCsv(csvOutput, rawCsvOutput, rawCsvName, csvName);
-% formatSpec = '\n%s, %s, %s, %s, %4.3f, %5.4f, %10.9f, %s, %4.3f, %5.4f, %10.9f, %s, %4.3f, %5.4f, %10.9f, %s, %4.3f, %5.4f, %10.9f, %s, %4.3f, %5.4f, %10.9f, %s, %4.3f, %5.4f, %10.9f, %s, %4.3f, %5.4f, %10.9f';
-% fileID = fopen(csvName, 'a+');
-% fprintf(fileID, formatSpec, csvOutput{1,:});
-% fclose(fileID);
+

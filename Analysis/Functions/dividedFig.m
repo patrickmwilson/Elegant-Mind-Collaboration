@@ -1,4 +1,4 @@
-function dividedFig(data, fitData, avg, sd, N, csvOutput, name, color, divided)
+function dividedFig(data, fitData, avg, sd, N, csvOutput, name, color, divLim, divided)
 
     figure(divided);
     txt = "%s: y = %4.3f Mean: %4.3f, Sigma: %5.4f, N = %4.2f";
@@ -29,10 +29,8 @@ function dividedFig(data, fitData, avg, sd, N, csvOutput, name, color, divided)
     
     % Setting axis limits based on experiment to facilitate visual 
     % comparison between subjects
-%     xlim([0 divLim(1,1)]);
-%     ylim([0 divLim(1,2)]);
-    xlim([-inf inf]);
-    ylim([-inf inf]);
+    xlim([-inf divLim(1,1)]);
+    ylim([-inf divLim(1,2)]);
     
     % Axis labels and title
     xlabel("Eccentricity (degrees)", 'FontSize', 12);

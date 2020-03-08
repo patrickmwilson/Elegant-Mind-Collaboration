@@ -28,33 +28,11 @@ errors = [];
 count = 1;
 for i = 2:size(table,1)
     name = string(table{i,3});
-%     t1Slope = str2double(table{i,5});
-%     cpSlope = str2double(table{i,9});
-%     cpoSlope = str2double(table{i,13});
-%     cc9Slope = str2double(table{i,17});
-%     cc3Slope = str2double(table{i,21});
-%     icSlope = str2double(table{i,25});
 
     for j = 1:7
         currParams(j) = str2double(table{i,(((j-1)*4)+5)});
         currErrors(j) = str2double(table{i,(((j-1)*4)+7)});
     end
-    
-%     currParams(1) = str2double(table{i,5});
-%     currParams(2) = str2double(table{i,9});
-%     currParams(3) = str2double(table{i,13});
-%     currParams(4) = str2double(table{i,17});
-%     currParams(5) = str2double(table{i,21});
-%     currParams(6) = str2double(table{i,25});
-%     currParams(7) = str2double(table{i,29});
-%     
-%     currErrors(1) = str2double(table{i,7});
-%     currErrors(2) = str2double(table{i,11});
-%     currErrors(3) = str2double(table{i,15});
-%     currErrors(4) = str2double(table{i,19});
-%     currErrors(5) = str2double(table{i,23});
-%     currErrors(6) = str2double(table{i,27});
-%     currErrors(6) = str2double(table{i,31});
     
     currParams(isnan(currParams)) = 0;
     currErrors(isnan(currErrors)) = 0;
@@ -72,13 +50,6 @@ for i = 2:size(table,1)
         errors(index,:) = (errors(index,:) + currErrors)./div;
     end
 end
-
-%     t1Slope = str2double(table{i,5});
-%     cpSlope = str2double(table{i,9});
-%     cpoSlope = str2double(table{i,13});
-%     cc9Slope = str2double(table{i,17});
-%     cc3Slope = str2double(table{i,21});
-%     icSlope = str2double(table{i,25});
 
 figures = [t1,cp,cpo,cc9,cc3,cp9,cc39,cpocp];
 
@@ -141,6 +112,7 @@ xLabels = ["IC slope", ...
 filenames = [ "T1vsIC", "CPCvsIC", "CPOvsIC", "CC9x9vsIC", "CC3x3vsIC", ...
     "CP9x9vsIC", "CC9x9vsCC3x3", "CPOvsCPC"];
 
+params(params == 0) = NaN;
 for i = 1:length(figures)
     figure(figures(i));
     xlim([0, (max(params(:,xIndex(i)))*1.3)]);
@@ -150,9 +122,14 @@ for i = 1:length(figures)
     ylabel(yLabels(i));
     grid on;
     box on;
+    
+    yavg = nanmean(params(:,yIndex(i)));
+    xavg = nanmean(params(:,xIndex(i)));
+    
+    slope = yavg/xavg;
 
     xvals = linspace(0,(max(params(:,xIndex(i)))*2));
-    yvals = linspace(0,(max(params(:,yIndex(i)))*2));
+    yvals = xvals.*slope;
 
     plot(xvals,yvals,'Color', [1 0 0], 'LineWidth', 0.8, 'HandleVisibility', ...
         'off');
