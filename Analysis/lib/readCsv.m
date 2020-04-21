@@ -16,6 +16,8 @@ function table = readCsv(name)
     
     if(strcmp(name,'Anstis'))
         folder = fullfile(pwd, 'Active Data', 'Anstis');
+    elseif(strcmp(name,'Compiled'))
+        folder = fullfile(pwd, 'Analysis Results');
     else
         folder = fullfile(pwd, 'Active Data');
     end
@@ -37,6 +39,8 @@ function table = readCsv(name)
     end
     
     % Convert the table to an array
-    table = table2array(table);
+    if ~strcmp(name,'Compiled')
+        table = table2array(table);
+    end
 
 end
