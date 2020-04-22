@@ -45,15 +45,12 @@ function histFig(data, name, csvOutput, color, divLim, distribution, combined, l
             'LineWidth', 1, 'Color', color, 'HandleVisibility', 'off');
     box on;
 
-    % Axis labels and title
+    % Axis labels and title for non-combined figure
     if ~combined
-        title(sprintf("Distribution of Letter Height/Eccentricity (%s %s) (%s)", ...
-            name, char(csvOutput{1,3}), char(csvOutput{1,4})), 'FontSize', 12);
-        xlabel("Letter Height (deg)/Eccentricity (deg)", 'FontSize', 10);
-        ylabel("Number of Occurences (Normalized to Probability)", 'FontSize', 10);
-        legend('show', 'Location', 'best');
-        ylim([0 0.7]);
-        xlim([0 divLim(1,2)]);
+        formatFigure(distribution, [gaussMin gaussMax], [0 gaussHeight*1.2], ...
+            "Letter Height (deg)/Eccentricity (deg)", ...
+            "Number of Occurences (Normalized to Probability)", ...
+            "Distribution of Letter Height/Eccentricity", false)
     end
 
 end

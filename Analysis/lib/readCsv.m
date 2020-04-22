@@ -3,23 +3,27 @@
 % Github.com/patrickmwilson
 % Created for the Elegant Mind Collaboration at UCLA under 
 % Professor Katsushi Arisaka
-% Copyright © 2020 Elegant Mind Collaboration. All rights reserved.
+% Copyright ï¿½ 2020 Elegant Mind Collaboration. All rights reserved.
 
 % Given a folder name that resides within the current directory, copies data
 % from all '.csv' folders within that directory that contain the sequence 
 % specified by name into an array.
 
-function table = readCsv(name)
+function table = readCsv(name, allData)
     
     % Suppress warning about modified csv headers
     warning('off','MATLAB:table:ModifiedAndSavedVarnames');
     
     if(strcmp(name,'Anstis'))
-        folder = fullfile(pwd, 'Active Data', 'Anstis');
+        folder = fullfile(pwd, 'Active_Data', 'Anstis');
     elseif(strcmp(name,'Compiled'))
-        folder = fullfile(pwd, 'Analysis Results');
+        folder = fullfile(pwd, 'Analysis_Results');
     else
-        folder = fullfile(pwd, 'Active Data');
+        if allData
+            folder = fullfile(pwd,'Active_Data','All');
+        else
+            folder = fullfile(pwd, 'Active_Data');
+        end
     end
     
     % Create list of names of all files within directory that end in '.csv'
