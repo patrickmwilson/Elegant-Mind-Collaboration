@@ -1,6 +1,4 @@
-function [csvOutput, rawCsvOutput] = makeFigs(data, name, csvOutput, rawCsvOutput, tableIndex, color, divLim, pointSlopeGraph, logPlot, llogPlot, combinedDist, logCombinedDist)
-    
-    warning('off','MATLAB:MKDIR:DirectoryExists');
+function [csvOutput,rawCsvOutput] = makeFigs(data,name,csvOutput,rawCsvOutput,tableIndex,color,divLim,wlssPointSlopeGraph,pointSlopeGraph,logPlot,combinedDist,logCombinedDist,saveOutput)
     
     % Setting direction of error bars. T1's independent variable is letter
     % height, while in all other experiments the independent variable is
@@ -13,6 +11,7 @@ function [csvOutput, rawCsvOutput] = makeFigs(data, name, csvOutput, rawCsvOutpu
     
     % Normalizing letter height values via dividing by eccentricity,
     % resulting in a normal distribution.
+    avgData = data;
     data(:,2) = data(:,2)./data(:,1);
     
     % Recursively removing outliers more than 2.5 standard deviations (99%
@@ -21,24 +20,32 @@ function [csvOutput, rawCsvOutput] = makeFigs(data, name, csvOutput, rawCsvOutpu
     [fitData,outliers] = removeOutliers(data, [], 2.5, 2);
     
     % Calculate useful statistics from this truncated distribution for
-    % fitting
+    % fitting - Standard deviation, Mean, Standard error
     sd = std(fitData(:,2));
-    avg = (mean(fitData(:,2)));
+    avg = mean(fitData(:,2));
     N = size(fitData,1);
     sError = (sd/(sqrt(N-1)));
     
+    % For all data except anstis, produce y/x vs. x graphs and y/x
+    % histograms
     if(~strcmp(name,'Anstis'))
-        
+        % y/x vs. x plot
         divided = figure();
-        dividedFig(data, fitData, avg, sd, N, csvOutput, name, color, divLim, divided);
+        dividedFig(data, fitData, avg, sd, N, name, color, ...
+            divLim, divided);
         
+        % y/x histogram
         distribution = figure();
-        histFig(data, name, csvOutput, color, divLim, distribution, 0, 0);
+        histFig(data, name, csvOutput, color, divLim, distribution, ...
+            false, false);
         
-        histFig(data, name, csvOutput, color, divLim, combinedDist, 1, 0);
+        % combined y/x histogram - all protocols graphed
+        histFig(data, name, csvOutput, color, divLim, combinedDist, ...
+            true, false);
         
-        histFig(data, name, csvOutput, color, divLim, logCombinedDist, 1, 1);
-       
+        % combined log10(y/x) histogram - all protocols graphed
+        histFig(data, name, csvOutput, color, divLim, logCombinedDist, ...
+            true, true);
     end
 
     % Converting letter heights back from letter height/eccentricity to
@@ -50,26 +57,40 @@ function [csvOutput, rawCsvOutput] = makeFigs(data, name, csvOutput, rawCsvOutpu
     % deviation from the mean, multiplied by their corresponding
     % eccentricity value. Higher eccentricity values have higher error.
     data(:,3) = sd.*data(:,1);
+    avgData(:,3) = sd.*avgData(:,1);
+    
+    % Weighted least sum of squares calculation
+    [avgData, wssAvg] = wss(avgData,name,avg);
         
-    pointSlope(data, avg, name, color, errorBarDirection, pointSlopeGraph);
+    % Graph linear point-slope with averaged data & wss slope
+    pointSlope(avgData, wssAvg, name, color, true, ...
+            errorBarDirection, wlssPointSlopeGraph);
     
-    logfit = logLogFig(data, fitData, name, errorBarDirection, color, logPlot);
+    % Graph linear point-slope without averaging data
+    pointSlope(data, avg, name, color, false, ...
+            errorBarDirection, pointSlopeGraph);
     
-    if(~strcmp(name,'Anstis'))
+    % Graph log-log plot, get fit parameters
+    logfit = logLogFig(data, fitData, name, errorBarDirection, color, ...
+        logPlot);
+    
+    % Residual plots and histograms, csv output, and saving figures
+    if(~strcmp(name,'Anstis')) && (saveOutput)
+        
         residualHist = figure();
         residualPlot = figure();
-        residualFigs(fitData,outliers,([avg 0]),name,color,csvOutput,residualPlot,residualHist,0);
+        residualFigs(fitData,outliers,([avg 0]),name,color,csvOutput, ...
+            residualPlot,residualHist,false);
         
         logResidualHist = figure();
         logResidualPlot = figure();
-        residualFigs(fitData,outliers,logfit,name,color,csvOutput,logResidualPlot,logResidualHist,1);
+        residualFigs(fitData,outliers,logfit,name,color,csvOutput, ...
+            logResidualPlot,logResidualHist,true);
         
-    end
-    
-    if(strcmp(name,'Anstis') == 0)
         if(size(rawCsvOutput,2) > 4)
             rawCsvOutput((size(rawCsvOutput,1)+1),:) = rawCsvOutput((size(rawCsvOutput,1)),:);
         end
+        
         rawCsvOutput{(size(rawCsvOutput,1)),5} = name;
         rawCsvOutput{(size(rawCsvOutput,1)),6} = avg;
         rawCsvOutput{(size(rawCsvOutput,1)),7} = sd;
@@ -82,31 +103,22 @@ function [csvOutput, rawCsvOutput] = makeFigs(data, name, csvOutput, rawCsvOutpu
         % Save divided and distribution figures to a folder titled with the
         % subject code
         fFolderName = strcat(string(csvOutput{1,3}), "_", string(csvOutput{1,4}));
-        folderName = fullfile(pwd, 'Analysis Results', 'Plots', string(csvOutput{1,2}), ...
+        folderName = fullfile(pwd, 'Analysis_Results', 'Plots', string(csvOutput{1,2}), ...
             fFolderName);
         mkdir(folderName);
         
-        fileName = sprintf('%s%s%s%s', string(csvOutput{1,3}), '_', name, ...
-            '_divided.png');
-        saveas(divided, fullfile(folderName, fileName));
+        figNames = ["_divided.png", "_distribution.png", ...
+            "_residual_distribution.png", "_residual_plot.png", ...
+            "_log_residual_distribution.png", "_log_residual_plot.png"];
         
-        fileName = sprintf('%s%s%s%s', string(csvOutput{1,3}), '_', name, ...
-            '_distribution.png');
-        saveas(distribution, fullfile(folderName, fileName));
+        figs = [divided, distribution, residualHist, residualPlot, ...
+            logResidualHist, logResidualPlot];
         
-        fileName = sprintf('%s%s%s%s', string(csvOutput{1,3}), '_', name, ...
-            '_residual_distribution.png');
-        saveas(residualHist, fullfile(folderName, fileName));
-        
-        fileName = sprintf('%s%s%s%s', string(csvOutput{1,3}), '_', name, ...
-            '_residual_plot.png');
-        saveas(residualPlot, fullfile(folderName, fileName));
-        
-        fileName = sprintf('%s%s%s%s', string(csvOutput{1,3}), '_', name, ...
-            '_log_residual_distribution.png');
-        saveas(logResidualHist, fullfile(folderName, fileName));
-        
-        fileName = sprintf('%s%s%s%s', string(csvOutput{1,3}), '_', name, ...
-            '_log_residual_plot.png');
-        saveas(logResidualPlot, fullfile(folderName, fileName));
+        for i = 1:length(figs) 
+            fig = figs(i);
+            figName = figNames(i);
+            fileName = sprintf('%s%s%s%s', string(csvOutput{1,3}), '_', name, ...
+                figName);
+            saveas(fig, fullfile(folderName, fileName));
+        end
     end

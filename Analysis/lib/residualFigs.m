@@ -4,11 +4,9 @@ function residualFigs(fitData,outliers,fitVals,name,color,csvOutput,plotFig,hist
     if log
         fitData = log10(fitData);
         outliers = log10(outliers);
-        title(sprintf("Log-Log Residuals (%s %s) (%s)", ...
-            char(csvOutput{1,3}), name, char(csvOutput{1,4})), 'FontSize', 12);
+        title = sprintf("Log-Log Residuals (%s)", name);
     else
-        title(sprintf("Residuals (%s %s) (%s)", ...
-            char(csvOutput{1,3}), name, char(csvOutput{1,4})), 'FontSize', 12);
+        title = sprintf("Residuals (%s)", name);
     end
     
     totalSquares = sum((fitData(:,2)-mean(fitData(:,2))).^2);
@@ -30,10 +28,6 @@ function residualFigs(fitData,outliers,fitVals,name,color,csvOutput,plotFig,hist
     % Plot histogram of letter height/eccentricity distribution
     histogram(fitData(:,2), optN, 'HandleVisibility', 'off',  ...
         'FaceColor', color, 'Normalization', 'probability');
-    
-    xlabel("Residuals");
-    ylabel("Number of Occurences (Normalized to Probability)");
-    grid on; box on;
     
     % Calculate appropriate height of gaussian fit - discretize splits the
     % data into bins, m becomes the mode (bin with most data points), and
@@ -57,12 +51,10 @@ function residualFigs(fitData,outliers,fitVals,name,color,csvOutput,plotFig,hist
     plot(gaussX,gaussY, 'LineWidth', 0.75, 'Color', color, 'DisplayName',  ...
             sprintf("%s Average: %5.4f Standard Deviation: %5.4f R^2: %2.3f", ...
             name, avg, sd, coeffDet));
-    
-    xlim([(min(gaussX)) (max(gaussX))]);
-    ylim([0 (gaussHeight*1.5)]);
-    
-    legend('show', 'Location', 'best');
-    
+        
+    formatFigure(hist, [gaussMin gaussMax], [0 (gaussHeight*1.5)], ...
+        "Residuals", "Number of Occurences (Normalized to Probability)", ...
+        title, false)
     
     figure(plotFig);
     hold on;
@@ -73,20 +65,13 @@ function residualFigs(fitData,outliers,fitVals,name,color,csvOutput,plotFig,hist
     end
     
     if log
-        title(sprintf("Log-Log Residuals (%s %s) (%s)", ...
-            char(csvOutput{1,3}), name, char(csvOutput{1,4})), 'FontSize', 12);
+        title = sprintf("Log-Log Residuals (%s)", name);
+        xlim = [-inf inf];
     else
-        title(sprintf("Residuals (%s %s) (%s)", ...
-            char(csvOutput{1,3}), name, char(csvOutput{1,4})), 'FontSize', 12);
+        title = sprintf("Residuals (%s)", name);
+        xlim = [0 inf];
     end
-    xlim([-inf inf]);
-    ylim([-inf inf]);
     
-    ax = gca;
-    ax.XAxisLocation = 'origin';
-    ax.YAxisLocation = 'origin';
-    
-    xlabel("Eccentricity (degrees)");
-    ylabel("Residuals (degrees)");
-
+    formatFigure(plotFig, xlim, [-inf inf], "Eccentricity (degrees)", ...
+        "Residuals (degrees)", title, true)
 end

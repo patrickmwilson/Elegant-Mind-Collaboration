@@ -1,6 +1,6 @@
-function dividedFig(data, fitData, avg, sd, N, csvOutput, name, color, divLim, divided)
+function dividedFig(data, fitData, avg, sd, N, name, color, divLim, fig)
 
-    figure(divided);
+    figure(fig);
     txt = "%s: y = %4.3f Mean: %4.3f, Sigma: %5.4f, N = %4.2f";
     
     % Calculating a 0 degree linear regression best fit line for the normalized,
@@ -20,24 +20,15 @@ function dividedFig(data, fitData, avg, sd, N, csvOutput, name, color, divLim, d
     sprintf(txt, name, p(1,1), avg, sd, N));
     
     % Scattering data with scaled dot sizes (see scaledScatter.m)
-    scaledScatter(divided, data, color, 10, 5);
+    scaledScatter(fig, data, color, 10, 5);
     grid on; box on;
     
     cutoff = (2.5*sd);
     yline((avg+cutoff), 'LineWidth', 1, 'Color', 'r', 'LineStyle', '--', ...
             'HandleVisibility', 'off');
-    
-    % Setting axis limits based on experiment to facilitate visual 
-    % comparison between subjects
-    xlim([-inf divLim(1,1)]);
-    ylim([-inf divLim(1,2)]);
-    
-    % Axis labels and title
-    xlabel("Eccentricity (degrees)", 'FontSize', 12);
-    ylabel("Letter Height (degrees)/Eccentricity (degrees)", 'FontSize', 12);
-    title(sprintf("Letter Height/Eccentricity vs. Eccentricity (%s %s) (%s)", ...
-         name, char(csvOutput{1,3}), char(csvOutput{1,4})), 'FontSize', 12);
-    legend('show', 'Location', 'best');
- 
-
+        
+    formatFigure(fig, [-inf divLim(1,1)], [-inf divLim(1,2)], ...
+        "Eccentricity (degrees)",  ...
+        "Letter Height (degrees)/Eccentricity (degrees)", ...
+        "Letter Height/Eccentricity vs. Eccentricity", false)
 end

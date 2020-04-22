@@ -19,7 +19,8 @@ graphNames = (char(dataAnswer(1)) == 'Y');
 
 dotColor = [0 0.1 1];
 
-table = readCsv('Compiled');
+table = readCsv('Compiled', false);
+table = table2array(table);
 
 t1 = figure();
 cp = figure();
@@ -37,10 +38,13 @@ errors = [];
 count = 1;
 for i = 2:size(table,1)
     name = string(table{i,3});
+    
+    currParams = [];
+    currErrors = [];
 
     for j = 1:7
-        currParams(j) = table{i,(((j-1)*4)+5)};
-        currErrors(j) = table{i,(((j-1)*4)+7)};
+        currParams(j) = str2double(table{i,(((j-1)*4)+5)});
+        currErrors(j) = str2double(table{i,(((j-1)*4)+7)});
     end
     
     currParams(isnan(currParams)) = 0;
@@ -145,13 +149,13 @@ for i = 1:length(figures)
     plot(xvals,yvals,'Color', [1 0 0], 'LineWidth', 0.8, 'HandleVisibility', ...
         'off');
     
-    folderName = fullfile(pwd, 'Analysis Results', 'Correlation Analysis'); 
+    folderName = fullfile(pwd, 'Analysis_Results', 'Correlation_Analysis'); 
     mkdir(folderName);
     fileName = sprintf('%s%s', filenames(i), '.png');
     saveas(figures(i), fullfile(folderName, fileName));
 end
 
-uiwait(helpdlg('Click OK to finish and close figures'));
+uiwait(helpdlg("Click OK to finish and close figures"));
 
 
 

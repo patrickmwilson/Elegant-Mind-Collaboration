@@ -1,6 +1,6 @@
-function pointSlope(data, avg, name, color, errorBarDirection, pointSlopeGraph)
+function pointSlope(data,avg,name,color,averageOver,errorBarDirection,fig)
 
-    figure(pointSlopeGraph);
+    figure(fig);
     txt = "%s : y = %4.3fx";
     
     % Chi-squared minimization for fit line was completed by previous
@@ -18,7 +18,10 @@ function pointSlope(data, avg, name, color, errorBarDirection, pointSlopeGraph)
     plot(xfit, yfit, 'Color', color, 'LineWidth', 1, 'DisplayName', ...
         sprintf(txt, name, avg));
     
-    % Scattering data with scaled dot sizes (see scaledScatter.m)
-    scaledScatter(pointSlopeGraph, data, color, 10, 5);
-    grid on; box on;
+    if averageOver
+        scatter(data(:,1),data(:,2),20,color,'filled','HandleVisibility','off');
+    else    
+        % Scattering data with scaled dot sizes
+        scaledScatter(fig, data, color, 10, 5);
+    end
 end
