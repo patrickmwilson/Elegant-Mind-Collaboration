@@ -14,13 +14,15 @@ addpath(functionPath);
 
 close all; 
 
+folderName = fullfile(pwd, 'Analysis_Results', 'Correlation_Analysis'); 
+mkdir(folderName);
+
 dataAnswer = questdlg('Add subject names?', '', 'Yes', 'No', 'Cancel', 'Yes');
 graphNames = (char(dataAnswer(1)) == 'Y');
 
 dotColor = [0 0.1 1];
 
 table = readCsv('Compiled', false);
-table = table2array(table);
 
 t1 = figure();
 cp = figure();
@@ -43,8 +45,10 @@ for i = 2:size(table,1)
     currErrors = [];
 
     for j = 1:7
-        currParams(j) = str2double(table{i,(((j-1)*4)+5)});
-        currErrors(j) = str2double(table{i,(((j-1)*4)+7)});
+        avgIndex = ((j-1)*4)+5;
+        errIndex = ((j-1)*4)+7;
+        currParams(j) = table{i,avgIndex};
+        currErrors(j) = table{i,errIndex};
     end
     
     currParams(isnan(currParams)) = 0;
@@ -63,41 +67,6 @@ for i = 2:size(table,1)
         errors(index,:) = (errors(index,:) + currErrors)./div;
     end
 end
-
-figures = [t1,cp,cpo,cc9,cc3,cp9,cc39,cpocp];
-
-yIndex = [1, 2, 3, 4, 5, 7, 4, 3];
-xIndex = [6, 6, 6, 6, 6, 6, 5, 2];
-
-for j = 1:length(figures)
-    
-    xI = xIndex(j);
-    yI = yIndex(j);
-    
-    for i = 1:size(params,1)
-        if((params(i,yI) ~= 0) && (params(i,xI) ~= 0))
-            
-            figure(figures(j));
-            hold on;
-            errorbar(params(i,xI), params(i,yI), errors(i,xI), ...
-                'horizontal','.', 'HandleVisibility', 'off', ...
-                'Color', [0.43 0.43 0.43], 'CapSize', 0);
-            
-            errorbar(params(i,xI), params(i,yI), errors(i,yI), ...
-                'vertical','.', 'HandleVisibility', 'off', ...
-                'Color', [0.43 0.43 0.43], 'CapSize', 0);
-            
-            scatter(params(i,xI), params(i,yI), 25, dotColor, ...
-                "filled", 'HandleVisibility', 'off');
-            
-            if graphNames
-                text((params(i,xI)*1.01), (params(i,yI)*1.01), names(i), 'FontSize', 8);
-            end
-
-        end
-    end
-end
-
 
 titles = ["T1 slope vs. IC slope", ...
     "Crowded Periphery Center slope vs. IC slope", ...
@@ -127,32 +96,82 @@ xLabels = ["IC slope", ...
 filenames = [ "T1vsIC", "CPCvsIC", "CPOvsIC", "CC9x9vsIC", "CC3x3vsIC", ...
     "CP9x9vsIC", "CC9x9vsCC3x3", "CPOvsCPC"];
 
-params(params == 0) = NaN;
-for i = 1:length(figures)
-    figure(figures(i));
-    xlim([0, (max(params(:,xIndex(i)))*1.3)]);
-    ylim([0 (max(params(:,yIndex(i)))*1.3)]);
-    title(titles(i));
-    xlabel(xLabels(i));
-    ylabel(yLabels(i));
-    grid on;
-    box on;
-    
-    yavg = nanmean(params(:,yIndex(i)));
-    xavg = nanmean(params(:,xIndex(i)));
-    
-    slope = yavg/xavg;
+figs = [t1,cp,cpo,cc9,cc3,cp9,cc39,cpocp];
 
-    xvals = linspace(0,(max(params(:,xIndex(i)))*2));
-    yvals = xvals.*slope;
+txt = 'Correlation Coefficient: %4.2f';
 
-    plot(xvals,yvals,'Color', [1 0 0], 'LineWidth', 0.8, 'HandleVisibility', ...
-        'off');
+yIndex = [1, 2, 3, 4, 5, 7, 4, 3];
+xIndex = [6, 6, 6, 6, 6, 6, 5, 2];
+
+for j = 1:length(figs)
     
-    folderName = fullfile(pwd, 'Analysis_Results', 'Correlation_Analysis'); 
-    mkdir(folderName);
-    fileName = sprintf('%s%s', filenames(i), '.png');
-    saveas(figures(i), fullfile(folderName, fileName));
+    xI = xIndex(j);
+    yI = yIndex(j);
+
+    x = [];
+    y = [];
+    xe = [];
+    ye = [];
+    n = [];
+    
+    for i = 1:size(params,1)
+        if((params(i,yI) ~= 0) && (params(i,xI) ~= 0))
+
+            x = [x params(i,xI)];
+            y = [y params(i,yI)];
+            xe = [xe errors(i,xI)];
+            ye = [ye errors(i,yI)];
+            n = [n names(i)];
+            
+            figure(figs(j));
+            hold on;
+            errorbar(params(i,xI), params(i,yI), errors(i,xI), ...
+                'horizontal','.', 'HandleVisibility', 'off', ...
+                'Color', [0.43 0.43 0.43], 'CapSize', 0);
+            
+            errorbar(params(i,xI), params(i,yI), errors(i,yI), ...
+                'vertical','.', 'HandleVisibility', 'off', ...
+                'Color', [0.43 0.43 0.43], 'CapSize', 0);
+            
+            scatter(params(i,xI), params(i,yI), 25, dotColor, ...
+                "filled", 'HandleVisibility', 'off');
+            
+            if graphNames
+                text((params(i,xI)*1.01), (params(i,yI)*1.01), names(i), 'FontSize', 8);
+            end
+
+        end
+    end
+    if length(x) > 0
+        errorbar(x, y, xe, 'horizontal','.', 'HandleVisibility', 'off', ...
+            'Color', [0.43 0.43 0.43], 'CapSize', 0);
+        errorbar(x, y, ye, 'vertical','.', 'HandleVisibility', 'off', ...
+            'Color', [0.43 0.43 0.43], 'CapSize', 0);
+        scatter(x, y, 25, dotColor, "filled", 'HandleVisibility', 'off');
+
+        if graphNames
+            text((x.*1.01), (y.*1.01), n, 'FontSize', 8);
+        end
+
+        R = corr2(x,y);
+
+        xavg = mean(x);
+        yavg = mean(y);
+
+        slope = yavg/xavg;
+
+        xvals = linspace(0,(max(x)*2));
+        yvals = xvals.*slope;
+
+        plot(xvals,yvals,'Color', [1 0 0], 'LineWidth', 0.8, 'DisplayName', ...
+            sprintf(txt,R));
+
+        formatFigure(figs(j), [0 max(x)*1.3], [0 max(y)*1.3], xLabels(j), ...
+            yLabels(j), titles(j), false);
+
+        fileName = sprintf('%s%s', filenames(j), '.png');
+        saveas(figs(j), fullfile(folderName, fileName));
+    end
 end
 
 uiwait(helpdlg("Click OK to finish and close figures"));
