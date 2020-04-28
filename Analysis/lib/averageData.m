@@ -1,6 +1,10 @@
 function avgData = averageData(data, discreteCol)
 
     avgCol = 3-discreteCol;
+
+    if discreteCol == 2
+        data(:,2) = round(data(:,2),2);
+    end
     
     avgData(:,discreteCol) = unique(data(:,discreteCol));
     
@@ -20,6 +24,7 @@ function avgData = averageData(data, discreteCol)
         
         avgData(i,avgCol) = mean(values);
         
-        avgData(i,3) = std(values);
+        avgData(i,3) = std(values)./(sqrt(length(indices)-1));
+        
     end
 end

@@ -3,7 +3,7 @@
 % Github.com/patrickmwilson
 % Created for the Elegant Mind Collaboration at UCLA 
 % with Professor Katsushi Arisaka
-% Copyright © 2020 Elegant Mind Collaboration. All rights reserved.
+% Copyright ï¿½ 2020 Elegant Mind Collaboration. All rights reserved.
 
 % Accepts a matrix, a cutoff Z-score, and the column of interest as input. 
 % Recursively computes the Z-score of the column of interest and removes 
@@ -13,6 +13,7 @@ function [newData,outliers] = removeOutliers(data, outliers, cutOff, columnOfInt
     
     % Compute Z-score of the column of interest and store it in a new
     % column
+    clear newData;
     newData = data;
     z = zscore(newData(:,columnOfInterest));
     newData(:,(size(data,2)+1)) = z(:,1);

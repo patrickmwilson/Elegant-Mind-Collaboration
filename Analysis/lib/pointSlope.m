@@ -19,7 +19,7 @@ function pointSlope(data,avg,name,color,averageOver,errorBarDirection,fig)
         sprintf(txt, name, avg));
     
     if averageOver
-        scatter(data(:,1),data(:,2),20,color,'filled','HandleVisibility','off');
+        scatter(data(:,1),data(:,2),30,color,'filled','HandleVisibility','off');
     else    
         % Scattering data with scaled dot sizes
         scaledScatter(fig, data, color, 10, 5);

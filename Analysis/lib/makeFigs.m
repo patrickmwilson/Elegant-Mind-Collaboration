@@ -1,4 +1,4 @@
-function [csvOutput,rawCsvOutput] = makeFigs(data,name,csvOutput,rawCsvOutput,tableIndex,color,divLim,wlssPointSlopeGraph,pointSlopeGraph,logPlot,combinedDist,logCombinedDist,saveOutput)
+function [csvOutput,rawCsvOutput] = makeFigs(data,fitData,outliers,name,csvOutput,rawCsvOutput,tableIndex,color,divLim,wlssPointSlopeGraph,avgPointSlopeGraph,pointSlopeGraph,logPlot,combinedDist,logCombinedDist,saveOutput)
     
     % Setting direction of error bars. T1's independent variable is letter
     % height, while in all other experiments the independent variable is
@@ -8,16 +8,6 @@ function [csvOutput,rawCsvOutput] = makeFigs(data,name,csvOutput,rawCsvOutput,ta
     else
         errorBarDirection = 'Vertical';
     end
-    
-    % Normalizing letter height values via dividing by eccentricity,
-    % resulting in a normal distribution.
-    avgData = data;
-    data(:,2) = data(:,2)./data(:,1);
-    
-    % Recursively removing outliers more than 2.5 standard deviations (99%
-    % confidence interval) from this distribution (see removeOutliers.m)
-    outliers = [];
-    [fitData,outliers] = removeOutliers(data, [], 2.5, 2);
     
     % Calculate useful statistics from this truncated distribution for
     % fitting - Standard deviation, Mean, Standard error
@@ -57,14 +47,23 @@ function [csvOutput,rawCsvOutput] = makeFigs(data,name,csvOutput,rawCsvOutput,ta
     % deviation from the mean, multiplied by their corresponding
     % eccentricity value. Higher eccentricity values have higher error.
     data(:,3) = sd.*data(:,1);
-    avgData(:,3) = sd.*avgData(:,1);
     
     % Weighted least sum of squares calculation
-    [avgData, wssAvg] = wss(avgData,name,avg);
+    clear('wss');
+    [avgData, wssAvg] = wss(fitData,name, avg);
+
+    if(strcmp(name,'Anstis'))
+        avgData = data;
+        wssAvg = avg;
+    end
         
     % Graph linear point-slope with averaged data & wss slope
     pointSlope(avgData, wssAvg, name, color, true, ...
             errorBarDirection, wlssPointSlopeGraph);
+
+    % Graph linear point-slope with averaged data 
+    pointSlope(avgData, avg, name, color, true, ...
+            errorBarDirection, avgPointSlopeGraph);
     
     % Graph linear point-slope without averaging data
     pointSlope(data, avg, name, color, false, ...

@@ -14,6 +14,9 @@ addpath(functionPath);
 
 close all; 
 
+fileName = fullfile(pwd, 'Analysis_Results', 'Compiled_Parameters.csv');
+table = readtable(fileName);
+
 folderName = fullfile(pwd, 'Analysis_Results', 'Correlation_Analysis'); 
 mkdir(folderName);
 
@@ -21,8 +24,6 @@ dataAnswer = questdlg('Add subject names?', '', 'Yes', 'No', 'Cancel', 'Yes');
 graphNames = (char(dataAnswer(1)) == 'Y');
 
 dotColor = [0 0.1 1];
-
-table = readCsv('Compiled', false);
 
 t1 = figure();
 cp = figure();
@@ -175,6 +176,8 @@ for j = 1:length(figs)
 end
 
 uiwait(helpdlg("Click OK to finish and close figures"));
+
+close all;
 
 
 
