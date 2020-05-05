@@ -69,7 +69,9 @@ function [data, fitData, outliers] = readCsv(name, id, allData, trimCC)
             exclusions = [0,5,10];
         elseif(strcmp(id,'CC9') && trimCC)
             exclusions = [0, 5, 10, 15];
-        else 
+        elseif(strcmp(id,'IC') && trimCC)
+            exclusions = [0, 5];
+        else
             exclusions = [0];
         end
 
