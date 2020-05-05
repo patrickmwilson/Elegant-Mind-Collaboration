@@ -24,7 +24,8 @@ function avgData = averageData(data, discreteCol)
         
         avgData(i,avgCol) = mean(values);
         
-        avgData(i,3) = std(values)./(sqrt(length(indices)-1));
+        avgData(i,3) = std(values);
+        avgData(i,4) = length(values);
         
     end
 end
