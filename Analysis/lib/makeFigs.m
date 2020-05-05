@@ -1,9 +1,9 @@
-function [csvOutput,rawCsvOutput] = makeFigs(data,fitData,outliers,name,csvOutput,rawCsvOutput,tableIndex,color,divLim,wlssPointSlopeGraph,avgPointSlopeGraph,pointSlopeGraph,logPlot,combinedDist,logCombinedDist,saveOutput)
+function [csvOutput,rawCsvOutput] = makeFigs(data,fitData,outliers,name,csvOutput,rawCsvOutput,tableIndex,color,divLim,pointSlopeGraph,saveOutput)
     
     % Setting direction of error bars. T1's independent variable is letter
     % height, while in all other experiments the independent variable is
     % eccentricity
-    if (strcmp(name,'T1'))
+    if (strcmp(name,'Fully Crowded'))
         errorBarDirection = 'Horizontal';
     else
         errorBarDirection = 'Vertical';
@@ -28,14 +28,6 @@ function [csvOutput,rawCsvOutput] = makeFigs(data,fitData,outliers,name,csvOutpu
         distribution = figure();
         histFig(data, name, csvOutput, color, divLim, distribution, ...
             false, false);
-        
-        % combined y/x histogram - all protocols graphed
-        histFig(data, name, csvOutput, color, divLim, combinedDist, ...
-            true, false);
-        
-        % combined log10(y/x) histogram - all protocols graphed
-        histFig(data, name, csvOutput, color, divLim, logCombinedDist, ...
-            true, true);
     end
 
     % Converting letter heights back from letter height/eccentricity to
@@ -55,36 +47,17 @@ function [csvOutput,rawCsvOutput] = makeFigs(data,fitData,outliers,name,csvOutpu
     if(strcmp(name,'Anstis'))
         avgData = data;
         wssAvg = avg;
+    else
+        avgData(:,3) = avgData(:,3)./sqrt(avgData(:,4));
     end
+    
         
     % Graph linear point-slope with averaged data & wss slope
     pointSlope(avgData, wssAvg, name, color, true, ...
-            errorBarDirection, wlssPointSlopeGraph);
-
-    % Graph linear point-slope with averaged data 
-    pointSlope(avgData, avg, name, color, true, ...
-            errorBarDirection, avgPointSlopeGraph);
-    
-    % Graph linear point-slope without averaging data
-    pointSlope(data, avg, name, color, false, ...
             errorBarDirection, pointSlopeGraph);
-    
-    % Graph log-log plot, get fit parameters
-    logfit = logLogFig(data, fitData, name, errorBarDirection, color, ...
-        logPlot);
     
     % Residual plots and histograms, csv output, and saving figures
     if(~strcmp(name,'Anstis')) && (saveOutput)
-        
-        residualHist = figure();
-        residualPlot = figure();
-        residualFigs(fitData,outliers,([avg 0]),name,color,csvOutput, ...
-            residualPlot,residualHist,false);
-        
-        logResidualHist = figure();
-        logResidualPlot = figure();
-        residualFigs(fitData,outliers,logfit,name,color,csvOutput, ...
-            logResidualPlot,logResidualHist,true);
         
         if(size(rawCsvOutput,2) > 4)
             rawCsvOutput((size(rawCsvOutput,1)+1),:) = rawCsvOutput((size(rawCsvOutput,1)),:);
@@ -106,12 +79,9 @@ function [csvOutput,rawCsvOutput] = makeFigs(data,fitData,outliers,name,csvOutpu
             fFolderName);
         mkdir(folderName);
         
-        figNames = ["_divided.png", "_distribution.png", ...
-            "_residual_distribution.png", "_residual_plot.png", ...
-            "_log_residual_distribution.png", "_log_residual_plot.png"];
+        figNames = ["_divided.png", "_distribution.png"];
         
-        figs = [divided, distribution, residualHist, residualPlot, ...
-            logResidualHist, logResidualPlot];
+        figs = [divided, distribution];
         
         for i = 1:length(figs) 
             fig = figs(i);
