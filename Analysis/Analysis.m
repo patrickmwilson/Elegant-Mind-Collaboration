@@ -37,7 +37,11 @@ else
 end
 rawCsvOutput = csvOutput;
 
-names = ["T1", "Crowded Periphery 9x9", "Crowded Periphery", ...
+names = ["Fully Crowded", "Crowded Periphery 9x9", "Crowded Periphery", ...
+    "Crowded Periphery Outer", "Anstis", "Crowded Center 9x9",  ...
+    "Crowded Center 3x3", "Isolated Character"];
+
+csvIdentifiers = ["T1", "Crowded Periphery 9x9", "Crowded Periphery", ...
     "Crowded Periphery Outer", "Anstis", "Crowded Center 9x9",  ...
     "Crowded Center 3x3", "Isolated Character"];
 
@@ -64,11 +68,6 @@ saveParams = (char(dataAnswer(1)) == 'Y');
 
 % Creating graphs that will include multiple sets of data
 pointSlopeGraph = figure('Name','Point Slope');
-avgPointSlopeGraph = figure('Name', 'Avg Point Slope');
-wlssPointSlopeGraph = figure('Name','WLSS Point Slope');
-logPlot = figure('Name', 'Log-Log Plot');
-combinedDist = figure('Name', 'Combined Histogram');
-logCombinedDist = figure('Name', 'Log Combined Histogram');
     
 % List of plot colors and axis limits for divided and distribution figures
 colors = [0 0.8 0.8; 0.83 0.86 .035; 0.9 0.3 0.9; 0.5 0 0.9; 0 0 0; ...
@@ -84,18 +83,15 @@ for p = 1:(length(names))
     if(CHECKBOXES(p)) 
         name = names(p);
         id = identifiers(p);
-        clear data;
-        clear fitData;
-        clear outliers;
-        clear('readCsv');
-        [data, fitData, outliers] = readCsv(name, id, allData, trimCC);
+        csvid = csvIdentifiers(p);
+
+        [data, fitData, outliers] = readCsv(csvid, id, allData, trimCC);
         
         % Calculate parameters and produce figures
         clear('makeFigs');
         [csvOutput, rawCsvOutput] = makeFigs(data, fitData, outliers, name, ...
-            csvOutput, rawCsvOutput, (((p-1)*4)+5), colors(p,:), divLims(p,:), ...
-            wlssPointSlopeGraph, avgPointSlopeGraph, pointSlopeGraph, logPlot, ...
-            combinedDist, logCombinedDist, saveOutput);
+            csvOutput, rawCsvOutput, (((p-1)*4)+5), colors(p,:), divLims(p,:), pointSlopeGraph, ...
+            saveOutput);
     end
 end
 
@@ -104,53 +100,14 @@ formatFigure(pointSlopeGraph, [0 45], [0 11], "Eccentricity (degrees)", ...
     "Letter Height (degrees)", "Letter Height vs. Retinal Eccentricity", ...
     false);
 
-% Axes and text formatting for averaged point slope plot
-formatFigure(avgPointSlopeGraph, [0 45], [0 11], "Eccentricity (degrees)", ...
-    "Letter Height (degrees)", "Letter Height vs. Retinal Eccentricity", ...
-    false);
-
-% Axes and text formatting for Weighted LSS point slope plot
-formatFigure(wlssPointSlopeGraph, [0 45], [0 11], "Eccentricity (degrees)", ...
-    "Letter Height (degrees)", ...
-    "Letter Height vs. Retinal Eccentricity (WLSS)", false);
-
-% Axes and text formatting for log-log plot
-formatFigure(logPlot, [-1 2], [-1 2], "Log of Eccentricity (degrees)", ...
-    "Log of Letter Height (degrees)", ...
-    "Log of Letter Height vs. Log of Retinal Eccentricity", true);
-
-% Axes, title, and labels for combined distribution graph
-formatFigure(combinedDist, [0 inf], [0 0.7], ...
-    "Letter Height (degrees)/Eccentricity (degrees)", ...
-    "Number of Occurences (Normalized to Probability)", ...
-    "Distribution of Letter Height/Eccentricity", false);
-
-% Axes, title, and labels for log combined distribution graph
-formatFigure(logCombinedDist, [-2 0.5], [0 0.7], ...
-    "Log10[Letter Height (deg)/Eccentricity (deg)]", ...
-    "Number of Occurences (Normalized to Probability)", ...
-    "Distribution of Log10[Letter Height/Eccentricity]", false);
-
 if saveOutput
     % Saving point slope, log-log, and combined dist plots as png
     fFolderName = strcat(string(csvOutput{1,3}), "_", string(csvOutput{1,4}));
     folderName = fullfile(pwd, 'Analysis_Results', 'Plots', ...
         string(csvOutput{1,2}), fFolderName);
 
-    figs = [pointSlopeGraph, avgPointSlopeGraph, wlssPointSlopeGraph, logPlot, ...
-        combinedDist, logCombinedDist];
-
-    figNames = ["_point_slope.png", "_avg_point_slope.png", ...
-        "_wlss_point_slope.png", "_log_log_plot.png", "_combined_histogram.png", ...
-        "_log_combined_histogram.png"];
-
-    for i = 1:length(figs) 
-        fig = figs(i);
-        figName = figNames(i);
-        fileName = sprintf('%s%s', string(csvOutput{1,3}), ...
-            figName);
-        saveas(fig, fullfile(folderName, fileName));
-    end
+    fileName = sprintf('%s%s', string(csvOutput{1,3}), "_point_slope.png");
+    saveas(pointSlopeGraph, fullfile(folderName, fileName));
 end
 
 if saveParams
