@@ -5,13 +5,16 @@ int button4 = 12;
 int button = 0;
 
 void setup() {
-  pinMode(button1, INPUT);
-  pinMode(button2, INPUT);
-  pinMode(button3, INPUT);
-  pinMode(button4, INPUT);
+  //Declaring button pins for input
+  pinMode(button1, INPUT); //E
+  pinMode(button2, INPUT); //B
+  pinMode(button3, INPUT); //P
+  pinMode(button4, INPUT); //Do not know
   Serial.begin(9600);
 }
 
+//Loops continuously, when a button is pressed an integer 
+//corresponding to its identity is output via serial
 void loop() {
   button = 0;
   
