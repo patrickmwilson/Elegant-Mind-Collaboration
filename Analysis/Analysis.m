@@ -68,6 +68,9 @@ saveParams = (char(dataAnswer(1)) == 'Y');
 
 % Creating graphs that will include multiple sets of data
 pointSlopeGraph = figure('Name','Point Slope');
+
+% Creating graphs that will include multiple sets of data
+polyfitGraph = figure('Name','Poly Fit');
     
 % List of plot colors and axis limits for divided and distribution figures
 colors = [0 0.8 0.8; 0.83 0.86 .035; 0.9 0.3 0.9; 0.5 0 0.9; 0 0 0; ...
@@ -90,14 +93,19 @@ for p = 1:(length(names))
         % Calculate parameters and produce figures
         clear('makeFigs');
         [csvOutput, rawCsvOutput] = makeFigs(data, fitData, outliers, name, ...
-            csvOutput, rawCsvOutput, (((p-1)*4)+5), colors(p,:), divLims(p,:), pointSlopeGraph, ...
-            saveOutput);
+            csvOutput, rawCsvOutput, (((p-1)*4)+5), colors(p,:), divLims(p,:), ...
+            pointSlopeGraph, polyfitGraph, saveOutput);
     end
 end
 
 % Axes and text formatting for point slope plot
-formatFigure(pointSlopeGraph, [0 45], [0 11], "Eccentricity (degrees)", ...
-    "Letter Height (degrees)", "Letter Height vs. Retinal Eccentricity", ...
+formatFigure(pointSlopeGraph, [0 45], [0 11], "Eccentricity (deg)", ...
+    "Letter Height (deg)", "Letter Height vs. Retinal Eccentricity", ...
+    false);
+
+% Axes and text formatting for point slope plot
+formatFigure(polyfitGraph, [0 45], [0 11], "Eccentricity (deg)", ...
+    "Letter Height (deg)", "Letter Height vs. Retinal Eccentricity", ...
     false);
 
 if saveOutput
@@ -108,6 +116,9 @@ if saveOutput
 
     fileName = sprintf('%s%s', string(csvOutput{1,3}), "_point_slope.png");
     saveas(pointSlopeGraph, fullfile(folderName, fileName));
+    
+    fileName = sprintf('%s%s', string(csvOutput{1,3}), "_poly_fit.png");
+    saveas(polyfitGraph, fullfile(folderName, fileName));
 end
 
 if saveParams
