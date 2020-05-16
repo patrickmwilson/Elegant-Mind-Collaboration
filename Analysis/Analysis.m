@@ -91,9 +91,13 @@ for p = 1:(length(names))
         [data, fitData, outliers] = readCsv(csvid, id, allData, trimCC);
         
         % Calculate parameters and produce figures
-        clear('makeFigs');
+        if p < 5
+            tableIndex = ((p-1)*5)+5;
+        else
+            tableIndex = ((p-2)*5)+5;
+        end
         [csvOutput, rawCsvOutput] = makeFigs(data, fitData, outliers, name, ...
-            csvOutput, rawCsvOutput, (((p-1)*4)+5), colors(p,:), divLims(p,:), ...
+            csvOutput, rawCsvOutput, tableIndex, colors(p,:), divLims(p,:), ...
             pointSlopeGraph, polyfitGraph, saveOutput);
     end
 end

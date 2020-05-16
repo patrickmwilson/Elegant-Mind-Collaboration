@@ -1,9 +1,5 @@
 function pointSlope(data,avg,name,color,errorBarDirection,fig)
 
-    if(~strcmp(name,'Anstis'))
-        data(:,3) = data(:,3)./sqrt(data(:,4));
-    end
-
     figure(fig);
     txt = "%s : y = %4.3fx";
     
