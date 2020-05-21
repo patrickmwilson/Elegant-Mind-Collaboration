@@ -50,40 +50,52 @@ function [chiSq,chiSqReduced,neg,pos] = chiSq(slope,intercept,data,fig)
     plot(xline, yline, 'Color', [1 0 0], 'LineWidth', 1, ...
         'HandleVisibility', 'off');
     
-    %Struct to hold slope values at +1 Chi^2
-    left = struct('slope', slope, 'chi', 0, 'dif', inf);
-    right = struct('slope', slope, 'chi', 0, 'dif', inf);
-    for i=1:length(chi)
-        this_slope = evals(i);
-        this_chi = chi(i);
-        dif = abs(target-this_chi);
-        
-        if i < center
-            if dif < left.dif && left.slope ~= this_slope
-                left.slope = this_slope;
-                left.chi = this_chi;
-                left.dif = dif;
-            end
-        elseif i > center
-            if dif < right.dif && right.slope ~= this_slope
-                right.slope = this_slope;
-                right.chi = this_chi;
-                right.dif = dif;
-            end
-        end
-    end
+    options = optimset('Display','iter','TolFun',1e-15);
     
-    disp('ChiSq');
-    disp(chiSq);
-    disp('Left Side');
-    disp(left);
-    disp('Center');
-    disp(slope);
-    disp('Right Side');
-    disp(right);
+    f = @(x,xvals,yvals,w,target)abs(target-sum(w.*((yvals-((xvals.*x)+intercept)).^2)));
+    fun = @(x)f(x,xvals,yvals,w,target);
+    xmin = 0;
+    xmax = slope-1e-5;
+    [neg, ~] = fminbnd(fun,xmin,xmax,options);
     
-    neg = left.slope;
-    pos = right.slope;
+    xmin = slope+1e-5;
+    xmax = 1;
+    [pos, ~] = fminbnd(fun,xmin,xmax,options);
+    
+%     %Struct to hold slope values at +1 Chi^2
+%     left = struct('slope', slope, 'chi', 0, 'dif', inf);
+%     right = struct('slope', slope, 'chi', 0, 'dif', inf);
+%     for i=1:length(chi)
+%         this_slope = evals(i);
+%         this_chi = chi(i);
+%         dif = abs(target-this_chi);
+%         
+%         if i < center
+%             if dif < left.dif && left.slope ~= this_slope
+%                 left.slope = this_slope;
+%                 left.chi = this_chi;
+%                 left.dif = dif;
+%             end
+%         elseif i > center
+%             if dif < right.dif && right.slope ~= this_slope
+%                 right.slope = this_slope;
+%                 right.chi = this_chi;
+%                 right.dif = dif;
+%             end
+%         end
+%     end
+%     
+%     disp('ChiSq');
+%     disp(chiSq);
+%     disp('Left Side');
+%     disp(left);
+%     disp('Center');
+%     disp(slope);
+%     disp('Right Side');
+%     disp(right);
+%     
+%     neg = left.slope;
+%     pos = right.slope;
     
     if intercept == 0
         titleText = "Chi^2 vs. Slope Parameter (y = ax)";

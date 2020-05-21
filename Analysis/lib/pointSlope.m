@@ -10,8 +10,11 @@ function pointSlope(data,avg,name,color,errorBarDirection,fig)
     
     % Plotting error bars
     hold on;
-    errorbar(data(:,1), data(:,2), data(:,3), errorBarDirection,'.', ...
-        'HandleVisibility', 'off', 'Color', [0.43 0.43 0.43], 'CapSize', 0);
+    if(~strcmp(name,'Anstis'))
+        errorbar(data(:,1), data(:,2), data(:,3), errorBarDirection,'.', ...
+            'HandleVisibility', 'off', 'Color', [0.43 0.43 0.43], ...
+            'CapSize', 0);
+    end
     
     % Plotting fit line
     hold on;

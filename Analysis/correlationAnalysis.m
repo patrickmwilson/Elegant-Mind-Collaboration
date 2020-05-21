@@ -5,179 +5,174 @@
 % with Professor Katsushi Arisaka
 % Copyright � 2020 Elegant Mind Collaboration. All rights reserved.
 
+close all; 
+
 % Suppress warnings about modified csv headers & directory existing
 warning('off','MATLAB:table:ModifiedAndSavedVarnames');
 warning('off','MATLAB:MKDIR:DirectoryExists');
-%Add helper functions to path (readCsv.m)
-functionPath = fullfile(pwd, 'lib');
-addpath(functionPath); 
 
-close all; 
-
-fileName = fullfile(pwd, 'Analysis_Results', 'Compiled_Parameters.csv');
-table = readtable(fileName);
-
-folderName = fullfile(pwd, 'Analysis_Results', 'Correlation_Analysis'); 
-mkdir(folderName);
+% Add helper functions to path
+libPath = fullfile(pwd, 'lib');
+addpath(libPath); 
 
 dataAnswer = questdlg('Add subject names?', '', 'Yes', 'No', 'Cancel', 'Yes');
 graphNames = (char(dataAnswer(1)) == 'Y');
 
-dotColor = [0 0.1 1];
+fileName = fullfile(pwd, 'Analysis_Results', 'Compiled_Parameters.csv');
+table = readtable(fileName);
 
-t1 = figure();
+subjects = cleanTable(table);
+
+folderName = fullfile(pwd, 'Analysis_Results', 'Correlation_Analysis'); 
+mkdir(folderName);
+
+fc = figure();
 cp = figure();
-cpo = figure();
-cc9 = figure();
-cc3 = figure();
-cp9 = figure();
-cc39 = figure();
-cpocp = figure();
+cc = figure();
 
-names = strings(0);
-params = [];
-errors = [];
+figInfo = struct('fig', NaN, 'title', NaN, 'xlab', NaN, 'ylab', NaN, ...
+    'filename', NaN, 'xlim', NaN, 'ylim', NaN);
+figInfo = repmat(figInfo, 1, 3);
 
-count = 1;
-for i = 2:size(table,1)
-    name = string(table{i,3});
+figInfo(1).fig = fc;
+figInfo(1).title = "Fully Crowded vs. Isolated Character";
+figInfo(1).xlab = "Isolated Character Slope";
+figInfo(1).ylab = "Fully Crowded Slope";
+figInfo(1).filename = "FCvIC.png";
+figInfo(1).xlim = 0;
+figInfo(1).ylim = 0;
+
+figInfo(2).fig = cp;
+figInfo(2).title = "Crowded Periphery vs. Isolated Character";
+figInfo(2).xlab = "Isolated Character Slope";
+figInfo(2).ylab = "Crowded Periphery Slope";
+figInfo(2).filename = "CPvIC.png";
+figInfo(2).xlim = 0;
+figInfo(2).ylim = 0;
+
+figInfo(3).fig = cc;
+figInfo(3).title = "Crowded Center vs. Isolated Character";
+figInfo(3).xlab = "Isolated Character Slope";
+figInfo(3).ylab = "Crowded Center Slope";
+figInfo(3).filename = "CCvIC.png";
+figInfo(3).xlim = 0;
+figInfo(3).ylim = 0;
+
+info = struct('name', NaN, 'color', NaN, 'yIndex', NaN, 'figInfoIdx', NaN);
+info = repmat(info, 1, 6);
+
+info(1).name = "Fully Crowded";
+info(1).color = [0 0.8 0.8];
+info(1).xName = 'ic';
+info(1).yName = 'fc';
+info(1).figInfoIdx = 1;
+
+info(2).name = "Crowded Periphery 9x9";
+info(2).color = [0.83 0.86 .035];
+info(2).xName = 'ic';
+info(2).yName = 'cp9';
+info(2).figInfoIdx = 2;
+
+info(3).name = "Crowded Periphery";
+info(3).color = [0.9 0.3 0.9];
+info(3).xName = 'ic';
+info(3).yName = 'cp';
+info(3).figInfoIdx = 2;
+
+info(4).name = "Crowded Periphery Outer";
+info(4).color = [0.5 0 0.9];
+info(4).xName = 'ic';
+info(4).yName = 'cpo';
+info(4).figInfoIdx = 2;
+
+info(5).name = "Crowded Center 9x9";
+info(5).color = [0 0.1 1];
+info(5).xName = 'ic';
+info(5).yName = 'cc9';
+info(5).figInfoIdx = 3;
+
+info(6).name = "Crowded Center 3x3";
+info(6).color = [0.4 0.8 0.5];
+info(6).xName = 'ic';
+info(6).yName = 'cc3';
+info(6).figInfoIdx = 3;
+
+txt = '%s: y = %4.2fx, R = %4.2f';
+
+for i = 1:length(info)
+    name = info(i).name;
+    color = info(i).color;
+    xId = info(i).xName;
+    yId = info(i).yName;
+    figIdx = info(i).figInfoIdx;
+    fig = figInfo(figIdx).fig;
     
-    currParams = [];
-    currErrors = [];
-
-    for j = 1:7
-        avgIndex = ((j-1)*4)+5;
-        errIndex = ((j-1)*4)+7;
-        currParams(j) = table{i,avgIndex};
-        currErrors(j) = table{i,errIndex};
-    end
+    data = []; subject_names = [];
     
-    currParams(isnan(currParams)) = 0;
-    currErrors(isnan(currErrors)) = 0;
-    if(isempty(names) || ~any(strcmp(names(1,:),name)))
-        index = count;
-        count = count+1;
-        names(index) = name;
-        params(index,:) = currParams;
-        errors(index,:) = currErrors;
-    else
-        index = find(names == name);
-        div = (1*(currParams(1,:) ~= 0))+1;
-        params(index,:) = (params(index,:) + currParams)./div;
-        div = (1*(currErrors(1,:) ~= 0))+1;
-        errors(index,:) = (errors(index,:) + currErrors)./div;
-    end
-end
-
-titles = ["Fully Crowded slope vs. IC slope", ...
-    "Crowded Periphery Center slope vs. IC slope", ...
-    "Crowded Periphery outer slope vs. IC slope", ...
-    "Crowded Center 9x9 slope vs. IC slope", ...
-    "Crowded Center 3x3 slope vs. IC slope", ...
-    "Crowded Periphery 9x9 slope vs. IC slope", ...
-    "Crowded Center 9x9 slope vs. Crowded Center 3x3 slope", ...
-    "Crowded Periphery Outer slope vs. Crowded Periphery Center slope"];
-yLabels = ["FC slope", ...
-    "CPC slope", ...
-    "CPO slope", ...
-    "CC9x9 slope", ...
-    "CC3x3 slope", ...
-    "CP9x9 slope", ...
-    "CC9x9 Slope", ...
-    "CPO Slope"];
-xLabels = ["IC slope", ...
-    "IC slope", ...
-    "IC slope", ...
-    "IC slope", ...
-    "IC slope", ...
-    "IC slope", ...
-    "CC3x3 Slope", ...
-    "CPC Slope"];
-
-filenames = [ "FCvsIC", "CPCvsIC", "CPOvsIC", "CC9x9vsIC", "CC3x3vsIC", ...
-    "CP9x9vsIC", "CC9x9vsCC3x3", "CPOvsCPC"];
-
-figs = [t1,cp,cpo,cc9,cc3,cp9,cc39,cpocp];
-
-txt = 'Correlation Coefficient: %4.2f';
-
-yIndex = [1, 2, 3, 4, 5, 7, 4, 3];
-xIndex = [6, 6, 6, 6, 6, 6, 5, 2];
-
-for j = 1:length(figs)
-    
-    xI = xIndex(j);
-    yI = yIndex(j);
-
-    x = [];
-    y = [];
-    xe = [];
-    ye = [];
-    n = [];
-    
-    for i = 1:size(params,1)
-        if((params(i,yI) ~= 0) && (params(i,xI) ~= 0))
-
-            x = [x params(i,xI)];
-            y = [y params(i,yI)];
-            xe = [xe errors(i,xI)];
-            ye = [ye errors(i,yI)];
-            n = [n names(i)];
-            
-            figure(figs(j));
-            hold on;
-            errorbar(params(i,xI), params(i,yI), errors(i,xI), ...
-                'horizontal','.', 'HandleVisibility', 'off', ...
-                'Color', [0.43 0.43 0.43], 'CapSize', 0);
-            
-            errorbar(params(i,xI), params(i,yI), errors(i,yI), ...
-                'vertical','.', 'HandleVisibility', 'off', ...
-                'Color', [0.43 0.43 0.43], 'CapSize', 0);
-            
-            scatter(params(i,xI), params(i,yI), 25, dotColor, ...
-                "filled", 'HandleVisibility', 'off');
-            
-            if graphNames
-                text((params(i,xI)*1.01), (params(i,yI)*1.01), names(i), 'FontSize', 8);
-            end
-
+    for j = 1:length(subjects)
+        subject_name = subjects(j).name;
+        x = subjects(j).(strcat(xId,'_slope'));
+        y = subjects(j).(strcat(yId,'_slope'));
+        
+        if(isnan(x) || isnan(y))
+            continue;
         end
+        
+        xerr = subjects(j).(strcat(xId,'_error'));
+        yerr = subjects(j).(strcat(yId,'_error'));
+        vals = [x;y;xerr;yerr];
+        
+        data = [data vals];
+        subject_names = [subject_names subject_name];
     end
-    if length(x) > 0
-        errorbar(x, y, xe, 'horizontal','.', 'HandleVisibility', 'off', ...
-            'Color', [0.43 0.43 0.43], 'CapSize', 0);
-        errorbar(x, y, ye, 'vertical','.', 'HandleVisibility', 'off', ...
-            'Color', [0.43 0.43 0.43], 'CapSize', 0);
-        scatter(x, y, 25, dotColor, "filled", 'HandleVisibility', 'off');
-
+    
+    if ~isempty(data)
+        figure(fig);
+        hold on;
+        
+        errorbar(data(1,:), data(2,:), data(3,:), 'horizontal','.', ...
+            'HandleVisibility', 'off', 'Color', [0.43 0.43 0.43], ...
+            'CapSize', 0);
+        
+        errorbar(data(1,:), data(2,:), data(4,:), 'vertical','.', ...
+            'HandleVisibility', 'off', 'Color', [0.43 0.43 0.43], ...
+            'CapSize', 0);
+        
+        scatter(data(1,:), data(2,:), 25, color, "filled", ...
+            'HandleVisibility', 'off');
+        
         if graphNames
-            text((x.*1.01), (y.*1.01), n, 'FontSize', 8);
+            text((data(1,:).*1.01), (data(2,:).*1.01), subject_names, ...
+                'FontSize', 8);
         end
-
-        R = corr2(x,y);
-
-        xavg = mean(x);
-        yavg = mean(y);
-
-        slope = yavg/xavg;
-
-        xvals = linspace(0,(max(x)*2));
-        yvals = xvals.*slope;
-
-        plot(xvals,yvals,'Color', [1 0 0], 'LineWidth', 0.8, 'DisplayName', ...
-            sprintf(txt,R));
-
-        formatFigure(figs(j), [0 max(x)*1.3], [0 max(y)*1.3], xLabels(j), ...
-            yLabels(j), titles(j), false);
-
-        fileName = sprintf('%s%s', filenames(j), '.png');
-        saveas(figs(j), fullfile(folderName, fileName));
+        
+        x_mu = mean(data(1,:));
+        y_mu = mean(data(2,:));
+        
+        slope = y_mu/x_mu;
+        R = corr2(data(1,:),data(2,:));
+        
+        xlin = linspace(0,(max(data(1,:))*2));
+        ylin = xlin.*slope;
+        
+        plot(xlin,ylin,'Color', color, 'LineWidth', 0.8, 'DisplayName', ...
+            sprintf(txt,name,slope,R));
+        
+        xlimit = max(data(1,:))*1.3;
+        ylimit = max(data(2,:))*1.3;
+        if xlimit > figInfo(figIdx).xlim
+            figInfo(figIdx).xlim = xlimit;
+        end
+        if ylimit > figInfo(figIdx).ylim
+            figInfo(figIdx).ylim = ylimit;
+        end
     end
+    
 end
 
-uiwait(helpdlg("Click OK to finish and close figures"));
-
-close all;
-
-
+for i=1:size(figInfo,2)
+    formatFigure(figInfo(i).fig, [0 figInfo(i).xlim], [0 figInfo(i).ylim], ...
+        figInfo(i).xlab, figInfo(i).ylab, figInfo(i).title, false);
+    saveas(figInfo(i).fig, fullfile(folderName, figInfo(i).filename));
+end
 

@@ -20,14 +20,14 @@ function [avgData, wssAvg] = wss(data,name,avg)
     w = 1./variance;
     
     % Weighted least sum of squares equation to be minimized
-    f = @(x,xvals,yvals,w)sum(w.*( (yvals-(xvals.*x)).^2 ) );
+    f = @(x,xvals,yvals,w)sum(w.*((yvals-(xvals.*x)).^2));
         
     % fminbnd iteratively searches for the slope parameter which
     % minimizes the WLSS equation
     fun = @(x)f(x,xvals,yvals,w);
     xMin = avg*0.5;
     xMax = avg*1.5;
-    options = optimset('Display','iter');
+    options = optimset('Display','iter','TolFun',1e-15);
     [wssAvg, fval] = fminbnd(fun,xMin,xMax,options);
     
     disp("fval");
