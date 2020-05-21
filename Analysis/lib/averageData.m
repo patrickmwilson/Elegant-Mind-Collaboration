@@ -23,7 +23,6 @@ function avgData = averageData(data, discreteCol)
         end
         
         avgData(i,avgCol) = mean(values);
-        
         avgData(i,3) = std(values);
         avgData(i,4) = length(values);
         

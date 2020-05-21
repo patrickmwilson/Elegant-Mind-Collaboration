@@ -1,4 +1,4 @@
-function [csvOutput,rawCsvOutput] = makeFigs(data,fitData,outliers,name,csvOutput,rawCsvOutput,tableIndex,color,divLim,pointSlopeGraph,saveOutput)
+function [csvOutput,rawCsvOutput] = makeFigs(data,fitData,outliers,name,csvOutput,rawCsvOutput,tableIndex,color,divLim,pointSlopeGraph,polyfitGraph,saveOutput)
     
     % Setting direction of error bars. T1's independent variable is letter
     % height, while in all other experiments the independent variable is
@@ -41,9 +41,8 @@ function [csvOutput,rawCsvOutput] = makeFigs(data,fitData,outliers,name,csvOutpu
     data(:,3) = sd.*data(:,1);
     
     % Weighted least sum of squares calculation
-    clear('wss');
     [avgData, wssAvg] = wss(fitData,name, avg);
-
+    
     if(strcmp(name,'Anstis'))
         avgData = data;
         wssAvg = avg;
@@ -51,10 +50,23 @@ function [csvOutput,rawCsvOutput] = makeFigs(data,fitData,outliers,name,csvOutpu
         avgData(:,3) = avgData(:,3)./sqrt(avgData(:,4));
     end
     
-        
     % Graph linear point-slope with averaged data & wss slope
-    pointSlope(avgData, wssAvg, name, color, true, ...
-            errorBarDirection, pointSlopeGraph);
+    pointSlope(avgData, wssAvg, name, color, errorBarDirection, ...
+        pointSlopeGraph);
+        
+    params = polyfitter(avgData, name, color, errorBarDirection, ...
+        polyfitGraph);
+    
+    if(~strcmp(name,'Anstis'))
+        wssChiSqGraph = figure();
+        [wssChiSq, wssChiSqReduced, wssNeg, wssPos] = chiSq(wssAvg,0, ...
+            avgData,wssChiSqGraph);
+        
+        polyChiSqGraph = figure();
+        [polyChiSq,polyChiSqReduce, dpolyNeg,polyPos] = chiSq(params(1,1), ...
+            params(1,2), avgData,polyChiSqGraph);
+        
+    end
     
     % Residual plots and histograms, csv output, and saving figures
     if(~strcmp(name,'Anstis')) && (saveOutput)
@@ -64,13 +76,15 @@ function [csvOutput,rawCsvOutput] = makeFigs(data,fitData,outliers,name,csvOutpu
         end
         
         rawCsvOutput{(size(rawCsvOutput,1)),5} = name;
-        rawCsvOutput{(size(rawCsvOutput,1)),6} = avg;
-        rawCsvOutput{(size(rawCsvOutput,1)),7} = sd;
-        rawCsvOutput{(size(rawCsvOutput,1)),8} = sError;
+        rawCsvOutput{(size(rawCsvOutput,1)),6} = wssAvg;
+        rawCsvOutput{(size(rawCsvOutput,1)),7} = wssPos;
+        rawCsvOutput{(size(rawCsvOutput,1)),8} = wssNeg;
+        rawCsvOutput{(size(rawCsvOutput,1)),9} = wssChiSqReduced;
         
-        csvOutput{1,tableIndex} = avg;
-        csvOutput{1,(tableIndex+1)} = sd;
-        csvOutput{1,(tableIndex+2)} = sError;
+        csvOutput{1,tableIndex} = wssAvg;
+        csvOutput{1,(tableIndex+1)} = wssAvg;
+        csvOutput{1,(tableIndex+2)} = wssNeg;
+        csvOutput{1,(tableIndex+3)} = wssChiSqReduced;
         
         % Save divided and distribution figures to a folder titled with the
         % subject code
@@ -79,9 +93,10 @@ function [csvOutput,rawCsvOutput] = makeFigs(data,fitData,outliers,name,csvOutpu
             fFolderName);
         mkdir(folderName);
         
-        figNames = ["_divided.png", "_distribution.png"];
+        figNames = ["_divided.png", "_distribution.png", "_wss_chisq.png", ...
+            "_poly_chisq.png"];
         
-        figs = [divided, distribution];
+        figs = [divided, distribution, wssChiSqGraph, polyChiSqGraph];
         
         for i = 1:length(figs) 
             fig = figs(i);
