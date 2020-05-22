@@ -1,108 +1,77 @@
-function [csvOutput,rawCsvOutput] = makeFigs(data,fitData,outliers,name,csvOutput,rawCsvOutput,tableIndex,color,divLim,pointSlopeGraph,polyfitGraph,saveOutput)
+function [oneParamOutput, twoParamOutput] = makeFigs(data,rawData,name,id,color,oneParamOutput,twoParamOutput,oneParamGraph,twoParamGraph,savePlots)
+    
+    % For all data except anstis, produce y/x vs. x graphs and y/x
+    % histograms
+    if(~strcmp(id,'a'))
+        
+        avg = mean(data(:,2));
+        sd = std(data(:,2));
+        N = size(data,1);
+        
+        % y/x vs. x plot
+        divided = figure();
+        %dividedFig(rawData, avg, sd, N, name, color, divided);
+        
+        % y/x histogram
+        distribution = figure();
+        histFig(rawData, avg, sd, N, name, color, distribution);
+    end
+
+    data(:,2) = data(:,2).*data(:,1);
     
     % Setting direction of error bars. T1's independent variable is letter
     % height, while in all other experiments the independent variable is
     % eccentricity
-    if (strcmp(name,'Fully Crowded'))
+    if (strcmp(id,'fc'))
         errorBarDirection = 'Horizontal';
+        discreteCol = 2;
     else
         errorBarDirection = 'Vertical';
-    end
-    
-    % Calculate useful statistics from this truncated distribution for
-    % fitting - Standard deviation, Mean, Standard error
-    sd = std(fitData(:,2));
-    avg = mean(fitData(:,2));
-    N = size(fitData,1);
-    sError = (sd/(sqrt(N-1)));
-    
-    % For all data except anstis, produce y/x vs. x graphs and y/x
-    % histograms
-    if(~strcmp(name,'Anstis'))
-        % y/x vs. x plot
-        divided = figure();
-        dividedFig(data, fitData, avg, sd, N, name, color, ...
-            divLim, divided);
-        
-        % y/x histogram
-        distribution = figure();
-        histFig(data, name, csvOutput, color, divLim, distribution, ...
-            false, false);
+        discreteCol = 1;
     end
 
-    % Converting letter heights back from letter height/eccentricity to
-    % real values
-    data(:,2) = data(:,2).*data(:,1);
-    fitData(:,2) = fitData(:,2).*fitData(:,1);
-    
-    % Adding values for error bars. Error bars represent one standard
-    % deviation from the mean, multiplied by their corresponding
-    % eccentricity value. Higher eccentricity values have higher error.
-    data(:,3) = sd.*data(:,1);
-    
-    % Weighted least sum of squares calculation
-    [avgData, wssAvg] = wss(fitData,name, avg);
-    
-    if(strcmp(name,'Anstis'))
+    if(strcmp(id,'a'))
+        slope = mean(data(:,2)./data(:,1));
+        params = polyfit(data(:,1),data(:,2),1);
         avgData = data;
-        wssAvg = avg;
     else
-        avgData(:,3) = avgData(:,3)./sqrt(avgData(:,4));
+        avgData = averageData(data,discreteCol);
+        
+        oneParamChiGraph = figure();
+        [slope,oneParamOutput] = oneParamChiSq(avgData, name, id, color, ...
+            oneParamOutput, oneParamChiGraph);
+        
+        twoParamChiGraph = figure();
+        [params,twoParamOutput] = twoParamChiSq(avgData, name, id, ...
+            twoParamOutput, twoParamChiGraph);
     end
     
     % Graph linear point-slope with averaged data & wss slope
-    pointSlope(avgData, wssAvg, name, color, errorBarDirection, ...
-        pointSlopeGraph);
-        
-    params = polyfitter(avgData, name, color, errorBarDirection, ...
-        polyfitGraph);
+    pointSlope(avgData, slope, name, color, errorBarDirection, ...
+        oneParamGraph);
     
-    if(~strcmp(name,'Anstis'))
-        wssChiSqGraph = figure();
-        [wssChiSq, wssChiSqReduced, wssNeg, wssPos] = chiSq(wssAvg,0, ...
-            avgData,wssChiSqGraph);
-        
-        polyChiSqGraph = figure();
-        [polyChiSq,polyChiSqReduce, dpolyNeg,polyPos] = chiSq(params(1,1), ...
-            params(1,2), avgData,polyChiSqGraph);
-        
-    end
+    pointSlope(avgData, params, name, color, errorBarDirection, ...
+        twoParamGraph);
     
     % Residual plots and histograms, csv output, and saving figures
-    if(~strcmp(name,'Anstis')) && (saveOutput)
-        
-        if(size(rawCsvOutput,2) > 4)
-            rawCsvOutput((size(rawCsvOutput,1)+1),:) = rawCsvOutput((size(rawCsvOutput,1)),:);
-        end
-        
-        rawCsvOutput{(size(rawCsvOutput,1)),5} = name;
-        rawCsvOutput{(size(rawCsvOutput,1)),6} = wssAvg;
-        rawCsvOutput{(size(rawCsvOutput,1)),7} = wssPos;
-        rawCsvOutput{(size(rawCsvOutput,1)),8} = wssNeg;
-        rawCsvOutput{(size(rawCsvOutput,1)),9} = wssChiSqReduced;
-        
-        csvOutput{1,tableIndex} = wssAvg;
-        csvOutput{1,(tableIndex+1)} = wssAvg;
-        csvOutput{1,(tableIndex+2)} = wssNeg;
-        csvOutput{1,(tableIndex+3)} = wssChiSqReduced;
+    if(~strcmp(name,'Anstis')) && (savePlots)
         
         % Save divided and distribution figures to a folder titled with the
         % subject code
-        fFolderName = strcat(string(csvOutput{1,3}), "_", string(csvOutput{1,4}));
-        folderName = fullfile(pwd, 'Analysis_Results', 'Plots', string(csvOutput{1,2}), ...
-            fFolderName);
+        folderName = fullfile(pwd, 'Analysis_Results', 'Plots', ...
+            string(oneParamOutput.type), string(oneParamOutput.name));
         mkdir(folderName);
         
-        figNames = ["_divided.png", "_distribution.png", "_wss_chisq.png", ...
-            "_poly_chisq.png"];
+        figNames = ["_one_param_chi_sq.png", "_two_param_chi_sq.png", ...
+            "_divided.png", "_distribution.png"];
         
-        figs = [divided, distribution, wssChiSqGraph, polyChiSqGraph];
+        figs = [oneParamChiGraph, twoParamChiGraph, divided, distribution];
         
         for i = 1:length(figs) 
             fig = figs(i);
             figName = figNames(i);
-            fileName = sprintf('%s%s%s%s', string(csvOutput{1,3}), '_', name, ...
-                figName);
+            fileName = sprintf('%s%s%s%s', string(oneParamOutput.name), ...
+                '_', name, figName);
             saveas(fig, fullfile(folderName, fileName));
         end
     end

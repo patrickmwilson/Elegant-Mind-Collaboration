@@ -1,11 +1,7 @@
-function histFig(data, name, csvOutput, color, divLim, distribution, combined, log)
-
-    figure(distribution);
+function histFig(data, avg, sd, N, name, color, fig)
+    figure(fig);
     
-    if log
-        data(:,2) = log10(data(:,2));
-    end
-    
+    data(:,2) = log10(data(:,2));
     avg = mean(data(:,2));
     sd = std(data(:,2));
     N = size(data,1);
@@ -16,6 +12,7 @@ function histFig(data, name, csvOutput, color, divLim, distribution, combined, l
     % Plot histogram of letter height/eccentricity distribution
     histogram(data(:,2), optN, 'HandleVisibility', 'off', 'FaceColor', color, ...
             'Normalization', 'probability');
+        
     % Calculate appropriate height of gaussian fit - discretize splits the
     % data into bins, m becomes the mode (bin with most data points), and
     % gaussHeight becomes the number of points in this bin.
@@ -45,12 +42,11 @@ function histFig(data, name, csvOutput, color, divLim, distribution, combined, l
             'LineWidth', 1, 'Color', color, 'HandleVisibility', 'off');
     box on;
 
-    % Axis labels and title for non-combined figure
-    if ~combined
-        formatFigure(distribution, [gaussMin gaussMax], [0 gaussHeight*1.2], ...
-            "Letter Height (deg)/Eccentricity (deg)", ...
-            "Number of Occurences (Normalized to Probability)", ...
-            "Distribution of Letter Height/Eccentricity", false)
-    end
+    
+    formatFigure(fig, [gaussMin gaussMax], [0 gaussHeight*1.2], ...
+        "Letter Height (deg)/Eccentricity (deg)", ...
+        "Number of Occurences (Normalized to Probability)", ...
+        "Distribution of Letter Height/Eccentricity", false)
+    
 
 end
