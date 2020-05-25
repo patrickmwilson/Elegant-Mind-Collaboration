@@ -1,4 +1,9 @@
-function [oneParamOutput, twoParamOutput] = makeFigs(data,rawData,name,id,color,oneParamOutput,twoParamOutput,oneParamGraph,twoParamGraph,savePlots)
+function [oneParamOutput,twoParamOutput] = makeFigs(data,rawData,info,oneParamOutput,twoParamOutput,oneParamGraph,twoParamGraph,savePlots,trimCC)
+
+    name = info.name;
+    id = info.id;
+    color = info.color;
+    discreteCol = info.discreteCol;
     
     % For all data except anstis, produce y/x vs. x graphs and y/x
     % histograms
@@ -10,7 +15,7 @@ function [oneParamOutput, twoParamOutput] = makeFigs(data,rawData,name,id,color,
         
         % y/x vs. x plot
         divided = figure();
-        %dividedFig(rawData, avg, sd, N, name, color, divided);
+        dividedFig(data, rawData, avg, sd, N, name, color, divided);
         
         % y/x histogram
         distribution = figure();
@@ -24,26 +29,27 @@ function [oneParamOutput, twoParamOutput] = makeFigs(data,rawData,name,id,color,
     % eccentricity
     if (strcmp(id,'fc'))
         errorBarDirection = 'Horizontal';
-        discreteCol = 2;
     else
         errorBarDirection = 'Vertical';
-        discreteCol = 1;
     end
 
     if(strcmp(id,'a'))
+        avgData = data;
         slope = mean(data(:,2)./data(:,1));
         params = polyfit(data(:,1),data(:,2),1);
-        avgData = data;
     else
-        avgData = averageData(data,discreteCol);
+        avgData = averageData(data, discreteCol);
+        
+        avgData = calculateStandardErrors(info, trimCC, avgData);
         
         oneParamChiGraph = figure();
         [slope,oneParamOutput] = oneParamChiSq(avgData, name, id, color, ...
             oneParamOutput, oneParamChiGraph);
         
+        approx = [oneParamOutput.(strcat(id, '_slope')) 0];
         twoParamChiGraph = figure();
         [params,twoParamOutput] = twoParamChiSq(avgData, name, id, ...
-            twoParamOutput, twoParamChiGraph);
+            approx, twoParamOutput, twoParamChiGraph);
     end
     
     % Graph linear point-slope with averaged data & wss slope
@@ -58,8 +64,13 @@ function [oneParamOutput, twoParamOutput] = makeFigs(data,rawData,name,id,color,
         
         % Save divided and distribution figures to a folder titled with the
         % subject code
-        folderName = fullfile(pwd, 'Analysis_Results', 'Plots', ...
-            string(oneParamOutput.type), string(oneParamOutput.name));
+        if(strcmp(string(oneParamOutput.type),'Averaged'))
+            folderName = fullfile(pwd, 'Plots', 'Averaged');
+        else
+            folderName = fullfile(pwd, 'Plots', string(oneParamOutput.type), ...
+                string(oneParamOutput.name));
+        end
+        
         mkdir(folderName);
         
         figNames = ["_one_param_chi_sq.png", "_two_param_chi_sq.png", ...

@@ -1,23 +1,26 @@
-function [params,twoParamOutput] = twoParamChiSq(data,name,id,twoParamOutput,fig)
+function [params,twoParamOutput] = twoParamChiSq(data,name,id,approx,twoParamOutput,fig)
 
     xvals = data(:,1)';
     yvals = data(:,2)';
     
-    variance = (data(:,3)').^2;
+    variance = (data(:,4)').^2;
     
     variance(variance == 0) = 0.000001;
     
     % Weights are assumed to be 1/standard error, normalized to 0-1
     w = 1./variance;
     
-    %Estimate parameters
-    approx = polyfit(xvals,yvals,1);
-    
     %Chi square function
     f = @(x,xvals,yvals,w)sum(w.*((yvals-((xvals.*x(1))+x(2))).^2));
     fun = @(x)f(x,xvals,yvals,w);
     
-    [params,chi_sq] = fminsearch(fun,approx); 
+    
+    ms = MultiStart;
+    problem = createOptimProblem('fmincon','x0',approx, ...
+        'objective',fun,'lb',[0,-1],'ub',[1,1]);
+    params = run(ms,problem,50);
+    chi_sq = fun(params);
+    
     slope = params(1);
     intercept = params(2);
     reduced_chi_sq = chi_sq/(length(xvals)-2);
@@ -32,24 +35,121 @@ function [params,twoParamOutput] = twoParamChiSq(data,name,id,twoParamOutput,fig
     
     target = chi_sq+1;
     
-    evals = linspace(slope*0.5, slope, 100000);
-    chi = cellfun(fun,num2cell(evals));
-    chi = abs(chi - target);
-    negChi = min(chi);
-    negError = evals(find(chi == min(chi)));
+    negSlopeError = slope;
+    mult = 0.5;
+    increment = 0.1;
+    while negSlopeError == slope
+        if mult > 1
+            break;
+        end
+        
+        evals = linspace(slope*mult, slope, 100000);
+        chi = cellfun(fun,num2cell(evals));
+        chi = abs(target-chi);
+        slopeIdx = find(chi == min(chi));
+        negSlopeError = evals(slopeIdx(1));
+        
+        if mult >= 0.9
+            increment = 0.01;
+        elseif mult >= 0.95
+            increment = 0.001;
+        end
+        
+        mult = mult + increment;
+    end
     
-    twoParamOutput.(strcat(id, '_neg_error')) = negError;
+    twoParamOutput.(strcat(id, '_slope_neg_error')) = negSlopeError;
     
-    evals = linspace(slope, slope*1.5, 100000);
-    chi = cellfun(fun,num2cell(evals));
-    chi = abs(chi - target);
-    posChi = min(chi);
-    posError = evals(find(chi == min(chi)));
+    posSlopeError = slope;
+    mult = 1.5;
+    increment = 0.1;
+    while posSlopeError == slope
+        if mult < 1
+            break;
+        end
+        evals = linspace(slope*mult, slope, 100000);
+        chi = cellfun(fun,num2cell(evals));
+        chi = abs(target-chi);
+        slopeIdx = find(chi == min(chi));
+        posSlopeError = evals(slopeIdx(1));
+        
+        if mult <= 1.1
+            increment = 0.01;
+        elseif mult <= 1.05
+            increment = 0.001;
+        end
+        
+        mult = mult - increment;
+    end
     
-    twoParamOutput.(strcat(id, '_pos_error')) = posError;
+    twoParamOutput.(strcat(id, '_slope_pos_error')) = posSlopeError;
     
-    slope_evals = linspace((slope*0.5),(slope*1.5));
-    int_evals = linspace((intercept*0.5),(intercept*1.5));
+    f = @(slope,intercept,xvals,yvals,w)sum(w.*((yvals-((xvals.*slope)+intercept)).^2));
+    fun = @(intercept)f(slope,intercept,xvals,yvals,w);
+    
+    negInterceptError = intercept;
+    mult = 0.5;
+    increment = 0.1;
+    while negInterceptError == intercept
+        if mult > 1
+            break;
+        end
+        
+        evals = linspace(intercept*mult, intercept, 100000);
+        chi = cellfun(fun,num2cell(evals));
+        chi = abs(target-chi);
+        intIdx = find(chi == min(chi));
+        negInterceptError = evals(intIdx(1));
+        
+        if mult >= 0.9
+            increment = 0.01;
+        elseif mult >= 0.95
+            increment = 0.001;
+        end
+        
+        mult = mult + increment;
+    end
+    
+    posInterceptError = intercept;
+    mult = 1.5;
+    increment = 0.1;
+    while posInterceptError == intercept
+        if mult < 1
+            break;
+        end
+        evals = linspace(intercept*mult, intercept, 100000);
+        chi = cellfun(fun,num2cell(evals));
+        chi = abs(target-chi);
+        intIdx = find(chi == min(chi));
+        posInterceptError = evals(intIdx(1));
+        
+        if mult <= 1.1
+            increment = 0.01;
+        elseif mult <= 1.05
+            increment = 0.001;
+        end
+        
+        mult = mult - increment;
+    end
+    
+    if negInterceptError > posInterceptError
+        temp = negInterceptError;
+        negInterceptError = posInterceptError;
+        posInterceptError = temp;
+    end
+    
+    twoParamOutput.(strcat(id, '_intercept_neg_error')) = negInterceptError;
+    twoParamOutput.(strcat(id, '_intercept_pos_error')) = posInterceptError;
+    
+    posSlopeDist = (posSlopeError-slope)*2;
+    negSlopeDist = (slope-negSlopeError)*2;
+    
+    slope_evals = linspace((slope-negSlopeDist),(slope+posSlopeDist));
+    
+    posIntDist = (posInterceptError-intercept)*4;
+    negIntDist = (intercept-negInterceptError)*4;
+    
+    int_evals = linspace((intercept-negIntDist),(intercept+posIntDist));
     
     [slope_grid, int_grid] = meshgrid(slope_evals,int_evals);
     
@@ -59,16 +159,43 @@ function [params,twoParamOutput] = twoParamChiSq(data,name,id,twoParamOutput,fig
     chi_grid = cellfun(fun,num2cell(slope_grid),num2cell(int_grid));
     
     figure(fig);
-    hold on; grid on;
     
-    mesh(slope_grid,int_grid,chi_grid);
+    chisqtext = "\chi^{2}";
+    redchisqtext = "\chi^{2}_{v}";
+    txt = "Minimum at\nSlope: %4.2f\nIntercept: %4.2f\n%s: %4.2f\n%s: %4.2f";
     
-    colormap(winter);
+    surf(slope_grid,int_grid,chi_grid,'FaceAlpha',0.4, ...
+        'EdgeColor','none', 'HandleVisibility', 'off');
     
-    titleText = sprintf('%s %s', name, "Chi^2 vs. a and b Parameters (y=ax+b)");
+    hold on;
+    
+    cb = colorbar;
+    
+    axisPos = get(gca,'position');
+    cbPos = get(cb,'Position');
+    
+    cbPos(1) = 0.87;
+    cbPos(2) = 0.25;
+    cbPos(3) = 0.015;
+    cbPos(4) = 0.5;
+    
+    set(cb,'Position',cbPos);
+    set(gca,'position', axisPos);
+    
+    line(nan, nan, 'Linestyle', 'none', 'Marker', 'none', 'Color', 'none', ...
+        'DisplayName', ...
+        sprintf(txt,slope,intercept,chisqtext,chi_sq,redchisqtext,reduced_chi_sq));
+    
+    titleText = sprintf('%s %s %s %s', "     ", name, chisqtext, ...
+        "vs. Slope and Intercept Parameters (y = ax + b)");
+    
     title(titleText);
     xlabel("Slope");
     ylabel("Intercept");
-    zlabel("Chi^2");
+    zlabel(chisqtext);
+
+    legend('show', 'Position', [0.2 0.6 0.1 0.2], 'EdgeColor', 'none', ...
+        'Color', 'none');
+    grid on;
     
 end

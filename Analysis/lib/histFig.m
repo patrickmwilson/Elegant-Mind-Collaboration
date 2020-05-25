@@ -1,11 +1,6 @@
 function histFig(data, avg, sd, N, name, color, fig)
     figure(fig);
     
-    data(:,2) = log10(data(:,2));
-    avg = mean(data(:,2));
-    sd = std(data(:,2));
-    N = size(data,1);
-    
     hold on;
     % Optimum bin number for distribution 
     optN = ceil((sqrt(N))*1.5);

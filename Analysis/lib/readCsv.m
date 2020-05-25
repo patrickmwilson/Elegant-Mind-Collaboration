@@ -9,7 +9,7 @@
 % from all '.csv' folders within that directory that contain the sequence 
 % specified by name into an array.
 
-function [rawData, data, outliers] = readCsv(name, id, allData, trimCC)
+function [rawData, data, outliers] = readCsv(name, id, plotAllData, trimCC)
     
     % Suppress warning about modified csv headers
     warning('off','MATLAB:table:ModifiedAndSavedVarnames');
@@ -19,16 +19,13 @@ function [rawData, data, outliers] = readCsv(name, id, allData, trimCC)
     if(strcmp(id,'a'))
         folder = fullfile(pwd, 'Active_Data', 'All', 'a');
     else
-        if allData
+        if plotAllData
             folder = fullfile(pwd, 'Active_Data','All', id);
         else
             folder = fullfile(pwd, 'Active_Data');
         end
     end
     
-    clear files;
-    clear filenames;
-    clear csvfiles;
     % Create list of names of all files within directory that end in '.csv'
     files = dir(folder);
     filenames={files(:).name}';
@@ -65,8 +62,8 @@ function [rawData, data, outliers] = readCsv(name, id, allData, trimCC)
             exclusions = [0,5,10];
         elseif(strcmp(id,'cc9') && trimCC)
             exclusions = [0, 5, 10, 15];
-        elseif(strcmp(id,'ic') && trimCC)
-            exclusions = [0, 5];
+%         elseif(strcmp(id,'ic') && trimCC)
+%             exclusions = [0, 5];
         else
             exclusions = [0];
         end
