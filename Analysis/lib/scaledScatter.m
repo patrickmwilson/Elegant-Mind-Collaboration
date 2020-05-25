@@ -9,9 +9,12 @@
 % in column 2, color, initial dot size, and dot size increment as input.
 % Scatters the data, then recursively scatters any duplicate data with an
 % increasing dot size.
-function scaledScatter(plot, data, color, dotSize, dotSizeIncrement)
+function scaledScatter(plot, rawData, color, dotSize, dotSizeIncrement)
 
     figure(plot);
+    
+    data(:,1) = round(rawData(:,1),2);
+    data(:,2) = round(rawData(:,2),2);
     
     % Get unique x-y combinations and their indices
     [q, I, ~] = unique(data, 'rows');

@@ -23,7 +23,7 @@ table = readtable(fileName);
 
 subjects = cleanTable(table);
 
-folderName = fullfile(pwd, 'Analysis_Results', 'Correlation_Analysis'); 
+folderName = fullfile(pwd, 'Plots', 'Correlation'); 
 mkdir(folderName);
 
 fc = figure();
