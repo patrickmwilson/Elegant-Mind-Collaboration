@@ -9,86 +9,116 @@
 % from all '.csv' folders within that directory that contain the sequence 
 % specified by name into an array.
 
-function [rawData, data, outliers] = readCsv(name, id, plotAllData, trimCC)
+function [rawData,data,outliers] = readCsv(name,id,type,subjectName,trimCC)
     
     % Suppress warning about modified csv headers
     warning('off','MATLAB:table:ModifiedAndSavedVarnames');
-
-
-    clear folder;
+    
     if(strcmp(id,'a'))
-        folder = fullfile(pwd, 'Active_Data', 'All', 'a');
+        baseFolders = [string(fullfile(pwd, 'Data', 'Anstis'))];
+    elseif(strcmp(type,'All'))
+        baseFolders = [string(fullfile(pwd, 'Data', 'Study')), ...
+            string(fullfile(pwd, 'Data', 'Mock')), ...
+            string(fullfile(pwd, 'Data', 'Pilot'))];
     else
-        if plotAllData
-            folder = fullfile(pwd, 'Active_Data','All', id);
-        else
-            folder = fullfile(pwd, 'Active_Data');
+        baseFolders = [string(fullfile(pwd, 'Data', type))];
+    end
+    
+    
+    folderPaths = [];
+    for i=1:length(baseFolders)
+        baseFolder = baseFolders(i);
+        
+        if(strcmp(id,'a'))
+            folderPaths = [baseFolder];
+            break;
+        end
+        
+        folders = dir(baseFolder);
+        
+        folderNames={folders(:).name}';
+        
+        for j=1:size(folderNames,1)
+            folderName = string(folderNames{j,1});
+            
+            if(startsWith(folderName,"."))
+                continue;
+            end
+            
+            if(~strcmp(subjectName,'Averaged'))
+                if(~strcmp(subjectName,folderName))
+                    continue;
+                end
+            end
+            
+            folderPath = string(fullfile(baseFolder, folderName));
+            folderPaths = [folderPaths folderPath];
+            
         end
     end
     
-    % Create list of names of all files within directory that end in '.csv'
-    files = dir(folder);
-    filenames={files(:).name}';
-    csvfiles=filenames(endsWith(filenames,'.csv'));
+    rawData = []; data = []; outliers = [];
     
-    % Read csv into table, concatenates additional csv files
-    rawData = [];
-    data = [];
-    outliers = [];
-    for i = 1:size(csvfiles,1)
-        % Only reads csv files that contain the experiment name
-        file = char(csvfiles{i,1});
-
-        if(~strcmp(id,'a'))
-            underscores = find(file == '_');
-            period = find(file == '.');
-            protocolName = string(extractBetween(file, (underscores(end)+1), (period-1)));
-            if(~strcmp(protocolName, name))
-                continue;
-            end
-        end
+    for i=1:length(folderPaths)
+        folder = folderPaths(i);
         
-        filename = fullfile(folder, string(csvfiles(i,1)));
-        thisData = table2array(readtable(filename));
+        files = dir(folder);
+        fileNames={files(:).name}';
+        csvFiles=fileNames(endsWith(fileNames,'.csv'));
         
-        % Creates a 2 column matrix of the data. Eccentricity is placed in
-        % column 1, letter height in column 2. 
-        thisData(:,1) = thisData(:,3);
-        % T1 data is stored differently, letter height is in column 4 of
-        % the csv rather than column 2
-        thisData(:,2) = thisData(:,(2 + 2*(strcmp(id,'fc'))));
-
-        if(strcmp(id,'cc3') && trimCC)
-            exclusions = [0,5,10];
-        elseif(strcmp(id,'cc9') && trimCC)
-            exclusions = [0, 5, 10, 15];
-%         elseif(strcmp(id,'ic') && trimCC)
-%             exclusions = [0, 5];
-        else
-            exclusions = [0];
-        end
-
-        % Removes all rows from the data matrix which contain a zero.
-        j = 1;
-        while(j <= size(thisData,1))
-            if(ismember(thisData (j, 1), exclusions) || thisData(j,2) == 0)
-                thisData(j,:) = [];
-                continue;
+        for j=1:size(csvFiles,1)
+            file = char(csvFiles{j,1});
+            
+            if(~strcmp(id,'a'))
+                underscores = find(file == '_');
+                period = find(file == '.');
+                protocolName = string(extractBetween(file, (underscores(end)+1), (period-1)));
+                if(~strcmp(protocolName, name))
+                    continue;
+                end
             end
-            j = j + 1;
-        end
+            
+            thisData = []; thisFitData = []; theseOutliers = [];
+            
+            filename = fullfile(folder, string(csvFiles(j,1)));
+            thisData = table2array(readtable(filename));
+        
+            % Creates a 2 column matrix of the data. Eccentricity is placed in
+            % column 1, letter height in column 2. 
+            thisData(:,1) = thisData(:,3);
+            % T1 data is stored differently, letter height is in column 4 of
+            % the csv rather than column 2
+            thisData(:,2) = thisData(:,(2 + 2*(strcmp(id,'fc'))));
 
-        % Normalize by y/x
-        thisData(:,2) = thisData(:,2)./thisData(:,1);
+            if(strcmp(id,'cc3') && trimCC)
+                exclusions = [0,5,10];
+            elseif(strcmp(id,'cc9') && trimCC)
+                exclusions = [0, 5, 10, 15];
+            else
+                exclusions = [0];
+            end
+
+            % Removes all rows from the data matrix which contain a zero.
+            k = 1;
+            while(k <= size(thisData,1))
+                if(ismember(thisData (k, 1), exclusions) || thisData(k,2) == 0)
+                    thisData(k,:) = [];
+                    continue;
+                end
+                k = k + 1;
+            end
+
+            % Normalize by y/x
+            thisData(:,2) = thisData(:,2)./thisData(:,1);
     
-        % Recursively removing outliers more than 2.5 standard deviations (99%
-        % confidence interval) from this distribution (see removeOutliers.m)
-        [thisFitData,theseOutliers] = removeOutliers(thisData, [], 2.5, 2);
+            % Recursively removing outliers more than 2.5 standard deviations (99%
+            % confidence interval) from this distribution (see removeOutliers.m)
+            [thisFitData,theseOutliers] = removeOutliers(thisData, [], 2.5, 2);
 
-        % Concatenate these values with accumulated values
-        rawData = [rawData; thisData];
-        data = [data; thisFitData];
-        outliers = [outliers; theseOutliers];
+            % Concatenate these values with accumulated values
+            rawData = [rawData; thisData];
+            data = [data; thisFitData];
+            outliers = [outliers; theseOutliers];
+        end
     end
-
 end
