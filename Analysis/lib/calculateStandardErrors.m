@@ -6,8 +6,8 @@ function outputData = calculateStandardErrors(info, trimCC, outputData)
         return;
     end
     discreteCol = info.discreteCol;
-
-    [~, data, ~] = readCsv(csvName, id, 1, trimCC);
+    
+    [~,data,~] = readCsv(csvName,id,'All','Averaged',trimCC);
 
     data(:,2) = data(:,2).*data(:,1);
     avgData = averageData(data,discreteCol);

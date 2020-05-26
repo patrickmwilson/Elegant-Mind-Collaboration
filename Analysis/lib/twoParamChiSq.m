@@ -1,4 +1,4 @@
-function [params,twoParamOutput] = twoParamChiSq(data,name,id,approx,twoParamOutput,fig)
+function [params,twoParamOutput] = twoParamChiSq(data,name,id,approx,twoParamOutput,surfFig,colorFig)
 
     xvals = data(:,1)';
     yvals = data(:,2)';
@@ -158,7 +158,7 @@ function [params,twoParamOutput] = twoParamChiSq(data,name,id,approx,twoParamOut
     
     chi_grid = cellfun(fun,num2cell(slope_grid),num2cell(int_grid));
     
-    figure(fig);
+    figure(surfFig);
     
     chisqtext = "\chi^{2}";
     redchisqtext = "\chi^{2}_{v}";
@@ -197,5 +197,43 @@ function [params,twoParamOutput] = twoParamChiSq(data,name,id,approx,twoParamOut
     legend('show', 'Position', [0.2 0.6 0.1 0.2], 'EdgeColor', 'none', ...
         'Color', 'none');
     grid on;
+    
+    figure(colorFig);
+
+    posSlopeDist = (posSlopeError-slope)*1.05;
+    negSlopeDist = (slope-negSlopeError)*1.05;
+    
+    slope_evals = linspace((slope-negSlopeDist),(slope+posSlopeDist));
+    
+    posIntDist = (posInterceptError-intercept)*1.5;
+    negIntDist = (intercept-negInterceptError)*1.5;
+    
+    int_evals = linspace((intercept-negIntDist),(intercept+posIntDist));
+    
+    [slope_grid, int_grid] = meshgrid(slope_evals,int_evals);
+    
+    chi_grid = cellfun(fun,num2cell(slope_grid),num2cell(int_grid));
+    
+    ax = axes('Parent',colorFig);
+    h = surf(slope_grid,int_grid,chi_grid,'Parent',ax);
+    hold on;
+    set(h, 'edgecolor','none');
+    view(ax,[0,90]);
+    colormap(jet);
+    ccb = colorbar;
+    
+    ccb.Label.String = chisqtext;
+    
+    pos = get(ccb.Label,'Position');
+    ccb.Label.Position = [pos(1)*1.3 pos(2) 0]; % to change its position
+    ccb.Label.Rotation = 0; % to rotate the text
+    ccb.Label.FontSize = 12;
+    
+    title(titleText);
+    xlabel("Slope");
+    ylabel("Intercept");
+    
+    xlim([min(slope_evals) max(slope_evals)]);
+    ylim([min(int_evals) max(int_evals)]);
     
 end

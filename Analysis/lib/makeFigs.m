@@ -1,4 +1,4 @@
-function [oneParamOutput,twoParamOutput] = makeFigs(data,rawData,info,oneParamOutput,twoParamOutput,oneParamGraph,twoParamGraph,savePlots,trimCC)
+function [oneParamOutput,twoParamOutput] = makeFigs(data,rawData,info,oneParamOutput,twoParamOutput,oneParamGraph,twoParamGraph,savePlots,trimCC,averageOver)
 
     name = info.name;
     id = info.id;
@@ -47,9 +47,10 @@ function [oneParamOutput,twoParamOutput] = makeFigs(data,rawData,info,oneParamOu
             oneParamOutput, oneParamChiGraph);
         
         approx = [oneParamOutput.(strcat(id, '_slope')) 0];
-        twoParamChiGraph = figure();
+        twoParamChiSurf = figure();
+        twoParamChiColor = figure();
         [params,twoParamOutput] = twoParamChiSq(avgData, name, id, ...
-            approx, twoParamOutput, twoParamChiGraph);
+            approx, twoParamOutput, twoParamChiSurf, twoParamChiColor);
     end
     
     % Graph linear point-slope with averaged data & wss slope
@@ -64,8 +65,9 @@ function [oneParamOutput,twoParamOutput] = makeFigs(data,rawData,info,oneParamOu
         
         % Save divided and distribution figures to a folder titled with the
         % subject code
-        if(strcmp(string(oneParamOutput.type),'Averaged'))
-            folderName = fullfile(pwd, 'Plots', 'Averaged');
+        if(averageOver)
+            folderName = fullfile(pwd, 'Plots', 'Averaged', ...
+                string(oneParamOutput.type));
         else
             folderName = fullfile(pwd, 'Plots', string(oneParamOutput.type), ...
                 string(oneParamOutput.name));
@@ -73,10 +75,12 @@ function [oneParamOutput,twoParamOutput] = makeFigs(data,rawData,info,oneParamOu
         
         mkdir(folderName);
         
-        figNames = ["_one_param_chi_sq.png", "_two_param_chi_sq.png", ...
-            "_divided.png", "_distribution.png"];
+        figNames = ["_one_param_chi_sq.png", "_two_param_chi_sq_surf.png", ...
+            "_two_param_chi_sq_color.png", "_divided.png", ...
+            "_distribution.png"];
         
-        figs = [oneParamChiGraph, twoParamChiGraph, divided, distribution];
+        figs = [oneParamChiGraph, twoParamChiSurf, twoParamChiColor, ...
+            divided, distribution];
         
         for i = 1:length(figs) 
             fig = figs(i);
