@@ -27,7 +27,9 @@ function [oneParamOutput,twoParamOutput] = makeFigs(data,rawData,info,oneParamOu
     % Setting direction of error bars. T1's independent variable is letter
     % height, while in all other experiments the independent variable is
     % eccentricity
-    if (strcmp(id,'fc'))
+    if strcmp(id,'fc')
+        errorBarDirection = 'Horizontal';
+    elseif strcmp(id,'l3')
         errorBarDirection = 'Horizontal';
     else
         errorBarDirection = 'Vertical';

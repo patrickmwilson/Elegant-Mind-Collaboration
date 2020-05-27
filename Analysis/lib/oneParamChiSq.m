@@ -28,54 +28,21 @@ function [slope, oneParamOutput] = oneParamChiSq(data,name,id,color,oneParamOutp
     
     target = chi_sq+1;
     
-    negError = slope;
-    mult = 0.5;
-    increment = 0.1;
-    while negError == slope
-        if mult > 1
-            break;
-        end
-        evals = linspace(slope*mult, slope, 100000);
-        chi = cellfun(fun,num2cell(evals));
-        chi = abs(target-chi);
-        slopeIdx = find(chi == min(chi));
-        negError = evals(slopeIdx(1));
-        
-        if mult >= 0.9
-            increment = 0.01;
-        elseif mult >= 0.95
-            increment = 0.001;
-        end
-        
-        mult = mult + increment;
-    end
+    % Chi^2 equation to be minimized
+    f = @(x,xvals,yvals,w)abs(target-sum((w.*((yvals-(xvals.*x))).^2)));
+    fun = @(x)f(x,xvals,yvals,w);
+    
+    options = optimset('Display','iter');
+    
+    negError = fminbnd(fun,(slope*0.5),slope,options);
+    posError = fminbnd(fun,slope,(slope*1.5),options);
     
     oneParamOutput.(strcat(id, '_neg_error')) = negError;
-    
-    posError = slope;
-    mult = 1.5;
-    increment = 0.1;
-    while posError == slope
-        if mult < 1
-            break;
-        end
-        
-        evals = linspace(slope*mult, slope, 100000);
-        chi = cellfun(fun,num2cell(evals));
-        chi = abs(target-chi);
-        slopeIdx = find(chi == min(chi));
-        posError = evals(slopeIdx(1));
-        
-        if mult <= 1.1
-            increment = 0.01;
-        elseif mult <= 1.05
-            increment = 0.001;
-        end
-        
-        mult = mult - increment;
-    end
-    
     oneParamOutput.(strcat(id, '_pos_error')) = posError;
+    
+    % Chi^2 equation to be minimized
+    f = @(x,xvals,yvals,w)sum((w.*((yvals-(xvals.*x))).^2));
+    fun = @(x)f(x,xvals,yvals,w);
     
     evals = linspace((slope*0.5), (slope*1.5));
     chi = cellfun(fun,num2cell(evals));
