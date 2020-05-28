@@ -1,29 +1,21 @@
 % ButtonUI
-% Created by Patrick Wilson on 1/20/2020
-% Github.com/patrickmwilson
-% Created for the Elegant Mind Collaboration at UCLA under Professor Katsushi Arisaka
-% Copyright © 2020 Elegant Mind Collaboration. All rights reserved.
-
+%
 % Creates a UI figure with checkboxes that upon callback, edit the values stored
-% in the global checkboxes array. Usage of this script is not reccommended as 
+% in the global checkboxes array. Usage of this script is not recommended as 
 % global variables can be tricky to work with. These were used here to avoid 
 % issues with transferring variables from the figure's workspace to the base 
 % workspace.
-
-function ButtonUI(names)
+function ButtonUI(info)
     global CHECKBOXES;
-    CHECKBOXES = ones(length(names));
+    CHECKBOXES = ones(length(info));
     
     % Create the figure with named checkboxes
     f = figure;
-    for k=1:length(names) 
-        cbh(k) = uicontrol('Style','checkbox','String',names(k), ...
-                      'Value',1,'Position',[30 (280-(20*k)) 200 20],        ...
+    for k=1:length(info) 
+        cbh(k) = uicontrol('Style','checkbox','String',info(k).name, ...
+                      'Value',1,'Position',[30 (280-(20*k)) 200 20], ...
                        'Callback',{@checkBoxCallback,k});
     end
-%     cbh(k+1) = uicontrol('Style','checkbox','String',"Plot Histograms Separately", ...
-%                       'Value',1,'Position',[30 (280-(20*(k+1))) 200 20],        ...
-%                        'Callback',{@checkBoxCallback,(k+1)});
     uiwait(f);
 end
 

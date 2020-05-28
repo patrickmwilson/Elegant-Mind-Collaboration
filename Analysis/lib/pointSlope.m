@@ -1,6 +1,15 @@
+% pointSlope
+%
+% Creates a scatterplot with a regression line. Accepts a data matrix, fit
+% parameters, protocol name, color, the error bar direction, and a figure
+% handle as input arguments. Scatters the data, the first column as x
+% values and the second as y values.
 function pointSlope(data,params,name,color,errorBarDirection,fig)
 
     figure(fig);
+    
+    % Extract slope and intercept values from the params array, set the
+    % legend text based upon whether or not an intercept was given
     if length(params) == 1
         slope = params(1);
         intercept = 0;
@@ -15,12 +24,11 @@ function pointSlope(data,params,name,color,errorBarDirection,fig)
         end
     end
     
-    % Chi-squared minimization for fit line was completed by previous
-    % normalization of letter height/eccentricity. y = avg*x
+    % Create values for the regression line
     xfit = linspace(0, max((data(:,1))'));
     yfit = (xfit*slope)+intercept;
     
-    % Plotting error bars
+    % Plot error bars
     hold on;
     if(~strcmp(name,'Anstis'))
         errorbar(data(:,1), data(:,2), data(:,3), errorBarDirection,'.', ...
@@ -28,8 +36,7 @@ function pointSlope(data,params,name,color,errorBarDirection,fig)
             'CapSize', 0);
     end
     
-    % Plotting fit line
-    hold on;
+    % Plot fit line
     if intercept == 0
         plot(xfit, yfit, 'Color', color, 'LineWidth', 1, 'DisplayName', ...
             sprintf(txt, name, slope));
@@ -38,6 +45,6 @@ function pointSlope(data,params,name,color,errorBarDirection,fig)
             sprintf(txt, name, slope, intercept));
     end
     
+    % Scatter data
     scatter(data(:,1),data(:,2),30,color,'filled','HandleVisibility','off');
-    
 end

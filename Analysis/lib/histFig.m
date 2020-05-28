@@ -1,9 +1,15 @@
+% histFig
+%
+% Plots a histogram of the normalized letter height observations (column 2
+% of the data matrix). Takes the data matrix, the average, standard 
+% deviation, and N of the distribution, the protocol name, color, and the
+% figure handle as arguments.
 function histFig(data, avg, sd, N, name, color, fig)
-    figure(fig);
+    figure(fig); hold on;
     
-    hold on;
-    % Optimum bin number for distribution 
+    % Calculate optimum bin number for distribution 
     optN = ceil((sqrt(N))*1.5);
+    
     % Plot histogram of letter height/eccentricity distribution
     histogram(data(:,2), optN, 'HandleVisibility', 'off', 'FaceColor', color, ...
             'Normalization', 'probability');
@@ -28,8 +34,9 @@ function histFig(data, avg, sd, N, name, color, fig)
     plot(gaussX,gaussY, 'LineWidth', 0.75, 'Color', color, 'DisplayName',  ...
             sprintf("%s Average: %5.4f", name, avg));
     
-    % Plotting vertical red lines at +/-2.5 standard deviations to
-    % demarcate the truncated data from the removed outliers
+    % Plot vertical dashed red lines at a distance of +/-2.5 sigma from 
+    % the mean, to demarcate outliers which have been truncated from the 
+    % distribution
     cutoff = (2.5*sd);
     line([(avg+cutoff), (avg+cutoff)], ylim, 'LineStyle', '--', ...
             'LineWidth', 1, 'Color', color, 'HandleVisibility', 'off');
@@ -37,11 +44,9 @@ function histFig(data, avg, sd, N, name, color, fig)
             'LineWidth', 1, 'Color', color, 'HandleVisibility', 'off');
     box on;
 
-    
+    % Formatting figure (see formatFigure.m)
     formatFigure(fig, [gaussMin gaussMax], [0 gaussHeight*1.2], ...
         "Letter Height (deg)/Eccentricity (deg)", ...
         "Number of Occurences (Normalized to Probability)", ...
-        "Distribution of Letter Height/Eccentricity", false)
-    
-
+        "Distribution of Letter Height/Eccentricity", false);
 end

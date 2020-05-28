@@ -1,19 +1,14 @@
 % removeOutliers
-% Created by Patrick Wilson on 1/20/2020
-% Github.com/patrickmwilson
-% Created for the Elegant Mind Collaboration at UCLA 
-% with Professor Katsushi Arisaka
-% Copyright � 2020 Elegant Mind Collaboration. All rights reserved.
-
-% Accepts a matrix, a cutoff Z-score, and the column of interest as input. 
-% Recursively computes the Z-score of the column of interest and removes 
-% row elements that have a Z-score higher than the cutoff. 
-
+%
+% Recursively truncates a distribution, removing any value greater than 
+% +/- the specified sigma value from the mean. Accepts a matrix, a cutoff 
+% sigma, and the column of interest as input. Recursively computes the 
+% Z-score of the column of interest and removes row elements that have a 
+% Z-score higher than the cutoff. 
 function [newData,outliers] = removeOutliers(data, outliers, cutOff, columnOfInterest)
     
     % Compute Z-score of the column of interest and store it in a new
     % column
-    clear newData;
     newData = data;
     z = zscore(newData(:,columnOfInterest));
     newData(:,(size(data,2)+1)) = z(:,1);
@@ -32,8 +27,8 @@ function [newData,outliers] = removeOutliers(data, outliers, cutOff, columnOfInt
     % Remove the column storing the Z-scores
     newData(:,(size(data,2)+1)) = [];
     
-    % If elements were removed, function is called again with the modified
-    % data
+    % If any elements were removed, remove outliers from the remaining
+    % elements
     if(size(newData,1) ~= size(data,1))
         [newData,outliers] = removeOutliers(newData, outliers, cutOff, columnOfInterest);
     end

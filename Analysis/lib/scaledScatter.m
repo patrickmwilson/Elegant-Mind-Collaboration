@@ -1,14 +1,10 @@
 % scaledScatter
-% Created by Patrick Wilson on 1/20/2020
-% Github.com/patrickmwilson
-% Created for the Elegant Mind Collaboration at UCLA 
-% with Professor Katsushi Arisaka
-% Copyright © 2020 Elegant Mind Collaboration. All rights reserved.
-
-% Accepts a figure, a matrix containing x-values in column 1 and y-values
-% in column 2, color, initial dot size, and dot size increment as input.
-% Scatters the data, then recursively scatters any duplicate data with an
-% increasing dot size.
+%
+% Scatters data with dot size proportional to number of duplicate
+% observations. Accepts a figure, a matrix containing x-values in column 1 
+% and y-values in column 2, color, initial dot size, and dot size increment
+% as input arguments. Scatters the data, then recursively scatters any 
+% duplicate data with an increasing dot size.
 function scaledScatter(plot, rawData, color, dotSize, dotSizeIncrement)
 
     figure(plot);

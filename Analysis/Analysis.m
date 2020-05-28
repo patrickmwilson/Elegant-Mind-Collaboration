@@ -1,15 +1,7 @@
 % Analysis
-% Created by Patrick Wilson on 1/20/2020
-% Github.com/patrickmwilson
-% Created for the Elegant Mind Collaboration at UCLA 
-% with Professor Katsushi Arisaka
-% Copyright � 2020 Elegant Mind Collaboration. All rights reserved.
-
-% Creates a compiled scatter plot with best fit chi-squared minimized
-% fit lines, a compiled scatter plot with weighted least sum of squares fit 
-% lines, a compiled log10-log10 plot with a best fit line, a scatter 
-% plot and histogram of Letter height/Eccentricity for each subject 
-% (divided and distribution figures), and residual plots and histograms.
+%
+% Analyzes and produces plots and statistics from visual acuity data
+% specified by the user through input dialogues
 
 % Add helper functions to path
 libPath = fullfile(pwd, 'lib');
@@ -22,13 +14,14 @@ warning('off','MATLAB:MKDIR:DirectoryExists');
 clear variables;
 close all; 
 
+% Input dialogue for data type
 type = string(inputdlg({'Type (All/Study/Mock/Pilot)'}, ...
     'Session Info', [1 70], {'All'}));
 
 if(strcmp(type,'All'))
     averageOver = true;
 else
-    % Input dialogue: all data?
+    % Input dialogue: average all data of the given type?
     dataAnswer = questdlg('Combine all subjects?', 'Data Selection', 'Yes', ...
         'No', 'Cancel', 'Yes');
     averageOver = strcmp(char(dataAnswer(1)),'Y');
@@ -40,10 +33,13 @@ end
 if(averageOver)
     subjectName = "Averaged";
 else
+    % Input dialogue: subject name
     subjectName = string(inputdlg({'Subject name (all caps)'}, ...
         'Session Info', [1 70], {''}));
 end
 
+% Struct to contain y=ax fit parameters, including slope, Chi^2, reduced
+% Chi^2, and error of the slope parameter for csv output
 oneParamOutput = struct('type', type, ...
     'name', subjectName, ...
     'fc_slope', NaN, ...
@@ -97,6 +93,9 @@ oneParamOutput = struct('type', type, ...
     'ic_neg_error', NaN, ...
     'ic_pos_error', NaN);
     
+% Struct to contain y=ax+b fit parameters, including slope, intercept,
+% Chi^2, reduced Chi^2, error of the slope and intercept parameter for csv 
+% output
 twoParamOutput = struct('type', type, ...
     'name', subjectName, ...
     'fc_slope', NaN, ...
@@ -180,25 +179,6 @@ twoParamOutput = struct('type', type, ...
     'ic_intercept_neg_error', NaN, ...
     'ic_intercept_pos_error', NaN);
 
-% Checkbox input dialogue - chooses which protocols to include data from
-global CHECKBOXES;
-names = ["Fully Crowded", "Three Lines", "Crowded Periphery 9x9", ...
-    "Crowded Periphery 7x7", "Crowded Periphery 5x5", "Crowded Periphery", ...
-    "Crowded Periphery Outer", "Anstis", "Crowded Center 9x9",  ...
-    "Crowded Center 3x3", "Isolated Character"];
-ButtonUI(names);
-
-trimCC = true;
-if(CHECKBOXES(6) || CHECKBOXES(7))
-    % Input dialogue: save plots?
-    dataAnswer = questdlg('Exclude small eccentricity from CC?',  ...
-        'CC Exclusion', 'Yes', 'No', 'Cancel', 'Yes');
-    trimCC = strcmp(char(dataAnswer(1)),'Y');
-    if strcmp(char(dataAnswer(1)),'C')
-        return;
-    end
-end
-
 % Input dialogue: save plots?
 dataAnswer = questdlg('Save plots?', 'Plot Output', 'Yes', 'No', 'Cancel', ...
     'Yes');
@@ -215,6 +195,8 @@ if strcmp(char(dataAnswer(1)),'C')
     return;
 end
 
+% Struct to store information about each protocol, including name, color,
+% csv name, and which column holds the independent variable
 info = struct('name', NaN, 'csvName', NaN, 'id', NaN, 'color', NaN, ...
     'discreteCol', 1);
 info = repmat(info,1,11);
@@ -223,104 +205,121 @@ info(1).name = "Fully Crowded";
 info(1).csvName = "T1";
 info(1).id = "fc";
 info(1).color = [0 0.8 0.8]; %Cyan
-info(1).include = CHECKBOXES(1);
 info(1).discreteCol = 2;
 
 info(2).name = "Three Lines";
 info(2).csvName = "Three Lines";
 info(2).id = "l3";
 info(2).color = [0.86 0.27 0.07]; %Burnt orange
-info(2).include = CHECKBOXES(2);
 info(2).discreteCol = 2;
 
 info(3).name = "Crowded Periphery 9x9";
 info(3).csvName = "Crowded Periphery 9x9";
 info(3).id = "cp9";
 info(3).color = [0.83 0.86 .035]; %Yellow
-info(3).include = CHECKBOXES(3);
 
 info(4).name = "Crowded Periphery 7x7";
 info(4).csvName = "Crowded Periphery 7x7";
 info(4).id = "cp7";
 info(4).color = [0.69 0.57 .41]; %Brown/tan
-info(4).include = CHECKBOXES(4);
 
 info(5).name = "Crowded Periphery 5x5";
 info(5).csvName = "Crowded Periphery 5x5";
 info(5).id = "cp5";
 info(5).color = [0.463 0.27 .96]; %Violet
-info(5).include = CHECKBOXES(5);
 
 info(6).name = "Crowded Periphery";
 info(6).csvName = "Crowded Periphery";
 info(6).id = "cp";
 info(6).color = [0.9 0.3 0.9]; %Pink
-info(6).include = CHECKBOXES(6);
 
 info(7).name = "Crowded Periphery Outer";
 info(7).csvName = "Crowded Periphery Outer";
 info(7).id = "cpo";
 info(7).color = [0.5 0 0.9]; %Purple
-info(7).include = CHECKBOXES(7);
 
 info(8).name = "Anstis";
 info(8).csvName = "Anstis";
 info(8).id = "a";
 info(8).color = [0 0 0]; %Black
-info(8).include = CHECKBOXES(8);
 
 info(9).name = "Crowded Center 9x9";
 info(9).csvName = "Crowded Center 9x9";
 info(9).id = "cc9";
 info(9).color = [0 0.1 1]; %Blue
-info(9).include = CHECKBOXES(9);
 
 info(10).name = "Crowded Center 3x3";
 info(10).csvName = "Crowded Center 3x3";
 info(10).id = "cc3";
 info(10).color = [0.4 0.8 0.5]; %Green
-info(10).include = CHECKBOXES(10);
 
 info(11).name = "Isolated Character";
 info(11).csvName = "Isolated Character";
 info(11).id = "ic";
 info(11).color = [1 0.6 0]; %Orange
+
+% Input UI to select which protocols to include data from
+global CHECKBOXES;
+ButtonUI(info);
+info(1).include = CHECKBOXES(1);
+info(2).include = CHECKBOXES(2);
+info(3).include = CHECKBOXES(3);
+info(4).include = CHECKBOXES(4);
+info(5).include = CHECKBOXES(5);
+info(6).include = CHECKBOXES(6);
+info(7).include = CHECKBOXES(7);
+info(8).include = CHECKBOXES(8);
+info(9).include = CHECKBOXES(9);
+info(10).include = CHECKBOXES(10);
 info(11).include = CHECKBOXES(11);
+
+trimCC = true;
+if(CHECKBOXES(6) || CHECKBOXES(7))
+    % Input dialogue: trim small eccentricity values from crowded center?
+    dataAnswer = questdlg('Exclude small eccentricity from CC?',  ...
+        'CC Exclusion', 'Yes', 'No', 'Cancel', 'Yes');
+    trimCC = strcmp(char(dataAnswer(1)),'Y');
+    if strcmp(char(dataAnswer(1)),'C')
+        return;
+    end
+end
 
 % Creating y = ax and y = ax+b figures
 oneParamGraph = figure('Name','y = ax');
 twoParamGraph = figure('Name','y = ax+b');
 
-% Make directory to save plots
-mkdir(fullfile(pwd, 'Plots'));
-
+% Loop through info and analyze each protocol individually
 for i = 1:(length(info))
     if ~info(i).include
-        continue;
+        continue; % Skip if it was not selected in the UI pop-up
     end
+
+    % Extract data from csv files, returning the raw data and the data with
+    % outliers > +/-2.5 sigma from the mean removed
+    [rawData, data, outliers] = readCsv(info(i).csvName,  info(i).id, ...
+        type, subjectName, trimCC);
     
-    csvName = info(i).csvName;
-    id = info(i).id;
-    
-    [rawData,data,outliers] = readCsv(csvName,id,type,subjectName,trimCC);
-    
-    [oneParamOutput, twoParamOutput] = makeFigs(data, rawData, ...
+    % Pass the data along to the fitting function for Chi^2 minimization
+    % and generation of graphs and parameter output
+    [oneParamOutput, twoParamOutput] = analyzeData(data, rawData, ...
         info(i), oneParamOutput, twoParamOutput, oneParamGraph, ...
         twoParamGraph, savePlots, trimCC, averageOver);
     
 end
 
-% Axes and text formatting for point slope plot
+% Axes and text formatting for y = ax plot
 formatFigure(oneParamGraph, [0 45], [0 11], "Eccentricity (deg)", ...
     "Letter Height (deg)", "Letter Height vs. Retinal Eccentricity", ...
     false);
 
-% Axes and text formatting for point slope plot
+% Axes and text formatting for y = ax + b plot
 formatFigure(twoParamGraph, [0 45], [0 11], "Eccentricity (deg)", ...
     "Letter Height (deg)", "Letter Height vs. Retinal Eccentricity", ...
     false);
 
 if savePlots
+    % If data was averaged, save the plots to Plots/Averaged/<type> 
+    % otherwise in Plots/<type>/<subjectName>
     if(averageOver)
         folderName = fullfile(pwd, 'Plots', 'Averaged', type);
     else
@@ -337,10 +336,12 @@ if savePlots
     saveas(twoParamGraph, fullfile(folderName, fileName));
 end
 
+% Converts the parameter output structs into tables and writes them to csv
+% files within the present working directory
 if saveParams
     oneParam = struct2table(oneParamOutput);
     oneParamFileName = 'one_parameter_statistics.csv';
-    if(exist(oneParamFileName, 'file') ~= 2)
+    if(exist(oneParamFileName, 'file') ~= 2) % If file does not exist, print column names
         writetable(oneParam,oneParamFileName,'WriteRowNames',true);
     else
         writetable(oneParam,oneParamFileName,'WriteRowNames',false, ...
@@ -349,7 +350,7 @@ if saveParams
     
     twoParam = struct2table(twoParamOutput);
     twoParamFileName = 'two_parameter_statistics.csv';
-    if(exist(twoParamFileName, 'file') ~= 2)
+    if(exist(twoParamFileName, 'file') ~= 2) % If file does not exist, print column names
         writetable(twoParam,twoParamFileName,'WriteRowNames',true);
     else
         writetable(twoParam,twoParamFileName,'WriteRowNames',false, ...
