@@ -14,7 +14,7 @@ warning('off','MATLAB:MKDIR:DirectoryExists');
 clear variables;
 close all; 
 
-% Input dialogue for data type
+%Input dialogue for data type
 type = string(inputdlg({'Type (All/Study/Mock/Pilot)'}, ...
     'Session Info', [1 70], {'All'}));
 
@@ -274,15 +274,15 @@ info(10).include = CHECKBOXES(10);
 info(11).include = CHECKBOXES(11);
 
 trimCC = true;
-if(CHECKBOXES(6) || CHECKBOXES(7))
-    % Input dialogue: trim small eccentricity values from crowded center?
-    dataAnswer = questdlg('Exclude small eccentricity from CC?',  ...
-        'CC Exclusion', 'Yes', 'No', 'Cancel', 'Yes');
-    trimCC = strcmp(char(dataAnswer(1)),'Y');
-    if strcmp(char(dataAnswer(1)),'C')
-        return;
-    end
-end
+% if(CHECKBOXES(6) || CHECKBOXES(7))
+%     % Input dialogue: trim small eccentricity values from crowded center?
+%     dataAnswer = questdlg('Exclude small eccentricity from CC?',  ...
+%         'CC Exclusion', 'Yes', 'No', 'Cancel', 'Yes');
+%     trimCC = strcmp(char(dataAnswer(1)),'Y');
+%     if strcmp(char(dataAnswer(1)),'C')
+%         return;
+%     end
+% end
 
 % Creating y = ax and y = ax+b figures
 oneParamGraph = figure('Name','y = ax');

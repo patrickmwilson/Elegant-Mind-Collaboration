@@ -21,10 +21,6 @@ function [slope, oneParamOutput] = oneParamChiSq(data,name,id,color,oneParamOutp
     % Chi^2 equation to be minimized
     f = @(x,xvals,yvals,w)sum((w.*((yvals-(xvals.*x))).^2));
     fun = @(x)f(x,xvals,yvals,w);
-    
-%     % Minimization algorithm to optimize slope parameter. Bounds are 
-%     approx = mean(yvals./xvals);
-%     [slope, chi_sq] = fminbnd(fun,(approx*0.5),(approx*1.5));
 
     % Minimization algorithm that searches for the optimal slope value in
     % the range of 0 -> 1. Returns slope and Chi^2
