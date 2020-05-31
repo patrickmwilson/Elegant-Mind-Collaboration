@@ -1,78 +1,86 @@
-#Isolated Character
-#Created by Patrick Wilson on 11/22/2019 
-#Github.com/patrickmwilson
-#Created for the Elegant Mind Collaboration at UCLA under Professor Katsushi Arisaka
-#Copyright © 2019 Elegant Mind Collaboration. All rights reserved.
+# Isolated Character
+#
+# Displays a single character in the peripheral region for the subject to 
+# identify. To see a photo of this experiment, open the 'ic.png' file within 
+# the 'Protocol Pictures' folder
 from __future__ import absolute_import, division
-
 import psychopy
 psychopy.useVersion('latest')
-
 from psychopy import locale_setup, prefs, sound, gui, visual, core, data, event, logging, clock, monitors
 from psychopy.constants import (NOT_STARTED, STARTED, PLAYING, PAUSED,
                                 STOPPED, FINISHED, PRESSED, RELEASED, FOREVER)
 from psychopy.hardware import keyboard
-
 import numpy as np  
 from numpy import (sin, cos, tan, log, log10, pi, average,
                    sqrt, std, deg2rad, rad2deg, linspace, asarray)
 from numpy.random import random, randint, normal, shuffle
+import os, sys, time, random, math, csv, serial
 
-import os, sys, time, random, math, csv
+# Create a serial object to read subject input from the arduino controlling the 
+# push buttons. Change the port parameter to the port your arduino is 
+# connected to.
+ser = serial.Serial(port='COM3', baudrate = 9600, parity=serial.PARITY_NONE,\
+     stopbits=serial.STOPBITS_ONE, bytesize=serial.EIGHTBITS, timeout=None)
 
-import serial
-
-ser = serial.Serial(port='COM3', baudrate = 9600, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE, bytesize=serial.EIGHTBITS, timeout=None)
-
-#CSVWRITER FUNCTION
+# Opens the csvFile and writes the output argument specified by to the file
 def csvOutput(output):
-    with open(filename,'a', newline ='') as csvFile:
+    with open(fileName,'a', newline ='') as csvFile:
         writer = csv.writer(csvFile)
         writer.writerow(output)
     csvFile.close()
 
-#CLOSE WINDOW, FLUSH LOG, STOP SCRIPT EXECUTION
+# End the experiment: close the window, flush the log, and quit the script
 def endExp():
     win.flip()
     logging.flush()
     win.close()
     core.quit()
 
-#Y/N INPUT DIALOGUE FOR DATA RECORDING
-datadlg = gui.Dlg(title='Record Data?', pos=None, size=None, style=None, labelButtonOK=' Yes ', labelButtonCancel=' No ', screen=-1)
+# Input dialogue: record data to csv file?
+datadlg = gui.Dlg(title='Record Data?', pos=None, size=None, style=None,\
+     labelButtonOK=' Yes ', labelButtonCancel=' No ', screen=-1)
 ok_data = datadlg.show()
 recordData = datadlg.OK
 
-#Y/N INPUT DIALOGUE FOR GLASSES
-datadlg = gui.Dlg(title='Horizontal angles only?', pos=None, size=None, style=None, labelButtonOK=' Yes ', labelButtonCancel=' No ', screen=-1)
-ok_data = datadlg.show()
-horizontalOnly = datadlg.OK
-
+# Create a csv file for data output and a folder to store it in
 if recordData:
-    #OUTPUT FILE PATH
-    PATH = 'C:\\Users\\chand\\OneDrive\\Desktop\\Visual-Acuity\\Data\\Data'
-    OUTPATH = '{0:s}\\Isolated Character\\'.format(PATH)
-    
-    #CD TO SCRIPT DIRECTORY
+    # Change directory to script directory
     _thisDir = os.path.dirname(os.path.abspath(__file__))
     os.chdir(_thisDir)
-    #STORE INFO ABOUT EXPERIMENT SESSION
-    expName = 'Isolated Character'
-    date = data.getDateStr(format='%m-%d') 
-    expInfo = {'Participant': ''}
     
-    #DIALOGUE WINDOW FOR PARTICIPANT NAME
+    # Store info about experiment, get date
+    expName = 'Isolated Character'
+    date = time.strftime("%m_%d")
+    expInfo = {'Session Type': '','Subject Code': ''}
+    
+    # Input dialogue: session type, subject code
     dlg = gui.DlgFromDict(dictionary=expInfo, sortKeys=False, title=expName)
     if dlg.OK == False:
         core.quit()
     
-    #CREATE FILE NAME, PRINT HEADER IF FILE DOESN'T EXIST
-    filename = OUTPATH + u'%s_%s_%s' % (expInfo['Participant'], date, expName) + '.csv'
-    if not os.path.isfile(filename):
-        csvOutput(["Direction","Letter Height (degrees)","Eccentricity (degrees)"]) 
+    # Create folder for data file output (cwd/Analysis/Data/<type>/<subject code>)
+    OUTPATH = os.path.join(os.getcwd(), 'Analysis', 'Data',\
+         expInfo['Session Type'], expInfo['Subject Code'])
+    os.mkdir(OUTPATH) 
+    
+    # Output file name: <OUTPATH>/<subject code_data_expName.csv>
+    fileName = os.path.join(OUTPATH, (expInfo['Subject Code'] + '_' + date +\
+         '_' + expName + '.csv'))
+    
+    # Print column headers if the output file does not exist
+    if not os.path.isfile(fileName):
+        csvOutput(["Direction","Letter Height (degrees)",\
+            "Eccentricity (degrees)"]) 
 
-#WINDOW CREATION
-mon = monitors.Monitor('TV')
+# Input dialogue: test horizontal angles only?
+datadlg = gui.Dlg(title='Horizontal angles only?', pos=None, size=None,\
+     style=None, labelButtonOK=' Yes ', labelButtonCancel=' No ', screen=-1)
+ok_data = datadlg.show()
+horizontalOnly = datadlg.OK
+
+# Create visual window - monitor setup is required beforehand, can be found in 
+# psychopy monitor tab. Set window size to the resolution of your display monitor
+mon = monitors.Monitor('TV') # Change this to the name of your display monitor
 mon.setWidth(200)
 win = visual.Window(
     size=(3840, 2160), fullscr=False, screen=-1, 
@@ -81,24 +89,32 @@ win = visual.Window(
     blendMode='avg', useFBO=True, 
     units='cm')
 
-#INITIALIZE DEFAULT KEYBOARD
-defaultKeyboard = keyboard.Keyboard()
-keyPress = keyboard.Keyboard()
-
-#EXPERIMENTAL VARIABLES
-letters = list("EPB")
+# Experimental variables
+# Possible stimulus characters to be displayed
+letters = list("EPB") 
+# Horizontal retinal eccentricity (opening angle) values to test
 anglesH = [0, 5, 10, 15, 20, 25, 30, 35, 40]
-anglesV = [5, 10, 15, 20, 25, 30]
-directionsH = [0, 2]
-directionsV = [1, 3]
-distToScreen = 50 #cm
-trials = 1
+# Vertical retinal eccentricity (opening angle) values to test
+anglesV = [5, 10, 15, 20, 25, 30] 
+# Horizontal directions: 0 = Right (0°), 2 = Left (180°)
+directionsH = [0, 2] 
+# Vertical directions: 1 = Down (270°), 2 = Up (90°)
+directionsV = [1, 3] 
+# Distance between the subject and the screen in centimeters
+distToScreen = 50 
+# Number of trails to run
+trials = 1 
+# Defining green and red color for center dot
+green, red = [.207, 1, .259], [1, 0, 0]
 
-#SPACING ADJUSTMENTS FOR TEXT DISPLAY
-dirXMult = [1.62, 0, -1.68, 0]
-dirYMult = [0, -1.562, 0, 1.748]
-yOffset = [0.2, 0, 0.2, 0]
+# Spacing adjustments for text display - These are unique to the particular 
+# monitor that was used in the experiment and would need to be modified 
+# manually for correct stimulus display
+dirXMult = [1.62, 0, -1.68, 0] # Multiply x position by this value
+dirYMult = [0, -1.562, 0, 1.748] # Multiply y position by this value
+yOffset = [0.2, 0, 0.2, 0] # Offset y position by this value
 
+# Returns a displayText object with the given text, coordinates, height, color
 def genDisplay(text, xPos, yPos, height, colour):
     displayText = visual.TextStim(win=win,
     text= text,
@@ -109,56 +125,92 @@ def genDisplay(text, xPos, yPos, height, colour):
     depth=0.0)
     return displayText
 
-#STAIRCASE ALGORITHM TO DETERMINE MINIMUM LEGIBLE SIZE
-def stairCase(thisResponse, numReversals, totalReversals, size, stairCaseCompleted, lastResponse, responses):
+# Staircase algorithm which determines when to end a trial (identifies the 
+# threshold identifiable letter height)
+def stairCase(thisResponse,numReversals,totalReversals,size,stairCaseCompleted,lastResponse,responses):
+    # Increment the number of responses recorded from the subject
     responses += 1
-    #IF TWO SEQUENTIAL IN/CORRECT ANSWERS, RESET NUMREVERSALS
+    
+    # Reset numReversals if there are two sequential correct or incorrect 
+    # answers. Update the number of total reversals
     if numReversals > 0 and lastResponse == thisResponse:
         totalReversals += numReversals
         numReversals = 0
-    #IF CORRECT, MOVE CHARACTER OUTWARD
+    
+    # If the subject correctly identified the stimulus character, decrease the 
+    # size of the stimulus character 
     if thisResponse:
         if numReversals == 0 and size > 1:
-            size -= 0.5
+            # Decrease display size rapidly until an incorrect identification is 
+            # made (while the size is > 1°)
+            size -= 0.5 
         elif(size > 0.5):
-            size -= 0.2
+            # Reduce the display size change decrement to 0.2 if the 
+            # size is < 0.5°
+            size -= 0.2 
         else:
-            size -= 0.1
-    #IF INCORRECT, MOVE CHARACTER INWARD, INCREMENT NUMREVERSALS
+            # Once a reversal has been made (after the first incorrect 
+            # identification), decrease size by 0.1°
+            size -= 0.1 
+    # If the subject incorrectly identified the stimulus character, increase the 
+    # size of the stimulus character
     else:
-        numReversals += 1
-        if size > 0.5:
+        numReversals += 1 # Increment the number of reversals recorded
+        # If the current display size is greater than 0.5°, increase it by 0.2°
+        if size > 0.5: 
             size += 0.2
-        else:
-            size += 0.1
+        else:  # Otherwise, increase it by 0.1°
+            size += 0.1 
             
-    #COMPLETE STAIRCASE IF THE MAX ANGLE IS REACHED, OR 3 REVERSALS OR 25 RESPONSES OCCUR
+    # Staircase algorithm convergence. Conditions for convergance: 3 or more 
+    # consecutive reversals, 15 or more total reversals, 25 or more responses. 
+    # If one of these conditions is met, the staircase converges and returns 
+    # true. The letter height of the last correctly identified stimulus 
+    # character is recorded as the threshold letter height
     if numReversals >= 3 or responses >= 25 or totalReversals > 15:
         stairCaseCompleted = True
+    
+    # If the display size has been lowered to > 0.1°, set it to 0.1°, because 
+    # the monitor used in our experiment was unable to clearly display 
+    # characters smaller than that size
     if size < 0.1:
         size = 0.1
         
-    return stairCaseCompleted, size, numReversals, totalReversals, thisResponse, responses
+    return stairCaseCompleted, size, numReversals, totalReversals,\
+         thisResponse, responses
 
-#CONVERT DEGREE INPUT TO DISTANCE IN CENTIMETERS
+# Takes a value in the form of angle of visual opening and returns the 
+# equivalent value in centimeters (based upon the distToScreen variable)
 def angleCalc(angle):
-    radians = math.radians(angle)
-    spacer = (math.tan(radians)*distToScreen)
+    radians = math.radians(angle) # Convert angle to radians
+    # tan(theta) * distToScreen ... opposite = tan(theta)*adjacent
+    spacer = (math.tan(radians)*distToScreen) 
     return spacer
-    
-#CALCULATE DISPLAY COORDINATES AND HEIGHT OF STIMULIe
+
+# Calculates the height and angle in cm for a stimulus character, as well as the 
+# x and y coordinates, given the display angle, direction, and size (in degrees)
+# IMPORTANT: the value of the spacingAdjustment variable is unique to the monitor 
+# used in our experiment. It will likely need to be changed to achieve proper 
+# stimulus display on another monitor. Trial and error. Similarly, the yOffset 
+# values will likely need to be adjusted (this offset is used to make move the 
+# character to be in line with the exact center of the screen)
 def displayVariables(angle, dir, size):
-    #DISPLAY HEIGHT AND DISTANCE FROM CENTER IN CENTIMETERS
-    heightCm = (angleCalc(size)*2.3378)
-    angleCm = angleCalc(angle)
-    #X AND Y DISPLAY COORDINATES
+    spacingAdjustment = 2.3378
+    # Stimulus height in cm
+    heightCm = (angleCalc(size)*spacingAdjustment) 
+    # Stimulus distance from the screen's center in cm
+    angleCm = angleCalc(angle) 
+    # Stimulus display x position
     xPos = (dirXMult[dir]*angleCm) 
-    yPos = (dirYMult[dir]*angleCm) + yOffset[dir]
-    #ADJUSTMENT TO CENTER CHARACTER
-    if angle == 0 and dir%2 != 0:
+    # Stimulus display y position
+    yPos = (dirYMult[dir]*angleCm) + yOffset[dir] 
+    
+    if angle == 0 and dir%2 != 0: # TODO: TEST THE CODE WITHOUT THIS LINE. MAY BE UNNECESSARY
         yPos += 0.2
     return heightCm, angleCm, xPos, yPos
 
+# Returns a boolean indicating whether or not the subject's input matched the 
+# stimulus character
 def checkResponse(button, letter):
     key = '0'
     if button == 1:
@@ -167,104 +219,133 @@ def checkResponse(button, letter):
         key = 'b'
     elif button == 3:
         key = 'p'
-    elif button == 4:
+    elif button == 4: # Do not know/cannot guess button
         key = 'space'
     return (key == letter.lower())
 
-    
-#DISPLAY INSTRUCTIONS FOR CHINREST ALIGNMENT
-instructions = genDisplay('  Take some time to familiarize yourself with the buttons\n\n                       Press any button to begin', 0, 0, 5, 'white')
+
+# Display on-screen instructions
+instructions = genDisplay('    Press the button corresponding to the character \n         displayed in the periphery, or black button \n                        if you can not read it    \n\n                 Press Any Button to continue', 0, 5, 5, 'white')
 instructions.draw()
 win.flip()
-while(1):
+while(1):  # Wait until the subject presses a button
     if ser.in_waiting:
-        a = ser.readline()
+        a = ser.readline()  # Read in the input value to clear the buffer
         break
     else:
         time.sleep(0.05)
 
-#GENERATE CENTER DOT
-dot = genDisplay('.', 0, 1.1, 4, [.207,1,.259])
+# Display on-screen instructions 
+instructionText = '  Take some time to familiarize yourself with the buttons\n\n                       Press any button to begin'
+instructions = genDisplay(instructionText, 0, 0, 5, 'white')
+instructions.draw()
+win.flip()
+while(1): # Wait until the subject presses a button
+    if ser.in_waiting:
+        a = ser.readline() # Read in the input value to clear the buffer
+        break
+    else:
+        time.sleep(0.05)
 
-#GENERATE RANDOM LIST OF ANGLE AND DIRECTION PAIRS
+# Generate display object for the green dot in the center of the screen
+dot = genDisplay('.', 0, 1.1, 4, green)
+
+# Generate a randomized list of angle and direction pairs. Each pair is 
+# represented as a single integer. The index of the angle (in the angles array) 
+# is multiplied by 10, and the index of the direction (in the directions array) 
+# is added to it. Positive values represent horizontal pairs, and negative 
+# represent vertical.
 pairs = list(range(0))
 for i in range(trials):
-    for j in range(len(anglesH)):
-        for k in range(len(directionsH)):
-            pairs.append((j*10)+k)
+    for j in range(len(anglesH)): # Loop through horizontal angles
+        for k in range(len(directionsH)): # Loop through horizontal directions
+            # Append (angle index * 10) + direction index to pairs
+            pairs.append((j*10)+k) 
     if not horizontalOnly:
-        for l in range(len(anglesV)):
-            for m in range(len(directionsV)):
-                pairs.append(-((l*10)+m))
-shuffle(pairs)
+        for l in range(len(anglesV)): # Loop through vertical angles
+            for m in range(len(directionsV)): # Loop through vertical directions
+                # Append (angle index * 10) + direction index to pairs
+                pairs.append(-((l*10)+m)) 
+shuffle(pairs) # Randomize the pairs list
 
-run = 0
-for pair in pairs:
-    if(pair >= 0):
-        angle = anglesH[int(pair/10)]
-        dir = directionsH[(pair%10)]
-    else:
-        angle = anglesV[abs(int(pair/10))]
-        dir = directionsV[abs(pair%10)]
+run = 0 # Store the number of trials completed
+for pair in pairs: # Loop through the list of pairs
+    if(pair >= 0): # Horizontal pairs
+        angle = anglesH[int(pair/10)] # Angle index = pair/10
+        dir = directionsH[(pair%10)] # Direction index = pair%10
+    else: # Vertical pairs
+        angle = anglesV[abs(int(pair/10))] # Angle index = pair/10
+        dir = directionsV[abs(pair%10)] # Direction index = pair%10
         
-    size = angle/10
-    if(size == 0):
+    size = angle/10 # Set initial letter height
+    if(size == 0): # Ensure initial letter height is not 0
         size = 1
-    numReversals = 0
-    totalReversals = 0
-    responses = 0
-    lastResponse = False
-    stairCaseCompleted = False
         
+    # Initialize trial variables related to staircase algorithm
+    numReversals, totalReversals, responses = 0, 0, 0
+    lastResponse, stairCaseCompleted = False, False
+    
+    # Continue to display the stimulus character and wait for subject input
+    # until the staircase algorithm converges
     while not stairCaseCompleted:
-            
-        #GENERATE NEW STIMULI
+        # Choose a random letter to display
         letter = random.choice(letters)
-            
+        
+        # Calculate display coordinates and generate a displaytext object for 
+        # the stimulus character
         heightCm, angleCm, xPos, yPos = displayVariables(angle, dir, size)
         displayText = genDisplay(letter, xPos, yPos, heightCm, 'white')
             
-        #ON FIRST TRIAL, DISPLAY BLANK SCREEN WITH CENTER DOT
+        # Display a blank screen with only the center dot on the first trial
         if responses == 0:
             dot.draw()
             win.flip()
             
         time.sleep(0.5)
-            
-        flash = 0
+        
+        # Display the stimulus character and the center green dot. Every 0.05 
+        # seconds, hide/display the dot to create a flashing effect
+        flash = False # Whether or not to display the dot
         while 1:
-            flash = (flash == 0)
+            flash = (flash == False) # Reverse the value of flash
+            
             if flash:
-                dot.draw()
-            displayText.draw()
-            win.flip()
-            if ser.in_waiting:
-                value = float(ser.readline().strip())
-                button = int(value)
+                dot.draw() # Draw the green dot
+                
+            displayText.draw() # Draw the stimulus character
+            win.flip() # Update the display
+            
+            if ser.in_waiting:  
+                # Read the serial input buffer
+                value = float(ser.readline().strip()) 
+                # Convert input to int
+                button = int(value) 
                 break
             else:
                 time.sleep(0.05)
-                
+        
+        # Check whether or not the input matched the stimulus character
         thisResponse = checkResponse(button, letter)
             
-        #CALL STAIRCASE ALGORITHM
-        stairCaseCompleted, size, numReversals, totalReversals, lastResponse, responses = stairCase(thisResponse, numReversals, totalReversals, size, stairCaseCompleted, lastResponse, responses)
-            
-        if stairCaseCompleted:
-            #ADVANCE DIRECTION
-            direction = dir+1
-            #CSV OUTPUT
-            if recordData:
-                csvOutput([direction, size, angle])
-                    
-    run += 1
-    if run == (int(len(pairs)/2)):
-        #ADVANCE DIRECTION
-        direction = dir+1
-        #CSV OUTPUT
-        if recordData:
-            csvOutput([direction, size, angle])
+        # Call the staircase algorithm
+        stairCaseCompleted, size, numReversals, totalReversals, lastResponse,\
+             responses = stairCase(thisResponse, numReversals, totalReversals,\
+                  size, stairCaseCompleted, lastResponse, responses)
         
+        # If the staircase has converged, output the data to the csv file
+        if stairCaseCompleted:
+            # Direction is stored in csv in the range of 1->4, rather than 0->3
+            direction = dir+1 
+            if recordData:
+                # Write direction, threshold letter height, and retinal
+                # eccentricity to csv
+                csvOutput([direction, size, angle]) 
+    
+    # Increment the number of runs completed
+    run += 1 
+    
+    # Halfway through the trial, give the subject a 30 second break and display 
+    # a countdown timer on the screen
     if run == (int(len(pairs)/2)):
         for i in range(30):
             win.clearBuffer()
@@ -277,5 +358,6 @@ for pair in pairs:
             numText.draw()
             win.flip()
             time.sleep(1)
-    run += 1
+
+# End the experiment
 endExp()

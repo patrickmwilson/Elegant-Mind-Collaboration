@@ -1,4 +1,8 @@
 % correlationAnalysis
+%
+% Produces plots assessing the correlation between a subject's performance
+% on different protocols. The parameters used are extracted from the
+% 'one_parameter_statistics.csv' spreadsheet.
 
 close all; 
 
@@ -122,52 +126,61 @@ info(9).figInfoIdx = 4;
 
 txt = '%s: y = %4.2fx, R = %4.2f';
 
+% Loop through each protocol separately
 for i = 1:length(info)
-    name = info(i).name;
-    color = info(i).color;
-    xId = info(i).xName;
-    yId = info(i).yName;
-    figIdx = info(i).figInfoIdx;
+    name = info(i).name; % protocol name
+    color = info(i).color; % plot color
+    xId = info(i).xName; % x-axis data id
+    yId = info(i).yName; % y-axis data id
+    figIdx = info(i).figInfoIdx; % figure to be plotted on
     fig = figInfo(figIdx).fig;
     
     data = []; subject_names = []; yerr = []; xerr = [];
     
+    % Loop through each subject to see if they have parameters for both
+    % protocols currently being plotted
     for j = 1:length(subjects)
+        % Extract subject id
         subject_name = subjects(j).name;
         if(strcmp(subject_name,'Averaged'))
-            continue;
+            continue; % Skip averaged sets of data
         end
         
+        % Extract slope parameters
         x = subjects(j).(strcat(xId,'_slope'));
         y = subjects(j).(strcat(yId,'_slope'));
         
         if(isnan(x) || isnan(y))
-            continue;
+            continue; % Skip if the subject doesn't have a slope parameter for both protocols
         end
         
+        % Extract reduced Chi^2 for weighting of least squares
         xchi = subjects(j).(strcat(xId,'_reduced_chi_sq'));
         ychi = subjects(j).(strcat(yId,'_reduced_chi_sq'));
         
+        % Extract error of slope parameter for error bar
         negxerr = x - subjects(j).(strcat(xId,'_neg_error'));
         posxerr = subjects(j).(strcat(xId,'_pos_error')) - x;
         err = [negxerr posxerr];
-        xerr = [xerr; err];
+        xerr = [xerr; err]; % Append x error data
         
         negyerr = y - subjects(j).(strcat(yId,'_neg_error'));
         posyerr = subjects(j).(strcat(yId,'_pos_error')) - y;
         err = [negyerr posyerr];
-        yerr = [yerr; err];
+        yerr = [yerr; err]; % Append y error data
         
+        % Append slope and reduced Chi^2 to accumulated matrix
         vals = [x y xchi ychi];
-        
         data = [data; vals];
         subject_names = [subject_names subject_name];
     end
     
+    % Skip plotting unless there is data to plot
     if ~isempty(data)
         figure(fig);
         hold on;
         
+        % Plot error bars 
         errorbar(data(:,1),data(:,2), ...
             yerr(:,1),yerr(:,2), ...
             xerr(:,1),xerr(:,2), ...
@@ -175,9 +188,11 @@ for i = 1:length(info)
             'Color', [0.43 0.43 0.43], ...
             'CapSize', 0);
         
+        % Scatter slope parameters
         scatter(data(:,1), data(:,2), 25, color, "filled", ...
             'HandleVisibility', 'off');
         
+        % Add subject names as text to the graph
         if graphNames
             text((data(1,:).*1.01), (data(2,:).*1.01), subject_names, ...
                 'FontSize', 8);
@@ -186,32 +201,37 @@ for i = 1:length(info)
         % Extract x & y values from data matrix
         xvals = data(:,1)'; yvals = data(:,2)';
     
-        % Variance is estimated as the standard error, then squared
-        variance = (data(:,3)' + data(:,4)')./2;
-        variance = variance.^2;
+        % Reduced Chi^2 are used as weights for linear regression
+        w = (data(:,3)' + data(:,4)')./2;
+        w = w.^2;
     
         % Slight data shift to avoid division by zero
-        variance(variance == 0) = 0.000001;
+        w(w == 0) = 0.000001;
+        w = 1./w;
     
-        % Weights are the inverse of (standard error)^2
-        w = 1./variance;
-    
-        % Chi^2 equation to be minimized
+        % Weighted least sum of squares equation to be minimized
         f = @(x,xvals,yvals,w)sum((w.*((yvals-(xvals.*x))).^2));
         fun = @(x)f(x,xvals,yvals,w);
         
+        % fminbnd optimizes the slope parameter to minimize the sum of the
+        % WLSS equation
         options = optimset('Display','iter');
-        
         [slope, chi_sq] = fminbnd(fun,0,15,options);
-
+        
+        % Calculate correlation coefficient for the x and y data
         R = corr2(data(:,1),data(:,2));
         
+        % Generate plottable line from slope parameter
         xlin = linspace(0,(max(data(:,1))*2));
         ylin = xlin.*slope;
         
+        % Plot regression line
         plot(xlin,ylin,'Color', color, 'LineWidth', 0.8, 'DisplayName', ...
             sprintf(txt,name,slope,R));
         
+        % Calculate the x and y-lim for the figure as 1.3* the maximum
+        % value plotted for either. Set the figure's limit to this value if
+        % it is greater than the current limit stored in the info struct
         xlimit = max(data(:,1))*1.3;
         ylimit = max(data(:,2))*1.3;
         if xlimit > figInfo(figIdx).xlim

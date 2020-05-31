@@ -1,8 +1,8 @@
-# Crowded Periphery
+# Crowded Periphery 9x9
 #
-# Displays 5 characters arranged in a plus ('+') in the peripheral region. The 
-# subject is tasked with identifying the character in the center of the plus.
-# To see a photo of this experiment, open the 'cp.png' file within the 
+# Displays a 9x9 block of characters in the peripheral region. The 
+# subject is tasked with identifying the character in the center of the block.
+# To see a photo of this experiment, open the 'cp9.png' file within the 
 # 'Protocol Pictures' folder
 from __future__ import absolute_import, division
 import psychopy
@@ -50,7 +50,7 @@ if recordData:
     os.chdir(_thisDir)
     
     # Store info about experiment, get date
-    expName = 'Crowded Periphery'
+    expName = 'Crowded Periphery 9x9'
     date = time.strftime("%m_%d")
     expInfo = {'Session Type': '','Subject Code': ''}
     
@@ -209,39 +209,44 @@ def displayVariables(angle, dir, size):
 
     return heightCm, angleCm, xPos, yPos
 
-# Generates and displays a plus ('+') pattern of 5 characters randomly selected 
+# Generates and displays a 9x9 block of characters randomly selected 
 # from 'E', 'B', and 'P'. Returns the target character (the character at the 
-# center of the plus pattern)
+# center of the block)
 #
-#  P
-# EEB
-#  B
+# PPEBPEBBB
+# EEBPEPPBE
+# PBPBBBEPB
+# PPEBEPEBP
+# EBPPBPBPP
+# BPPPBBEEP
+# BBPEBPPBE
+# EEPPBEBPE
+# BPEPPBEPE
 #
 def genArray(size, heightCm, xPos, yPos):
     # Spacing adjustment for distance between the rows of characters
     spacer = (size*1.4)*1.1
     
-    rows = 3
-    colsPerRow = [1, 3, 1] 
+    rows, cols = 9, 9
+    centerRow, centerCol = 4, 4
     
     # Fill and display each row
     for i in range(rows):
         # Set vertical position of the row based on its index
-        yCoord = yPos + (spacer*(1 - i))
+        yCoord = yPos + (spacer*(centerRow - i))
         
         # List to store characters in the line
         line = list(range(0))
 
-        cols = colsPerRow[i]
         for j in range(cols):
             # Choose a random letter from E, B, and P
             char = random.choice(letters)
             # Append the character to the line list
             line.append(char) 
             
-            # Row 1, Col 1 is the center. Return this character, as the subject
+            # Row 4, Col 4 is the center. Return this character, as the subject
             # will be asked to identify it
-            if(i == 1 and j == 1):
+            if(i == centerRow and j == centerCol):
                 centerChar = char
         
         # Convert the list to a string, create a display object, and draw it
@@ -341,8 +346,8 @@ for pair in pairs:  # Loop through the list of pairs
         # Calculate display coordinates for the stimulus
         heightCm, angleCm, xPos, yPos = displayVariables(angle, dir, size)
 
-        # Generate and display a new randomized plus pattern of stimulus 
-        # characters, return the center character of the pattern
+        # Generate and display a new randomized block of stimulus 
+        # characters, return the center character of the block
         centerChar = genArray(size, heightCm, xPos, yPos)
         
         # Display the center green dot. Every 0.05 seconds, hide/display the dot
