@@ -4,7 +4,7 @@
 % Plots Chi^2 vs. slope parameter. Takes the data matrix, name, id, color
 % of the protocol, the parameter output struct, and a figure handle as
 % input arguments.
-function [slope, oneParamOutput] = oneParamChiSq(data,name,id,color,oneParamOutput,fig)
+function [slope, oneParamOutput] = oneParamChiSq(data,info,oneParamOutput,fig)
     
     % Extract x & y values from data matrix
     xvals = data(:,1)'; yvals = data(:,2)';
@@ -30,9 +30,9 @@ function [slope, oneParamOutput] = oneParamChiSq(data,name,id,color,oneParamOutp
     reduced_chi_sq = chi_sq/(length(xvals)-1);
     
     % Store parameters in output struct
-    oneParamOutput.(strcat(id, '_slope')) = slope;
-    oneParamOutput.(strcat(id, '_chi_sq')) = chi_sq;
-    oneParamOutput.(strcat(id, '_reduced_chi_sq')) = reduced_chi_sq;
+    oneParamOutput.(strcat(info.id, '_slope')) = slope;
+    oneParamOutput.(strcat(info.id, '_chi_sq')) = chi_sq;
+    oneParamOutput.(strcat(info.id, '_reduced_chi_sq')) = reduced_chi_sq;
     
     %Plotting Chi^2 vs. Slope parameter
     figure(fig); hold on; 
@@ -44,15 +44,13 @@ function [slope, oneParamOutput] = oneParamChiSq(data,name,id,color,oneParamOutp
     evals = linspace((slope*0.5), (slope*1.5));
     chi = cellfun(fun,num2cell(evals));
     txt = "%s min: %4.3f, %s: %4.3f, Slope: %4.3f";
-    plot(evals, chi, 'Color', color, 'LineWidth', 1, 'DisplayName', ...
+    plot(evals, chi, 'Color', info.color, 'LineWidth', 1, 'DisplayName', ...
         sprintf(txt, chisqtext, chi_sq, redchisqtext, reduced_chi_sq, slope));
     
     % Plot a horizontal red line at a value of Chi^2 + 1
     yline = ones(length(evals)).*(chi_sq+1);
     plot(evals, yline, 'Color', [1 0 0], 'LineWidth', 1, ...
         'HandleVisibility', 'off');
-    
-    titleText = sprintf('%s %s %s', name, chisqtext, "vs. Slope Parameter (y = ax)");
     
     % The standard error of the slope parameter is calculated as the slope
     % value in both the + and - directions which results in a Chi^2 of + 1.
@@ -65,9 +63,12 @@ function [slope, oneParamOutput] = oneParamChiSq(data,name,id,color,oneParamOutp
     negError = fminbnd(fun,(slope*0.5),slope);
     posError = fminbnd(fun,slope,(slope*1.5));
     
-    oneParamOutput.(strcat(id, '_neg_error')) = negError;
-    oneParamOutput.(strcat(id, '_pos_error')) = posError;
+    oneParamOutput.(strcat(info.id, '_neg_error')) = negError;
+    oneParamOutput.(strcat(info.id, '_pos_error')) = posError;
+    
+    titleText = sprintf('%s %s %s', info.name, chisqtext, ...
+        "vs. Slope Parameter (y = ax)");
     
     formatFigure(fig, [0 (max(evals)+min(evals))], [0 (target*2)], "Slope", ...
-        chisqtext, titleText, false);
+        chisqtext, titleText, false, 'best');
 end

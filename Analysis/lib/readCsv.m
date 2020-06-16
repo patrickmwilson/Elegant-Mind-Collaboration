@@ -6,7 +6,7 @@
 % csvName, csvId, data type, subject name, and a boolean indicating whether
 % to remove small eccentricity values from crowded center as input
 % arguments. Returns the raw data, truncated data, and any outliers.
-function [rawData,data,outliers] = readCsv(name,id,type,subjectName,trimCC)
+function [rawData,data,outliers] = readCsv(name,id,type,subjectName,trimCC,direction)
     
     % Suppress warning about modified csv headers
     warning('off','MATLAB:table:ModifiedAndSavedVarnames');
@@ -72,7 +72,7 @@ function [rawData,data,outliers] = readCsv(name,id,type,subjectName,trimCC)
             % csv file names follow this convention:
             % SUBJECT_DATE_PROTOCOLNAME.csv
             if(~strcmp(id,'a'))
-                underscores = find(file == '_'); % Find indices of undersc
+                underscores = find(file == '_'); % Find indices of underscores
                 period = find(file == '.'); % Find the period
                 
                 % Extract the portion of the csv file name between the last
@@ -87,14 +87,15 @@ function [rawData,data,outliers] = readCsv(name,id,type,subjectName,trimCC)
             
             % Extract the data from the csv into an array
             filename = fullfile(folder, string(csvFiles(j,1)));
-            thisData = table2array(readtable(filename));
+            raw = table2array(readtable(filename));
         
-            % Creates a 2 column matrix of the data. Eccentricity is placed in
-            % column 1, letter height in column 2. 
-            thisData(:,1) = thisData(:,3);
+            % Creates a 3 column matrix of the data. Eccentricity is placed in
+            % col 1, letter height in col 2, direction in col 3
+            thisData(:,1) = raw(:,3);
             % T1 data is stored differently, letter height is in column 4 of
             % the csv rather than column 2
-            thisData(:,2) = thisData(:,(2 + 2*(strcmp(id,'fc'))));
+            thisData(:,2) = raw(:,(2 + 2*(strcmp(id,'fc'))));
+            thisData(:,3) = raw(:,1);
             
             % Sets the eccentricity values which are to be excluded from
             % the data
@@ -105,18 +106,45 @@ function [rawData,data,outliers] = readCsv(name,id,type,subjectName,trimCC)
             else
                 exclusions = [0];
             end
+            
+            % Set directions to include in the data based on the dir input
+            % argument. Some old T1 data used 2 to specify left, while
+            % newer data uses 3. 1 always specifies right.
+            if(strcmp(direction,'both'))
+                if(strcmp(id,'fc'))
+                    dirs = [1, 2, 3];
+                else
+                    dirs = [1,3];
+                end     
+            elseif(strcmp(direction,'right'))
+                dirs = [1];
+            else
+                if(strcmp(id,'fc'))
+                    dirs = [2, 3];
+                else
+                    dirs = [3];
+                end
+            end
 
             % Removes all rows from the data matrix which contain a zero,
-            % or contain an eccentricity value that is included in the
-            % exclusions array
+            % contain an eccentricity value that is included in the
+            % exclusions array, or do not match the specified direction
             k = 1;
             while(k <= size(thisData,1))
-                if(ismember(thisData (k, 1), exclusions) || thisData(k,2) == 0)
+                if(ismember(thisData(k, 1), exclusions) || thisData(k,2) == 0)
                     thisData(k,:) = [];
                     continue;
+                elseif(~ismember(thisData(k,3),dirs))
+                    if(~strcmp(id,'a'))
+                        thisData(k,:) = [];
+                        continue;
+                    end
                 end
                 k = k + 1;
             end
+            
+            % Remove the direction information as it is no longer needed
+            %thisData(:,3) = [];
 
             % Normalize letter height observations by retinal eccentricity 
             thisData(:,2) = thisData(:,2)./thisData(:,1);
@@ -124,7 +152,8 @@ function [rawData,data,outliers] = readCsv(name,id,type,subjectName,trimCC)
             % Recursively removing outliers more than 2.5 standard 
             % deviations (99% confidence interval) from the normalized 
             % distribution (see removeOutliers.m)
-            [thisFitData,theseOutliers] = removeOutliers(thisData, [], 2.5, 2);
+            [thisFitData,theseOutliers] = removeOutliers(thisData, [], ...
+                2.5, 2);
 
             % Concatenate these values with accumulated values
             rawData = [rawData; thisData];
