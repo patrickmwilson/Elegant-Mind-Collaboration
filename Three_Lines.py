@@ -107,7 +107,7 @@ distToScreen = 50
 # Number of trials to run
 trials = 1
 # Defining green and red colors for dot display
-green, red = [.207,1,.259] [1, 0, 0]
+green, red = [.207,1,.259], [1, 0, 0]
 
 # Spacing adjustments for text display - These are unique to the particular
 # monitor that was used in the experiment and would need to be modified
@@ -213,8 +213,8 @@ def genMask(size, dir):
     if dir == 0: # Right (0°)
         # Reduce the x coordinates for the right of the mask to the center + the
         # distance needed to cover the characters at the center of the screen
-        coords[2][0] = 0 + ((size*0.75)*2)
-        coords[3][0] = 0 + ((size*0.75)*2)
+        coords[0][0] = 0 + ((size*0.75)*2)
+        coords[1][0] = 0 + ((size*0.75)*2)
     elif dir == 1:  # Down (270°)
         # Reduce the y coordinates for the bottom of the mask to the center - the
         # distance needed to cover the characters at the center of the screen
@@ -304,7 +304,7 @@ def checkResponse(button, letter):
     return (key == letter.lower())
 
 # Display on-screen instructions
-instructions = genDisplay('Read the center line of text in the direction away from the center \nand press the corresponding button,\n and black button if you can not read it \n\n      Press Any Button to continue', 0, 0, 5, 'white')
+instructions = genDisplay('Read the center line of text in the direction away from the center \n                        and press the corresponding button,\n                     and black button if you can not read it \n\n                     Press Any Button to continue', 0, 0, 5, 'white')
 instructions.draw()
 win.flip()
 while(1):
@@ -351,10 +351,10 @@ run = 0  # Store the number of trials completed
 for pair in pairs:  # Loop through the list of pairs
     size = sizes[int(pair/10)]  # Size index = pair/10
     if(pair >= 0):  # Horizontal pairs
-        dir = directionsH[(pair % 10)]  # Direction index = pair%10
+        dir = directionsH[(pair%10)]  # Direction index = pair%10
     else:  # Vertical pairs
         dir = directionsV[abs(pair % 10)]  # Direction index = pair%10
-
+    
     # Clear the display buffer
     win.clearBuffer()
 
@@ -414,7 +414,7 @@ for pair in pairs:  # Loop through the list of pairs
             else:
                 time.sleep(0.05)
         
-        # If the subject correctly identified the character, increment the 
+        # If the subject incorrectly identified the character, increment the 
         # number of responses and wait for further input from the subject
         if checkResponse(button, letter):
             responses += 1
@@ -431,21 +431,22 @@ for pair in pairs:  # Loop through the list of pairs
             angle = eccentricityCalc(size, responses, dir)
             # Output direction, letter height, and eccentricity to csv
             csvOutput([direction, size, angle])
+        break
         
-        # Increment the number of runs completed
-        run += 1
+    # Increment the number of runs completed
+    run += 1
 
-        # Halfway through the trial, give the subject a 30 second break and display
-        # a countdown timer on the screen
-        if run == (int(len(pairs)/2)):
-            for i in range(30):
-                win.clearBuffer()
-                seconds = str(30-i)
-                breakText = genDisplay('Break', 0, 0, 5, 'white')
-                secondText = genDisplay('Seconds', +2, -5, 5, 'white')
-                numText = genDisplay(seconds, -11, -5, 5, 'white')
-                breakText.draw()
-                secondText.draw()
-                numText.draw()
-                win.flip()
-                time.sleep(1)
+    # Halfway through the trial, give the subject a 30 second break and display
+    # a countdown timer on the screen
+    if run == (int(len(pairs)/2)):
+        for i in range(30):
+            win.clearBuffer()
+            seconds = str(30-i)
+            breakText = genDisplay('Break', 0, 0, 5, 'white')
+            secondText = genDisplay('Seconds', +2, -5, 5, 'white')
+            numText = genDisplay(seconds, -11, -5, 5, 'white')
+            breakText.draw()
+            secondText.draw()
+            numText.draw()
+            win.flip()
+            time.sleep(1)

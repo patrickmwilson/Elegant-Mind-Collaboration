@@ -227,7 +227,7 @@ def genArray(size, heightCm):
     # Spacing adjustment for distance between the rows of characters
     spacer = (size*1.4)*1.1
 
-    rows, cols, centerRow = 3, 3, 1
+    rows, cols, centerRow = 9, 9, 4
 
     # Fill and display each row
     for i in range(rows):
