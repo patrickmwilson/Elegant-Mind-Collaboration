@@ -107,7 +107,7 @@ distToScreen = 50
 # Number of trials to run
 trials = 1
 # Defining green and red colors for dot display
-green, red = [.207,1,.259], [1, 0, 0]
+green, red, blue = [.207,1,.259], [1, 0, 0], [0, 0, 1]
 
 # Spacing adjustments for text display - These are unique to the particular
 # monitor that was used in the experiment and would need to be modified
@@ -403,10 +403,14 @@ for pair in pairs:  # Loop through the list of pairs
                 # Convert input to int
                 button = int(value)
 
-                # Display a red dot in the center to indicate to the subject
+                # Display a colored dot in the center to indicate to the subject
                 # that their response was recorded. Input is paused while the
-                # red dot is displayed
-                dot = genDisplay('.', 0, 1.1, 4, red)
+                # dot is displayed. Blue if correct, red otherwise
+                if checkResponse(button, letter):
+                    dot = genDisplay('.', 0, 1.1, 4, blue)
+                else:
+                    dot = genDisplay('.', 0, 1.1, 4, red)
+                    
                 dot.draw()
                 win.flip(clearBuffer=False)
                 time.sleep(0.5)
