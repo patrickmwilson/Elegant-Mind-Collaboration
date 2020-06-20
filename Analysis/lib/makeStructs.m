@@ -1,4 +1,4 @@
-function [info,oneParamOutput,leftVsRight,twoParamOutput] = makeStructs(options)
+function [info,oneParamOutput,twoParamOutput] = makeStructs(options)
    
     % Struct to contain y=ax fit parameters, including slope, Chi^2, reduced
     % Chi^2, and error of the slope parameter for csv output
@@ -8,13 +8,6 @@ function [info,oneParamOutput,leftVsRight,twoParamOutput] = makeStructs(options)
     
     oneParamOutput.type = options.type;
     oneParamOutput.name = options.subjectName;
-    
-    fileName = fullfile(pwd,'lib','struct_templates', ...
-        'left_vs_right_struct.csv');
-    leftVsRight = table2struct(readtable(fileName));
-    
-    leftVsRight.type = options.type;
-    leftVsRight.name = options.subjectName;
     
     % Struct to contain y=ax+b fit parameters, including slope, intercept,
     % Chi^2, reduced Chi^2, error of the slope and intercept parameter for csv 

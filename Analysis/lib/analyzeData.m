@@ -8,7 +8,7 @@
 % linear plots, and booleans indicating whether to save plots, and whether
 % the data is averaged over and small eccentricity observations have been
 % excluded from crowded center.
-function [oneParamOutput,leftVsRight,twoParamOutput] = analyzeData(data, rawData, lData, lRawData, rData, rRawData, info, oneParamOutput, leftVsRight, twoParamOutput, oneParamGraph, twoParamGraph, options)
+function [oneParamOutput,twoParamOutput] = analyzeData(data, rawData, info, oneParamOutput, twoParamOutput, oneParamGraph, twoParamGraph, options)
     
     % For all data except anstis, produce y/x vs. x graphs and y/x
     % histograms
@@ -23,30 +23,6 @@ function [oneParamOutput,leftVsRight,twoParamOutput] = analyzeData(data, rawData
         % y/x histogram
         distribution = figure();
         histFig(rawData, avg, sd, N, info, distribution);
-        
-        splitInfo = struct('name', strcat(info.name,'(left)'), ...
-            'color', [0 1 0]);
-        
-        % y/x histogram split by direction
-        splitDistribution = figure();
-        histFig(lRawData, mean(lData(:,2)), std(lData(:,2)),  ...
-            size(lRawData,1), splitInfo, splitDistribution);
-        
-        splitInfo.name = strcat(info.name,'(right)');
-        splitInfo.color = [1 0 0];
-        
-        histFig(rRawData, mean(rData(:,2)), std(rData(:,2)), ...
-            size(lRawData,1), splitInfo, splitDistribution);
-        
-        p = ranksum(lData(:,2),rData(:,2),'tail', 'left');
-        oneParamOutput.(strcat(info.id, '_left_better')) = p;
-
-        p = ranksum(lData(:,2),rData(:,2));
-        oneParamOutput.(info.id) = p;
-
-        p = ranksum(lData(:,2),rData(:,2),'tail', 'right');
-        oneParamOutput.(strcat(info.id, '_right_better')) = p;
-
     end
     
     % Convert the normalized data back to the linear scale by multiplying
@@ -77,15 +53,11 @@ function [oneParamOutput,leftVsRight,twoParamOutput] = analyzeData(data, rawData
         [slope,oneParamOutput] = oneParamChiSq(avgData, info, ...
             oneParamOutput, oneParamChiGraph);
         
-        % Provide the slope parameter that minimized the Chi^2 of the y=ax
-        % fit as a starting guess for the y=ax+b minimization algorithm
-        approx = [slope 0];
-        
         % Minimize Chi^2 for y = ax + b and produce both a surface plot and
         % a colormap of Chi^2 vs. a and b.
         twoParamChiSurf = figure(); twoParamChiColor = figure();
         [params,twoParamOutput] = twoParamChiSq(avgData, info, ...
-            approx, twoParamOutput, twoParamChiSurf, twoParamChiColor);
+            [slope 0], twoParamOutput, twoParamChiSurf, twoParamChiColor);
     end
     
     % Graph linear y = ax data with optimized fit
@@ -94,6 +66,7 @@ function [oneParamOutput,leftVsRight,twoParamOutput] = analyzeData(data, rawData
     % Graph linear y = ax + b data with optimized fit
     pointSlope(avgData, params, info, twoParamGraph);
     
+    % Save plots unless they are based on anstis data
     if(~strcmp(info.name,'Anstis')) && (options.savePlots)
         % If data was averaged, save the plots to Plots/Averaged/<type> 
         % otherwise in Plots/<type>/<subjectName>
@@ -109,10 +82,10 @@ function [oneParamOutput,leftVsRight,twoParamOutput] = analyzeData(data, rawData
         
         figNames = [" one param chi^2.png", "two param chi^2 surf.png", ...
             " two param chi^2 colormap.png", " divided.png", ...
-            " distribution.png", " split distribution.png"];
+            " distribution.png"];
         
         figs = [oneParamChiGraph, twoParamChiSurf, twoParamChiColor, ...
-            divided, distribution, splitDistribution];
+            divided, distribution];
         
         % Loop through each figure and save them with as a .png
         for i = 1:length(figs) 

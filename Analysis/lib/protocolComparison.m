@@ -1,91 +1,95 @@
-close all; 
 
-% Suppress warnings about modified csv headers & directory existing
-warning('off','MATLAB:MKDIR:DirectoryExists');
+function protocolComparison(type, name)
+    % Struct to store information about each protocol, including name, color,
+    % csv name, and which column holds the independent variable
+    infoCsv = fullfile(pwd,'lib','struct_templates','protocol_info.csv');
+    info = table2struct(readtable(infoCsv));
+    
+    % Struct to store the results of the significance tests
+    resultCsv = fullfile(pwd,'lib','struct_templates', ...
+            'protocol_comparison_struct.csv');
+    resultStruct = table2struct(readtable(resultCsv));
+    resultStruct = repmat(resultStruct,1,(length(info)-1));
+    
+    % Loop through every protocol and compare each to every other protocol
+    structIdx = 1;
+    for i=1:length(info)
 
-% Add helper functions to path
-libPath = fullfile(pwd, 'lib'); addpath(libPath); 
-
-% Struct to store information about each protocol, including name, color,
-% csv name, and which column holds the independent variable
-infoCsv = fullfile(pwd,'lib','struct_templates','protocol_info.csv');
-info = table2struct(readtable(infoCsv));
-
-resultCsv = fullfile(pwd,'lib','struct_templates', ...
-        'protocol_comparison_struct.csv');
-resultStruct = table2struct(readtable(resultCsv));
-resultStruct = repmat(resultStruct,1,(length(info)-1));
-
-lrCsv = fullfile(pwd,'lib','struct_templates', ...
-        'left_vs_right_struct.csv');
-lrStruct = table2struct(readtable(lrCsv));
-
-lrStruct.type = 'All';
-lrStruct.name = 'Averaged';
-
-structIdx = 1;
-for i=1:length(info)
-    
-    if strcmp(info(i).id,'a')
-        continue;
-    end
-    
-    [~,data,~] = readCsv(info(i).csvName, info(i).id, 'All', "Averaged", ...
-        true, 'both');
-    
-    % Extract data from left eccentricities
-    [~,lData, ~] = readCsv(info(i).csvName,  info(i).id, ...
-        'All', "Averaged", true, 'left');
-    
-    % Extract data from right eccentricities
-    [~, rData, ~] = readCsv(info(i).csvName,  info(i).id, ...
-        'All', "Averaged", true, 'right');
-    
-    lrStruct.(strcat(info(i).id,'_left_better')) = ...
-        ranksum(lData(:,2), rData(:,2), 'tail', 'left');
-    
-    lrStruct.(info(i).id) = ...
-        ranksum(lData(:,2), rData(:,2));
-    
-    lrStruct.(strcat(info(i).id,'_right_better')) = ...
-        ranksum(lData(:,2), rData(:,2), 'tail', 'right');
-    
-    resultStruct(structIdx).protocol = info(i).id;
-    
-    for j=1:length(info)
-        if i == j || strcmp(info(j).id,'a')
-            continue;
+        if strcmp(info(i).id,'a')
+            continue; % Skip anstis
         end
         
-        [~,comparisonData,~] = readCsv(info(j).csvName, info(j).id, ...
-            'All', "Averaged", true, 'both');
+        % Specify the current protocol for csv output
+        resultStruct(structIdx).protocol = info(i).id;
         
-        resultStruct(structIdx).(strcat(info(j).id, '_worse')) = ...
-            ranksum(data(:,2), comparisonData(:,2), 'tail', 'left');
-
-        resultStruct(structIdx).(info(j).id) = ...
-            ranksum(data(:,2), comparisonData(:,2));
-
-        resultStruct(structIdx).(strcat(info(j).id, '_better')) = ...
-            ranksum(data(:,2), comparisonData(:,2), 'tail', 'right');
+        % Get data matrix for the first protocol
+        [~,data,~] = readCsv(info(i).csvName, info(i).id, type, name, ...
+            true, 'both');
         
-        structIdx = structIdx + 1;
+        if isempty(data)
+            continue; % Skip if there is no data matching the search terms
+        end
+        
+        % Loop through the protocols again, comparing the first protocol to
+        % every other protocol
+        for j=1:length(info)
+            if i == j || strcmp(info(j).id,'a')
+                continue; % Skip anstis
+            end
+            
+            % Get data matrix for the second protocol
+            [~,comparisonData,~] = readCsv(info(j).csvName, info(j).id, ...
+                type, name, true, 'both');
+            
+            if isempty(comparisonData)
+                structIdx = structIdx + 1;
+                continue; % Skip if there is no data matching the search terms
+            end
+            
+            % Conduct a one sided Wilcoxun rank sum test. The 'tail, left'
+            % argument returns a p-value indicating whether a point from
+            % the data distribution is likely to have a smaller value than
+            % a point from the comparison data distribution, indicating
+            % that the data distribution has a better visual acuity
+            resultStruct(structIdx).(strcat(info(j).id, '_worse')) = ...
+                ranksum(data(:,2), comparisonData(:,2), 'tail', 'left');
+            
+            % Conduct a two sided Wilcoxun rank sum test. Returns a p-value
+            % indicating the likelihood that the data and comparison data
+            % distributions are identical.
+            resultStruct(structIdx).(info(j).id) = ...
+                ranksum(data(:,2), comparisonData(:,2));
+            
+            % Conduct a one sided Wilcoxun rank sum test. The 'tail, right'
+            % argument returns a p-value indicating whether a point from
+            % the data distribution is likely to have a larger value than
+            % a point from the comparison data distribution, indicating
+            % that the comparison data distribution has a better visual 
+            % acuity
+            resultStruct(structIdx).(strcat(info(j).id, '_better')) = ...
+                ranksum(data(:,2), comparisonData(:,2), 'tail', 'right');
 
+            structIdx = structIdx + 1;
+        end
     end
-
-end
-
-fileName = fullfile(pwd, 'Parameters', 'protocol_comparison.csv');
-results = struct2table(resultStruct);
-writetable(results,fileName,'WriteRowNames',true);
-
-fileName = fullfile(pwd, 'Parameters', 'left_vs_right.csv');
-results = struct2table(lrStruct);
-if(exist(fileName, 'file') ~= 2) % If file does not exist, print column names
+    
+    % P-values are saved as a csv. If 'All' and 'Averaged' are the input
+    % arguments it is saved within the Parameters subfolder. If a type is
+    % specified and the subject is 'Averaged', it is saved within the
+    % Plots/Averaged/<type> subfolder. If a single subject is specified, it
+    % is saved within the Plots/<type>/<name> subfolder
+    if strcmp(type,'All')
+        fileName = fullfile(pwd, 'Parameters', 'protocol_comparison.csv');
+    elseif strcmp(name,'Averaged')
+        fileName = fullfile(pwd, 'Plots', 'Averaged', type, ...
+            strcat(type, '_protocol_comparison.csv'));
+    else
+        fileName = fullfile(pwd, 'Plots', type, name, ...
+            strcat(name, '_protocol_comparison.csv'));
+    end
+    
+    % Write the results to csv
+    results = struct2table(resultStruct);
     writetable(results,fileName,'WriteRowNames',true);
-else
-    writetable(results,fileName,'WriteRowNames',false, ...
-        'WriteMode', 'Append')
 end
-
 

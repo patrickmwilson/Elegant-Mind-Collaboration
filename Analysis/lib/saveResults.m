@@ -1,4 +1,4 @@
-function saveResults(savePlots, saveParams, figs, figNames, oneParamOutput, leftVsRight, twoParamOutput)
+function saveResults(savePlots, saveParams, figs, figNames, oneParamOutput, twoParamOutput)
     if savePlots
         % If data was averaged, save the plots to Plots/Averaged/<type> 
         % otherwise in Plots/<type>/<subjectName>
@@ -29,15 +29,6 @@ function saveResults(savePlots, saveParams, figs, figNames, oneParamOutput, left
             writetable(oneParam,fileName,'WriteRowNames',true);
         else
             writetable(oneParam,fileName,'WriteRowNames',false, ...
-                'WriteMode', 'Append')
-        end
-        
-        lvr = struct2table(leftVsRight);
-        fileName = fullfile(pwd, 'Parameters', 'left_vs_right.csv');
-        if(exist(fileName, 'file') ~= 2) % If file does not exist, print column names
-            writetable(lvr,fileName,'WriteRowNames',true);
-        else
-            writetable(lvr,fileName,'WriteRowNames',false, ...
                 'WriteMode', 'Append')
         end
     

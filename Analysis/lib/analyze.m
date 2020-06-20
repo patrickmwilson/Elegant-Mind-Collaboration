@@ -1,6 +1,6 @@
 function analyze(opts)
 
-    [info, oneParamOutput, leftVsRight, twoParamOutput] = makeStructs(options);
+    [info, oneParamOutput, twoParamOutput] = makeStructs(options);
 
     % Creating y = ax and y = ax+b figures
     oneParamGraph = figure(); twoParamGraph = figure();
@@ -17,21 +17,10 @@ function analyze(opts)
             oneParamOutput.type, oneParamOutput.name, options.trimCC, ...
             'both');
     
-        % Extract data from left eccentricities
-        [lRawData, lData, ~] = readCsv(info(i).csvName,  info(i).id, ...
-            oneParamOutput.type, oneParamOutput.name, options.trimCC, ...
-            'left');
-    
-        % Extract data from right eccentricities
-        [rRawData, rData, ~] = readCsv(info(i).csvName,  info(i).id, ...
-            oneParamOutput.type, oneParamOutput.name, options.trimCC, ...
-            'right');
-    
         % Pass the data along to the fitting function for Chi^2 
         % minimization and generation of graphs and parameter output
-        [oneParamOutput, leftVsRight, twoParamOutput] = analyzeData(...
-            data, rawData, lData, lRawData, rData, rRawData, info, ...
-            oneParamOutput, leftVsRight, twoParamOutput, oneParamGraph, ...
+        [oneParamOutput, twoParamOutput] = analyzeData(data, rawData, ...
+            info, oneParamOutput, twoParamOutput, oneParamGraph, ...
             twoParamGraph, options);
     end
 
@@ -49,5 +38,5 @@ function analyze(opts)
     figNames = [" one param.png", " two param.png"];
 
     saveResults(savePlots, saveParams, figs, figNames, oneParamOutput, ...
-        lOneParamOutput, rOneParamOutput, twoParamOutput);
+        twoParamOutput);
 end
