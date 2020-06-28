@@ -8,113 +8,91 @@
 % linear plots, and booleans indicating whether to save plots, and whether
 % the data is averaged over and small eccentricity observations have been
 % excluded from crowded center.
-function [oneParamOutput,twoParamOutput] = analyzeData(data,rawData,info,oneParamOutput,twoParamOutput,oneParamGraph,twoParamGraph,savePlots,trimCC,averageOver)
-    
-    % Extract protocol information from the info struct
-    name = info.name; id = info.id;
-    color = info.color; discreteCol = info.discreteCol;
+function [oneParamOutput,twoParamOutput] = analyzeData(data, rawData, info, oneParamOutput, twoParamOutput, oneParamGraph, twoParamGraph, subject)
     
     % For all data except anstis, produce y/x vs. x graphs and y/x
     % histograms
-    if(~strcmp(id,'a'))
+    if(~strcmp(info.id,'a'))
         
-        avg = mean(data(:,2));
-        sd = std(data(:,2));
-        N = size(data,1);
+        avg = mean(data(:,2)); sd = std(data(:,2)); N = size(data,1);
         
         % y/x vs. x plot
         divided = figure();
-        dividedFig(data, rawData, avg, sd, N, name, color, divided);
+        dividedFig(data, rawData, avg, sd, N, info, divided);
         
         % y/x histogram
         distribution = figure();
-        histFig(rawData, avg, sd, N, name, color, distribution);
+        histFig(rawData, avg, sd, N, info, distribution);
     end
     
     % Convert the normalized data back to the linear scale by multiplying
     % each value by its respective eccentricity value
     data(:,2) = data(:,2).*data(:,1);
-    
-    % Setting direction of error bars. Fully Crowded and Three Lines' 
-    % independent variable is letter height, while in all other experiments 
-    % the independent variable is eccentricity
-    if(strcmp(id,'fc') || strcmp(id,'l3'))
-        errorBarDirection = 'Horizontal';
-    else
-        errorBarDirection = 'Vertical';
-    end
 
-    
-    if(strcmp(id,'a'))
+    if(strcmp(info.id,'a'))
         % For Anstis data, do not perform the Chi^2 minimization or produce
         % graphs. Define the slope for the y=ax graph as the average of the 
         % y/x distribution and estimate the parameters for y=ax+b with
         % polyfit, as the standard error is unknown
-        avgData = data;
-        slope = mean(data(:,2)./data(:,1));
+        avgData = data; 
+        slope = mean(data(:,2)./data(:,1)); 
         params = polyfit(data(:,1),data(:,2),1);
     else
         % Average all observations made at each discrete measurement point
         % for plotting.
-        avgData = averageData(data, discreteCol);
+        avgData = averageData(data, info.discreteCol);
         
         % Estimate the standard errors of each observation for the Chi^2
         % minimization as the standard error of the distribution of all
         % observations ever recorded at that discrete measurement, across
         % all subjects
-        avgData = calculateStandardErrors(info, trimCC, avgData);
+        avgData = calculateStandardErrors(info, avgData);
         
         % Minimize Chi^2 for y = ax and produce a plot of Chi^2 vs. a
         oneParamChiGraph = figure();
-        [slope,oneParamOutput] = oneParamChiSq(avgData, name, id, color, ...
+        [slope,oneParamOutput] = oneParamChiSq(avgData, info, ...
             oneParamOutput, oneParamChiGraph);
-        
-        % Provide the slope parameter that minimized the Chi^2 of the y=ax
-        % fit as a starting guess for the y=ax+b minimization algorithm
-        approx = [oneParamOutput.(strcat(id, '_slope')) 0];
         
         % Minimize Chi^2 for y = ax + b and produce both a surface plot and
         % a colormap of Chi^2 vs. a and b.
-        twoParamChiSurf = figure();
+        twoParamChiSurf = figure(); 
         twoParamChiColor = figure();
-        [params,twoParamOutput] = twoParamChiSq(avgData, name, id, ...
-            approx, twoParamOutput, twoParamChiSurf, twoParamChiColor);
+        [params,twoParamOutput] = twoParamChiSq(avgData, info, ...
+            [slope 0], twoParamOutput, twoParamChiSurf, twoParamChiColor);
     end
     
     % Graph linear y = ax data with optimized fit
-    pointSlope(avgData, slope, name, color, errorBarDirection, ...
-        oneParamGraph);
+    pointSlope(avgData, slope, info, oneParamGraph);
     
     % Graph linear y = ax + b data with optimized fit
-    pointSlope(avgData, params, name, color, errorBarDirection, ...
-        twoParamGraph);
+    pointSlope(avgData, params, info, twoParamGraph);
     
-    if(~strcmp(name,'Anstis')) && (savePlots)
+    % Save plots unless they are based on anstis data
+    if(~strcmp(info.name,'Anstis')) && (subject.savePlots)
         % If data was averaged, save the plots to Plots/Averaged/<type> 
         % otherwise in Plots/<type>/<subjectName>
-        if(averageOver)
+        if(strcmp(subject.name,'Averaged'))
             folderName = fullfile(pwd, 'Plots', 'Averaged', ...
-                string(oneParamOutput.type));
+                string(subject.type));
         else
-            folderName = fullfile(pwd, 'Plots', string(oneParamOutput.type), ...
-                string(oneParamOutput.name));
+            folderName = fullfile(pwd, 'Plots', string(subject.type), ...
+                string(subject.name));
         end
         
         mkdir(folderName);
         
-        figNames = ["_one_param_chi_sq.png", "_two_param_chi_sq_surf.png", ...
-            "_two_param_chi_sq_color.png", "_divided.png", ...
-            "_distribution.png"];
+        figNames = [" one param chi^2.png", "two param chi^2 surf.png", ...
+            " two param chi^2 colormap.png", " divided.png", ...
+            " distribution.png"];
         
         figs = [oneParamChiGraph, twoParamChiSurf, twoParamChiColor, ...
             divided, distribution];
         
         % Loop through each figure and save them with as a .png
         for i = 1:length(figs) 
-            fig = figs(i);
-            figName = figNames(i);
-            fileName = sprintf('%s%s%s%s', string(oneParamOutput.name), ...
-                '_', name, figName);
-            saveas(fig, fullfile(folderName, fileName));
+            fileName = sprintf('%s%s%s%s', string(subject.name), ...
+                ' ', info.name, figNames(i));
+            saveas(figs(i), fullfile(folderName, fileName));
+            close(figs(i));
         end
     end

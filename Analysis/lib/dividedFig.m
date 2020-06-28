@@ -5,7 +5,7 @@
 % truncated y/x distribution, the plot color, and a figure handle as
 % arguments. Plots a scatter plot of the normalized letter height
 % observations vs. eccentricity.
-function dividedFig(data, rawData, avg, sd, N, name, color, fig)
+function dividedFig(data, rawData, avg, sd, N, info, fig)
 
     figure(fig);
     txt = "%s: Mean: %4.3f, Sigma: %5.4f, N = %4.2f";
@@ -17,11 +17,11 @@ function dividedFig(data, rawData, avg, sd, N, name, color, fig)
     poly = polyval(p,data(:,1));
     
     % Plotting the line of best fit
-    plot(data(:,1),poly, 'Color', color, 'LineWidth', 1, 'DisplayName', ...
-        sprintf(txt, name, avg, sd, N));
+    plot(data(:,1),poly, 'Color', info.color, 'LineWidth', 1, 'DisplayName', ...
+        sprintf(txt, info.name, avg, sd, N));
     
     % Scattering data with scaled dot sizes (see scaledScatter.m)
-    scaledScatter(fig, rawData, color, 10, 5);
+    scaledScatter(fig, rawData, info.color, 10, 5);
     grid on; box on;
     
     % Plot a dashed red line at a distance of +2.5 sigma from the mean, to
@@ -34,5 +34,5 @@ function dividedFig(data, rawData, avg, sd, N, name, color, fig)
     formatFigure(fig, [-inf inf], [-inf inf], ...
         "Eccentricity (degrees)",  ...
         "Letter Height (degrees)/Eccentricity (degrees)", ...
-        "Letter Height/Eccentricity vs. Eccentricity", false);
+        "Letter Height/Eccentricity vs. Eccentricity", false, 'best');
 end

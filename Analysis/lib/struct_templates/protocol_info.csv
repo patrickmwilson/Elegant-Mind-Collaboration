@@ -1,0 +1,13 @@
+name,csvName,id,color,discreteCol,errorBarDirection,include
+Fully Crowded,T1,fc,0 0.8 0.8,2,Horizontal,1
+Three Lines,Three Lines,l3,0.86 0.27 0.07,2,Horizontal,1
+Crowded Periphery 9x9,Crowded Periphery 9x9,cp9,0.83 0.86 0.035,1,Vertical,1
+Crowded Periphery 7x7,Crowded Periphery 7x7,cp7,0.69 0.57 0.41,1,Vertical,1
+Crowded Periphery 5x5,Crowded Periphery 5x5,cp5,0.463 0.27 0.96,1,Vertical,1
+Crowded Periphery,Crowded Periphery,cp,0.9 0.3 0.9,1,Vertical,1
+Crowded Periphery Outer,Crowded Periphery Outer,cpo,0.5 0 0.9,1,Vertical,1
+Crowded Periphery Inner,Crowded Periphery Inner,cpi,0 0 0,1,Vertical,1
+Anstis,Anstis,a,0 0 0,1,Vertical,1
+Crowded Center 9x9,Crowded Center 9x9,cc9,0 0.1 1,1,Vertical,1
+Crowded Center 3x3,Crowded Center 3x3,cc3,0.4 0.8 0.5,1,Vertical,1
+Isolated Character,Isolated Character,ic,1 0.6 0,1,Vertical,1

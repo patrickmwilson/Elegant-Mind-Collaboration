@@ -5,7 +5,7 @@
 % surface plot and colormap. Takes the data matrix, name, id, color of the 
 % protocol, the parameter output struct, and a figure handle as input 
 % arguments.
-function [params,twoParamOutput] = twoParamChiSq(data,name,id,approx,twoParamOutput,surfFig,colorFig)
+function [params,twoParamOutput] = twoParamChiSq(data,info,approx,twoParamOutput,surfFig,colorFig)
     
     % Extract x & y values from data matrix
     xvals = data(:,1)'; yvals = data(:,2)';
@@ -38,10 +38,10 @@ function [params,twoParamOutput] = twoParamChiSq(data,name,id,approx,twoParamOut
     reduced_chi_sq = chi_sq/(length(xvals)-2);
     
     % Storing parameters in output struct
-    twoParamOutput.(strcat(id, '_slope')) = slope;
-    twoParamOutput.(strcat(id, '_intercept')) = intercept;
-    twoParamOutput.(strcat(id, '_chi_sq')) = chi_sq;
-    twoParamOutput.(strcat(id, '_reduced_chi_sq')) = reduced_chi_sq;
+    twoParamOutput.(strcat(info.id, '_slope')) = slope;
+    twoParamOutput.(strcat(info.id, '_intercept')) = intercept;
+    twoParamOutput.(strcat(info.id, '_chi_sq')) = chi_sq;
+    twoParamOutput.(strcat(info.id, '_reduced_chi_sq')) = reduced_chi_sq;
     
     % The standard error of the parameters is estimated as the parameter
     % value in both the + and - directions which results in a Chi^2 of + 1,
@@ -55,34 +55,16 @@ function [params,twoParamOutput] = twoParamChiSq(data,name,id,approx,twoParamOut
     fun = @(x)f(x,intercept,xvals,yvals,w);
     negSlopeError = fminbnd(fun,(slope*0.5),slope);
     posSlopeError = fminbnd(fun,slope,(slope*1.5));
-    twoParamOutput.(strcat(id, '_slope_neg_error')) = negSlopeError;
-    twoParamOutput.(strcat(id, '_slope_pos_error')) = posSlopeError;
+    twoParamOutput.(strcat(info.id, '_slope_neg_error')) = negSlopeError;
+    twoParamOutput.(strcat(info.id, '_slope_pos_error')) = posSlopeError;
     
     % Targeting intercept parameter
     f = @(slope,intercept,xvals,yvals,w)abs(target-sum(w.*((yvals-((xvals.*slope)+intercept)).^2)));
     fun = @(intercept)f(slope,intercept,xvals,yvals,w);
     negInterceptError = fminbnd(fun,-1,intercept);
     posInterceptError = fminbnd(fun,intercept,1);
-    twoParamOutput.(strcat(id, '_intercept_neg_error')) = negInterceptError;
-    twoParamOutput.(strcat(id, '_intercept_pos_error')) = posInterceptError;
-    
-%     target = chi_sq+2;
-%     
-%     f = @(x,intercept,xvals,yvals,w)abs(target-sum(w.*((yvals-((xvals.*x)+intercept)).^2)));
-%     fun = @(x)f(x,intercept,xvals,yvals,w);
-%     
-%     slopeMin = fminbnd(fun,(slope*0.5),slope,options);
-%     slopeMax = fminbnd(fun,slope,(slope*1.5),options);
-%     
-%     fun = @(intercept)f(slope,intercept,xvals,yvals,w);
-%     
-%     intMin = fminbnd(fun,-1,intercept,options);
-%     intMax = fminbnd(fun,intercept,1,options);
-%     
-%     f = @(x,int,xvals,yvals,w)sum(w.*((yvals-((xvals.*x)+int)).^2));
-%     fun = @(x,int)f(x,int,xvals,yvals,w);
-%     
-%     target = chi_sq+4;
+    twoParamOutput.(strcat(info.id, '_intercept_neg_error')) = negInterceptError;
+    twoParamOutput.(strcat(info.id, '_intercept_pos_error')) = posInterceptError;
     
     f = @(slope,intercept,xvals,yvals,w)sum(w.*((yvals-((xvals.*slope)+intercept)).^2));
     fun = @(slope,intercept)f(slope,intercept,xvals,yvals,w);
@@ -142,7 +124,7 @@ function [params,twoParamOutput] = twoParamChiSq(data,name,id,approx,twoParamOut
     cb.Label.Rotation = 0; % Rotate label 90° 
     cb.Label.FontSize = 12;
     
-    title(sprintf('%s %s %s %s', "     ", name, chisqtext, ...
+    title(sprintf('%s %s %s %s', "     ", info.name, chisqtext, ...
         "vs. Slope and Intercept Parameters (y = ax + b)"));
     
     xlabel("Slope"); ylabel("Intercept"); zlabel(chisqtext);
@@ -179,7 +161,7 @@ function [params,twoParamOutput] = twoParamChiSq(data,name,id,approx,twoParamOut
     ccb.Label.Rotation = 0; % Rotate label 90°
     ccb.Label.FontSize = 12;
     
-    title(sprintf('%s %s %s %s', "     ", name, chisqtext, ...
+    title(sprintf('%s %s %s %s', "     ", info.name, chisqtext, ...
         "vs. Slope and Intercept Parameters (y = ax + b)"));
     xlabel("Slope"); ylabel("Intercept");
     

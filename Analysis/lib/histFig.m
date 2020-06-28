@@ -4,15 +4,15 @@
 % of the data matrix). Takes the data matrix, the average, standard 
 % deviation, and N of the distribution, the protocol name, color, and the
 % figure handle as arguments.
-function histFig(data, avg, sd, N, name, color, fig)
+function histFig(data, avg, sd, N, info, fig)
     figure(fig); hold on;
     
     % Calculate optimum bin number for distribution 
     optN = ceil((sqrt(N))*1.5);
     
     % Plot histogram of letter height/eccentricity distribution
-    histogram(data(:,2), optN, 'HandleVisibility', 'off', 'FaceColor', color, ...
-            'Normalization', 'probability');
+    histogram(data(:,2), optN, 'HandleVisibility', 'off', ...
+        'FaceColor', info.color, 'Normalization', 'probability');
         
     % Calculate appropriate height of gaussian fit - discretize splits the
     % data into bins, m becomes the mode (bin with most data points), and
@@ -31,22 +31,22 @@ function histFig(data, avg, sd, N, name, color, fig)
     gaussY = normpdf(gaussX,avg,sd);
     gaussY = rescale(gaussY, 0, (gaussHeight*1.1));
     hold on;
-    plot(gaussX,gaussY, 'LineWidth', 0.75, 'Color', color, 'DisplayName',  ...
-            sprintf("%s Average: %5.4f", name, avg));
+    plot(gaussX,gaussY, 'LineWidth', 0.75, 'Color', info.color, ...
+        'DisplayName', sprintf("%s Average: %5.4f", info.name, avg));
     
     % Plot vertical dashed red lines at a distance of +/-2.5 sigma from 
     % the mean, to demarcate outliers which have been truncated from the 
     % distribution
     cutoff = (2.5*sd);
     line([(avg+cutoff), (avg+cutoff)], ylim, 'LineStyle', '--', ...
-            'LineWidth', 1, 'Color', color, 'HandleVisibility', 'off');
+            'LineWidth', 1, 'Color', info.color, 'HandleVisibility', 'off');
     line([(avg-cutoff), (avg-cutoff)], ylim, 'LineStyle', '--',  ...
-            'LineWidth', 1, 'Color', color, 'HandleVisibility', 'off');
+            'LineWidth', 1, 'Color', info.color, 'HandleVisibility', 'off');
     box on;
 
     % Formatting figure (see formatFigure.m)
     formatFigure(fig, [gaussMin gaussMax], [0 gaussHeight*1.2], ...
         "Letter Height (deg)/Eccentricity (deg)", ...
         "Number of Occurences (Normalized to Probability)", ...
-        "Distribution of Letter Height/Eccentricity", false);
+        "Distribution of Letter Height/Eccentricity", false, 'best');
 end
