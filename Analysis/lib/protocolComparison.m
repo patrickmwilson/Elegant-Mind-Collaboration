@@ -1,5 +1,5 @@
 
-function protocolComparison(type, name)
+function resultStruct = protocolComparison()
     % Struct to store information about each protocol, including name, color,
     % csv name, and which column holds the independent variable
     infoCsv = fullfile(pwd,'lib','struct_templates','protocol_info.csv');
@@ -23,8 +23,8 @@ function protocolComparison(type, name)
         resultStruct(structIdx).protocol = info(i).id;
         
         % Get data matrix for the first protocol
-        [~,data,~] = readCsv(info(i).csvName, info(i).id, type, name, ...
-            true, 'both');
+        [~,data,~] = readCsv(info(i).csvName, info(i).id, "All", "Averaged", ...
+            'both');
         
         if isempty(data)
             continue; % Skip if there is no data matching the search terms
@@ -39,10 +39,9 @@ function protocolComparison(type, name)
             
             % Get data matrix for the second protocol
             [~,comparisonData,~] = readCsv(info(j).csvName, info(j).id, ...
-                type, name, true, 'both');
+                "All", "Averaged", 'both');
             
             if isempty(comparisonData)
-                structIdx = structIdx + 1;
                 continue; % Skip if there is no data matching the search terms
             end
             
@@ -68,25 +67,12 @@ function protocolComparison(type, name)
             % acuity
             resultStruct(structIdx).(strcat(info(j).id, '_better')) = ...
                 ranksum(data(:,2), comparisonData(:,2), 'tail', 'right');
-
-            structIdx = structIdx + 1;
         end
+        structIdx = structIdx + 1;
     end
     
-    % P-values are saved as a csv. If 'All' and 'Averaged' are the input
-    % arguments it is saved within the Parameters subfolder. If a type is
-    % specified and the subject is 'Averaged', it is saved within the
-    % Plots/Averaged/<type> subfolder. If a single subject is specified, it
-    % is saved within the Plots/<type>/<name> subfolder
-    if strcmp(type,'All')
-        fileName = fullfile(pwd, 'Parameters', 'protocol_comparison.csv');
-    elseif strcmp(name,'Averaged')
-        fileName = fullfile(pwd, 'Plots', 'Averaged', type, ...
-            strcat(type, '_protocol_comparison.csv'));
-    else
-        fileName = fullfile(pwd, 'Plots', type, name, ...
-            strcat(name, '_protocol_comparison.csv'));
-    end
+    % P-values output csv
+    fileName = fullfile(pwd, 'Parameters', 'protocol_comparison.csv');
     
     % Write the results to csv
     results = struct2table(resultStruct);

@@ -8,7 +8,7 @@
 % linear plots, and booleans indicating whether to save plots, and whether
 % the data is averaged over and small eccentricity observations have been
 % excluded from crowded center.
-function [oneParamOutput,twoParamOutput] = analyzeData(data, rawData, info, oneParamOutput, twoParamOutput, oneParamGraph, twoParamGraph, options)
+function [oneParamOutput,twoParamOutput] = analyzeData(data, rawData, info, oneParamOutput, twoParamOutput, oneParamGraph, twoParamGraph, subject)
     
     % For all data except anstis, produce y/x vs. x graphs and y/x
     % histograms
@@ -46,7 +46,7 @@ function [oneParamOutput,twoParamOutput] = analyzeData(data, rawData, info, oneP
         % minimization as the standard error of the distribution of all
         % observations ever recorded at that discrete measurement, across
         % all subjects
-        avgData = calculateStandardErrors(info, options, avgData);
+        avgData = calculateStandardErrors(info, avgData);
         
         % Minimize Chi^2 for y = ax and produce a plot of Chi^2 vs. a
         oneParamChiGraph = figure();
@@ -55,7 +55,8 @@ function [oneParamOutput,twoParamOutput] = analyzeData(data, rawData, info, oneP
         
         % Minimize Chi^2 for y = ax + b and produce both a surface plot and
         % a colormap of Chi^2 vs. a and b.
-        twoParamChiSurf = figure(); twoParamChiColor = figure();
+        twoParamChiSurf = figure(); 
+        twoParamChiColor = figure();
         [params,twoParamOutput] = twoParamChiSq(avgData, info, ...
             [slope 0], twoParamOutput, twoParamChiSurf, twoParamChiColor);
     end
@@ -67,15 +68,15 @@ function [oneParamOutput,twoParamOutput] = analyzeData(data, rawData, info, oneP
     pointSlope(avgData, params, info, twoParamGraph);
     
     % Save plots unless they are based on anstis data
-    if(~strcmp(info.name,'Anstis')) && (options.savePlots)
+    if(~strcmp(info.name,'Anstis')) && (subject.savePlots)
         % If data was averaged, save the plots to Plots/Averaged/<type> 
         % otherwise in Plots/<type>/<subjectName>
-        if(options.averageOver)
+        if(strcmp(subject.name,'Averaged'))
             folderName = fullfile(pwd, 'Plots', 'Averaged', ...
-                string(oneParamOutput.type));
+                string(subject.type));
         else
-            folderName = fullfile(pwd, 'Plots', string(oneParamOutput.type), ...
-                string(oneParamOutput.name));
+            folderName = fullfile(pwd, 'Plots', string(subject.type), ...
+                string(subject.name));
         end
         
         mkdir(folderName);
@@ -89,7 +90,7 @@ function [oneParamOutput,twoParamOutput] = analyzeData(data, rawData, info, oneP
         
         % Loop through each figure and save them with as a .png
         for i = 1:length(figs) 
-            fileName = sprintf('%s%s%s%s', string(oneParamOutput.name), ...
+            fileName = sprintf('%s%s%s%s', string(subject.name), ...
                 ' ', info.name, figNames(i));
             saveas(figs(i), fullfile(folderName, fileName));
             close(figs(i));

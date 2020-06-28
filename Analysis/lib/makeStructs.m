@@ -1,4 +1,4 @@
-function [info,oneParamOutput,twoParamOutput] = makeStructs(options)
+function [info,oneParamOutput,twoParamOutput] = makeStructs(subject)
    
     % Struct to contain y=ax fit parameters, including slope, Chi^2, reduced
     % Chi^2, and error of the slope parameter for csv output
@@ -6,8 +6,8 @@ function [info,oneParamOutput,twoParamOutput] = makeStructs(options)
         'one_param_struct.csv');
     oneParamOutput = table2struct(readtable(fileName));
     
-    oneParamOutput.type = options.type;
-    oneParamOutput.name = options.subjectName;
+    oneParamOutput.type = subject.type;
+    oneParamOutput.name = subject.name;
     
     % Struct to contain y=ax+b fit parameters, including slope, intercept,
     % Chi^2, reduced Chi^2, error of the slope and intercept parameter for csv 
@@ -16,8 +16,8 @@ function [info,oneParamOutput,twoParamOutput] = makeStructs(options)
         'two_param_struct.csv');
     twoParamOutput = table2struct(readtable(fileName));
     
-    twoParamOutput.type = options.type;
-    twoParamOutput.name = options.subjectName;
+    twoParamOutput.type = subject.type;
+    twoParamOutput.name = subject.name;
     
     % Struct to store information about each protocol, including name, color,
     % csv name, and which column holds the independent variable
@@ -25,11 +25,14 @@ function [info,oneParamOutput,twoParamOutput] = makeStructs(options)
     info = table2struct(readtable(infoCsv));
     
     % Input UI to select which protocols to include data from
-    global CHECKBOXES;
-    ButtonUI(info);
-
+    if ~subject.includeAll
+        global CHECKBOXES;
+        ButtonUI(info);
+        for i=1:length(info)
+            info(i).include = CHECKBOXES(i);
+        end
+    end
     for i=1:length(info)
-        info(i).include = CHECKBOXES(i);
         info(i).color = str2num(info(i).color);
     end
 end

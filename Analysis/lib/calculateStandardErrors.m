@@ -6,7 +6,7 @@
 % all subjects. Takes a struct containing information about the protocol,
 % a boolean indicating whether small eccentricity observations should be
 % excluded from crowded center, and the data matrix.
-function outputData = calculateStandardErrors(info, options, outputData)
+function outputData = calculateStandardErrors(info, outputData)
     csvName = info.csvName; id = info.id; discreteCol = info.discreteCol;
     
     % There are no replicates for Anstis' data, so SE cannot be estimated
@@ -16,7 +16,7 @@ function outputData = calculateStandardErrors(info, options, outputData)
     
     % Extract all of the data ever recorded for the current protocol from
     % the csv files
-    [~,data,~] = readCsv(csvName,id,'All','Averaged',options.trimCC,'both');
+    [~,data,~] = readCsv(csvName,id,'All','Averaged','both');
     
     % Convert the data back into the linear scale (from dimensionless y/x),
     % and average all observations made at each discrete measurement point

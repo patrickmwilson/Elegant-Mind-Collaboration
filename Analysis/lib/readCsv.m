@@ -6,7 +6,7 @@
 % csvName, csvId, data type, subject name, and a boolean indicating whether
 % to remove small eccentricity values from crowded center as input
 % arguments. Returns the raw data, truncated data, and any outliers.
-function [rawData,data,outliers] = readCsv(name,id,type,subjectName,trimCC,direction)
+function [rawData,data,outliers] = readCsv(name,id,type,subjectName,direction)
     
     % Suppress warning about modified csv headers
     warning('off','MATLAB:table:ModifiedAndSavedVarnames');
@@ -16,7 +16,6 @@ function [rawData,data,outliers] = readCsv(name,id,type,subjectName,trimCC,direc
         baseFolders = [string(fullfile(pwd, 'Data', 'Anstis'))];
     elseif(strcmp(type,'All'))
         baseFolders = [string(fullfile(pwd, 'Data', 'Study')), ...
-            string(fullfile(pwd, 'Data', 'Mock')), ...
             string(fullfile(pwd, 'Data', 'Pilot'))];
     else
         baseFolders = [string(fullfile(pwd, 'Data', type))];
@@ -99,9 +98,9 @@ function [rawData,data,outliers] = readCsv(name,id,type,subjectName,trimCC,direc
             
             % Sets the eccentricity values which are to be excluded from
             % the data
-            if(strcmp(id,'cc3') && trimCC)
+            if(strcmp(id,'cc3'))
                 exclusions = [0,5,10];
-            elseif(strcmp(id,'cc9') && trimCC)
+            elseif(strcmp(id,'cc9'))
                 exclusions = [0, 5, 10, 15];
             else
                 exclusions = [0];
@@ -144,7 +143,7 @@ function [rawData,data,outliers] = readCsv(name,id,type,subjectName,trimCC,direc
             end
             
             % Remove the direction information as it is no longer needed
-            %thisData(:,3) = [];
+            thisData(:,3) = [];
 
             % Normalize letter height observations by retinal eccentricity 
             thisData(:,2) = thisData(:,2)./thisData(:,1);
