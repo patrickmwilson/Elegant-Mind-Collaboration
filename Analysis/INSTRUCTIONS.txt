@@ -1,0 +1,27 @@
+
+
+-------------------------------------------
+     ANALYSIS INSTRUCTIONS
+-------------------------------------------
+1. Run the script
+2. Click through all of the options and prompts. 
+3. You can choose to run:
+(a) a single subjects data
+(b) all the data ever recorded
+(c) all of the study session data ever recorded
+(d) all of the pilot data ever recorded
+(e) correlation analysis
+(f) protocol vs. protocol significance tests
+
+
+-------------------------------------------
+	ANALYSIS NOTES 
+-------------------------------------------
+
+1.To run the script you need several Matlab add-ons, including Globalsearch, the optimization toolbox, and the curve fitting toolbox. 
+2. The 'Data' subfolder contains all recorded data. To run a specific subject's data all you need to know is their subject code/name and the session type (Study/Pilot).
+3. If you saved the plots, they can be found within the 'Plots' subfolder, into another subfolder depending upon the data type (Study/Pilot).
+4. Parameters relating to the fit will be output to the 'one_parameter_statistics' and the 'two_parameter_statistics' spreadsheets within this folder.
+5. Results from the significance tests for left vs. right can be found in the left_vs_right.csv file within the 'Parameters' subfolder.
+6. Results from the significance tests for protocol vs. protocol can be found in the protocol_comparisons.csv file within the 'Parameters' subfolder.
+7. Plots resulting from the correlation analysis can be found within the Plots/Correlation subfolder.

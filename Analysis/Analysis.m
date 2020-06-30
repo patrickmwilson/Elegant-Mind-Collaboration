@@ -69,5 +69,5 @@ if strcmp(dataAnswer,'Chi^2')
 elseif strcmp(dataAnswer,'Correlation')
     correlationAnalysis();
 else
-    resultStruct = protocolComparison();
+    protocolComparison();
 end

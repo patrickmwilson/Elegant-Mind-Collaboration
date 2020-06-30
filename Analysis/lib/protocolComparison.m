@@ -1,5 +1,5 @@
 
-function resultStruct = protocolComparison()
+function protocolComparison()
     % Struct to store information about each protocol, including name, color,
     % csv name, and which column holds the independent variable
     infoCsv = fullfile(pwd,'lib','struct_templates','protocol_info.csv');
